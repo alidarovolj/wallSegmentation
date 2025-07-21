@@ -1,0 +1,85 @@
+#pragma kernel CSMain
+
+// The model output tensor data as a structured buffer (raw logits).
+StructuredBuffer<float> TensorData;
+
+// The output texture that will be displayed on screen.
+RWTexture2D<float4> OutputTexture;
+
+// A buffer containing the colors for each class index.
+StructuredBuffer<float4> ColorMap;
+
+// Tensor dimensions and parameters
+int tensorWidth;
+int tensorHeight;
+int numClasses;
+int classIndexToPaint;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // Get the dimensions of our output texture
+    uint outputWidth, outputHeight;
+    OutputTexture.GetDimensions(outputWidth, outputHeight);
+
+    // Stop if we're trying to write outside the texture bounds
+    if (id.x >= outputWidth || id.y >= outputHeight)
+    {
+        return;
+    }
+
+    // --- GPU-side Argmax and Upscaling ---
+    
+    // Calculate the corresponding coordinate in the low-resolution model output tensor.
+    // This effectively performs nearest-neighbor upscaling.
+    float2 uv = float2(1.0f - (float)id.x / (float)outputWidth, 1.0f - (float)id.y / (float)outputHeight); // Invert X and Y axes
+    uint tensorX = (uint)(uv.x * tensorWidth);
+    uint tensorY = (uint)(uv.y * tensorHeight);
+    
+    // --- Argmax operation on GPU ---
+    int dominantClass = 0;
+    float maxLogit = -3.402823466e+38F; // Minimum float value
+
+    // Iterate through all classes for the current pixel to find the one with the highest logit
+    for (int c = 0; c < numClasses; c++)
+    {
+        // Calculate the index in the flattened 1D buffer for the logit at (channel, y, x)
+        // The layout is NCHW, so we step by C slices of H*W.
+        int logitIndex = c * (tensorWidth * tensorHeight) + tensorY * tensorWidth + tensorX;
+        float currentLogit = TensorData[logitIndex];
+
+        if (currentLogit > maxLogit)
+        {
+            maxLogit = currentLogit;
+            dominantClass = c;
+        }
+    }
+    
+    // Clamp the dominant class to valid range.
+    dominantClass = clamp(dominantClass, 0, numClasses - 1);
+
+    // Get the base color for the dominant class.
+    float4 pixelColor = ColorMap[dominantClass];
+
+    // --- Apply Highlighting Effects ---
+    if (classIndexToPaint != -1 && dominantClass == classIndexToPaint)
+    {
+        // Make the selected class almost fully opaque and bright.
+        pixelColor.a = 0.9f;
+        pixelColor.rgb *= 1.2f; // Brighten the selected class
+    }
+    else if (classIndexToPaint == -1)
+    {
+        // When nothing is selected, make all classes semi-transparent.
+        pixelColor.a = 0.6f; 
+    }
+    else
+    {
+        // When a class is selected, dim the other classes.
+        pixelColor.a = 0.15f;
+        pixelColor.rgb *= 0.7f; // Darken non-selected classes
+    }
+
+    // Write the final color to the output texture.
+    OutputTexture[id.xy] = pixelColor;
+} 

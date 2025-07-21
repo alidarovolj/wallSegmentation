@@ -1,0 +1,38 @@
+#pragma kernel Preprocess
+
+// Input camera texture
+Texture2D<float4> InputTexture;
+SamplerState sampler_InputTexture;
+
+// Output texture for the model
+RWTexture2D<float4> OutputTexture;
+
+// Normalization parameters (ImageNet standards are common)
+static const float3 mean = float3(0.485, 0.456, 0.406);
+static const float3 std = float3(0.229, 0.224, 0.225);
+
+[numthreads(8,8,1)]
+void Preprocess (uint3 id : SV_DispatchThreadID)
+{
+    uint width, height;
+    OutputTexture.GetDimensions(width, height);
+
+    if (id.x >= width || id.y >= height)
+    {
+        return;
+    }
+
+    // Simple bilinear resize
+    uint inputWidth, inputHeight;
+    InputTexture.GetDimensions(inputWidth, inputHeight);
+    float2 uv = float2((id.x + 0.5) / width, (id.y + 0.5) / height);
+    float4 color = InputTexture.SampleLevel(sampler_InputTexture, uv, 0);
+
+    // Normalize the color
+    // 1. Scale from [0, 1] range to [0, 1] (already done by sampling)
+    // 2. Subtract mean
+    // 3. Divide by standard deviation
+    float3 normalizedColor = (color.rgb - mean) / std;
+
+    OutputTexture[id.xy] = float4(normalizedColor, 1.0);
+} 
