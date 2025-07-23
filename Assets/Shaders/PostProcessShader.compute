@@ -1,91 +1,121 @@
 #pragma kernel CSMain
 
-// The model output tensor data as a structured buffer (raw logits).
+// Input tensor data from the neural network
 StructuredBuffer<float> TensorData;
 
-// The output texture that will be displayed on screen.
+// Output texture for display
 RWTexture2D<float4> OutputTexture;
 
-// A buffer containing the colors for each class index.
+// Color map for classes
 StructuredBuffer<float4> ColorMap;
 
-// Tensor dimensions and parameters
+// Tensor dimensions and rendering parameters
 int tensorWidth;
 int tensorHeight;
 int numClasses;
 int classIndexToPaint;
-int classIndexToPaint2; // Second class to highlight
+int classIndexToPaint2;
+float edgeHardness; // Controls the smoothness of edges
 
-[numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+// Find the two most dominant classes for a given pixel
+void FindTopTwoClasses(uint2 tensorCoord, out int topClass, out int secondClass, out float topLogit, out float secondLogit)
 {
-    // Get the dimensions of our output texture
+    topClass = 0;
+    secondClass = 0;
+    topLogit = -3.402823466e+38F; // Min float
+    secondLogit = -3.402823466e+38F; // Min float
+
+    for (int c = 0; c < numClasses; c++)
+    {
+        int logitIndex = c * (tensorWidth * tensorHeight) + tensorCoord.y * tensorWidth + tensorCoord.x;
+        float currentLogit = TensorData[logitIndex];
+
+        if (currentLogit > topLogit)
+        {
+            secondLogit = topLogit;
+            secondClass = topClass;
+            topLogit = currentLogit;
+            topClass = c;
+        }
+        else if (currentLogit > secondLogit)
+        {
+            secondLogit = currentLogit;
+            secondClass = c;
+        }
+    }
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
     uint outputWidth, outputHeight;
     OutputTexture.GetDimensions(outputWidth, outputHeight);
 
-    // Stop if we're trying to write outside the texture bounds
     if (id.x >= outputWidth || id.y >= outputHeight)
     {
         return;
     }
 
-    // --- GPU-side Argmax and Upscaling ---
-    
-    // Calculate the corresponding coordinate in the low-resolution model output tensor.
-    // This effectively performs nearest-neighbor upscaling.
-    float2 uv = float2(1.0f - (float)id.x / (float)outputWidth, 1.0f - (float)id.y / (float)outputHeight); // Invert X and Y axes
-    uint tensorX = (uint)(uv.x * tensorWidth);
-    uint tensorY = (uint)(uv.y * tensorHeight);
-    
-    // --- Argmax operation on GPU ---
-    int dominantClass = 0;
-    float maxLogit = -3.402823466e+38F; // Minimum float value
+    // --- High-Quality Upscaling and Edge Smoothing ---
+    float2 uv = float2((float)id.x / (float)outputWidth, (float)id.y / (float)outputHeight);
+    float2 tensorUV = float2(1.0f - uv.x, 1.0f - uv.y) * float2(tensorWidth, tensorHeight);
 
-    // Iterate through all classes for the current pixel to find the one with the highest logit
-    for (int c = 0; c < numClasses; c++)
+    // Get the integer and fractional parts of the tensor coordinate
+    float2 tensorCoord_f = floor(tensorUV - 0.5f);
+    float2 t = tensorUV - 0.5f - tensorCoord_f; // Interpolation factor
+
+    // Bilinear interpolation for smoother results
+    float4 finalColor = float4(0, 0, 0, 0);
+    for (int j = 0; j <= 1; j++)
     {
-        // Calculate the index in the flattened 1D buffer for the logit at (channel, y, x)
-        // The layout is NCHW, so we step by C slices of H*W.
-        int logitIndex = c * (tensorWidth * tensorHeight) + tensorY * tensorWidth + tensorX;
-        float currentLogit = TensorData[logitIndex];
-
-        if (currentLogit > maxLogit)
+        for (int i = 0; i <= 1; i++)
         {
-            maxLogit = currentLogit;
-            dominantClass = c;
+            uint2 sampleCoord = uint2(tensorCoord_f) + uint2(i, j);
+            
+            // Clamp coordinates to be within tensor bounds
+            sampleCoord.x = clamp(sampleCoord.x, 0, tensorWidth - 1);
+            sampleCoord.y = clamp(sampleCoord.y, 0, tensorHeight - 1);
+
+            int topClass, secondClass;
+            float topLogit, secondLogit;
+            FindTopTwoClasses(sampleCoord, topClass, secondClass, topLogit, secondLogit);
+            
+            // --- Edge blending factor ---
+            float diff = abs(topLogit - secondLogit);
+            float blendFactor = 1.0f - exp(-diff * edgeHardness);
+            blendFactor = pow(blendFactor, 1.5); // Tweak to control falloff
+
+            // Get colors for the top two classes
+            float4 color1 = ColorMap[topClass];
+            float4 color2 = ColorMap[secondClass];
+
+            // Mix the colors based on the blend factor
+            float4 mixedColor = lerp(color2, color1, blendFactor);
+            
+            // --- Apply Highlighting ---
+            bool isTopClassSelected = (classIndexToPaint != -1 && topClass == classIndexToPaint) || (classIndexToPaint2 != -1 && topClass == classIndexToPaint2);
+            bool anyClassSelected = classIndexToPaint != -1 || classIndexToPaint2 != -1;
+
+            float alpha = 0.0f;
+            if (anyClassSelected)
+            {
+                if (isTopClassSelected)
+                {
+                    alpha = lerp(0.0f, 0.9f, blendFactor); // Fade in based on confidence
+                }
+            }
+            else // Show all classes semi-transparent
+            {
+                alpha = lerp(0.3f, 0.7f, blendFactor); // Blend between two transparencies
+            }
+
+            mixedColor.a = alpha;
+
+            // Bilinear interpolation weight
+            float weight = (1 - abs(t.x - i)) * (1 - abs(t.y - j));
+            finalColor += weight * mixedColor;
         }
     }
     
-    // Clamp the dominant class to valid range.
-    dominantClass = clamp(dominantClass, 0, numClasses - 1);
-
-    // Get the base color for the dominant class.
-    float4 pixelColor = ColorMap[dominantClass];
-
-    // --- Apply Highlighting Effects ---
-    bool shouldHighlight = (classIndexToPaint != -1 && dominantClass == classIndexToPaint) || (classIndexToPaint2 != -1 && dominantClass == classIndexToPaint2);
-    bool anyClassSelected = classIndexToPaint != -1 || classIndexToPaint2 != -1;
-    
-    if (anyClassSelected)
-    {
-        if (shouldHighlight)
-        {
-            // Make the selected class almost fully opaque and bright.
-            pixelColor.a = 0.9f;
-            pixelColor.rgb *= 1.2f; // Brighten the selected class
-        }
-        else
-        {
-            // When a class is selected, dim the other classes.
-            pixelColor.a = 0.0f; // Make non-selected transparent
-        }
-    }
-    else
-    {
-        // When nothing is selected, make all classes semi-transparent.
-        pixelColor.a = 0.6f; 
-    }
-
-    // Write the final color to the output texture.
-    OutputTexture[id.xy] = pixelColor;
+    OutputTexture[id.xy] = finalColor;
 } 

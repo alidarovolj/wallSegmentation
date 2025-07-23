@@ -36,6 +36,7 @@ public class SegmentationManager : MonoBehaviour
       [SerializeField] private ComputeShader postProcessShader;
       [SerializeField] private int classIndexToPaint = -1; // Default to all classes
       [SerializeField] private int classIndexToPaint2 = -1; // Second class to paint
+      [SerializeField, Range(0.1f, 10f)] private float edgeHardness = 2.5f; // Controls edge smoothness
       [SerializeField] private Color paintColor = Color.blue;
       [SerializeField] private bool mirrorX = false;
       [SerializeField] private bool mirrorY = true;
@@ -252,6 +253,7 @@ public class SegmentationManager : MonoBehaviour
             postProcessShader.SetInt("numClasses", this.numClasses);
             postProcessShader.SetInt("classIndexToPaint", classIndexToPaint);
             postProcessShader.SetInt("classIndexToPaint2", classIndexToPaint2);
+            postProcessShader.SetFloat("edgeHardness", edgeHardness);
 
             int threadGroupsX_post = Mathf.CeilToInt(segmentationTexture.width / 8.0f);
             int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
