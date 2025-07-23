@@ -14,6 +14,7 @@ int tensorWidth;
 int tensorHeight;
 int numClasses;
 int classIndexToPaint;
+int classIndexToPaint2; // Second class to highlight
 
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
@@ -62,22 +63,27 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float4 pixelColor = ColorMap[dominantClass];
 
     // --- Apply Highlighting Effects ---
-    if (classIndexToPaint != -1 && dominantClass == classIndexToPaint)
+    bool shouldHighlight = (classIndexToPaint != -1 && dominantClass == classIndexToPaint) || (classIndexToPaint2 != -1 && dominantClass == classIndexToPaint2);
+    bool anyClassSelected = classIndexToPaint != -1 || classIndexToPaint2 != -1;
+    
+    if (anyClassSelected)
     {
-        // Make the selected class almost fully opaque and bright.
-        pixelColor.a = 0.9f;
-        pixelColor.rgb *= 1.2f; // Brighten the selected class
-    }
-    else if (classIndexToPaint == -1)
-    {
-        // When nothing is selected, make all classes semi-transparent.
-        pixelColor.a = 0.6f; 
+        if (shouldHighlight)
+        {
+            // Make the selected class almost fully opaque and bright.
+            pixelColor.a = 0.9f;
+            pixelColor.rgb *= 1.2f; // Brighten the selected class
+        }
+        else
+        {
+            // When a class is selected, dim the other classes.
+            pixelColor.a = 0.0f; // Make non-selected transparent
+        }
     }
     else
     {
-        // When a class is selected, dim the other classes.
-        pixelColor.a = 0.15f;
-        pixelColor.rgb *= 0.7f; // Darken non-selected classes
+        // When nothing is selected, make all classes semi-transparent.
+        pixelColor.a = 0.6f; 
     }
 
     // Write the final color to the output texture.

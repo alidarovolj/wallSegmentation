@@ -72,10 +72,6 @@ crashlytics-build.properties
 !/Assets/Models/*.onnx
 !/Assets/Models/*.onnx.meta
 
-# Exclude very large model files (over GitHub 100MB limit)
-Assets/Models/model_fp16.onnx
-Assets/Models/model_fp16.onnx.meta
-
 # macOS
 .DS_Store
 .DS_Store?

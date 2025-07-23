@@ -35,6 +35,7 @@ public class SegmentationManager : MonoBehaviour
       [Header("Rendering")]
       [SerializeField] private ComputeShader postProcessShader;
       [SerializeField] private int classIndexToPaint = -1; // Default to all classes
+      [SerializeField] private int classIndexToPaint2 = -1; // Second class to paint
       [SerializeField] private Color paintColor = Color.blue;
       [SerializeField] private bool mirrorX = false;
       [SerializeField] private bool mirrorY = true;
@@ -250,6 +251,7 @@ public class SegmentationManager : MonoBehaviour
             this.numClasses = shape[1];
             postProcessShader.SetInt("numClasses", this.numClasses);
             postProcessShader.SetInt("classIndexToPaint", classIndexToPaint);
+            postProcessShader.SetInt("classIndexToPaint2", classIndexToPaint2);
 
             int threadGroupsX_post = Mathf.CeilToInt(segmentationTexture.width / 8.0f);
             int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
@@ -280,12 +282,14 @@ public class SegmentationManager : MonoBehaviour
       public void SetClassToPaint(int classIndex)
       {
             classIndexToPaint = classIndex;
+            classIndexToPaint2 = -1; // Reset second class
             Debug.Log($"🎨 Class to paint set to: {classIndex}");
       }
 
       public void ShowAllClasses()
       {
             classIndexToPaint = -1;
+            classIndexToPaint2 = -1;
             Debug.Log("🌈 Showing all classes");
       }
 
@@ -330,8 +334,25 @@ public class SegmentationManager : MonoBehaviour
       [ContextMenu("Show Only Chairs")]
       public void ShowOnlyChairs()
       {
-            classIndexToPaint = 9;
-            Debug.Log("🎨 Showing only: chair");
+            classIndexToPaint = 19; // ADE20K index for chair
+            classIndexToPaint2 = -1;
+            Debug.Log("🎨 Showing only: chair (19)");
+      }
+
+      [ContextMenu("Show Only Walls")]
+      public void ShowOnlyWalls()
+      {
+            classIndexToPaint = 0; // Correct ADE20K index for 'wall' is 0 for this model
+            classIndexToPaint2 = -1;
+            Debug.Log("🎨 Showing only: wall (0)");
+      }
+
+      [ContextMenu("Show Walls and Floor")]
+      public void ShowWallsAndFloor()
+      {
+          classIndexToPaint = 0; // wall
+          classIndexToPaint2 = 3; // floor
+          Debug.Log("🎨 Showing only: wall (0) and floor (3)");
       }
 
       // =====================================================
@@ -391,6 +412,7 @@ public class SegmentationManager : MonoBehaviour
                   // Set the class index to be painted in the post-process shader
                   classIndexToPaint = tappedClass;
                   postProcessShader.SetInt("classIndexToPaint", classIndexToPaint);
+                  postProcessShader.SetInt("classIndexToPaint2", -1); // Reset second class on tap
 
                   // --- NEW: Communicate with PaintManager ---
                   if (paintManager != null)

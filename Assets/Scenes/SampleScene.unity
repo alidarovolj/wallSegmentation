@@ -234,13 +234,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6727b53e261b54d1f881b231e9d9fb46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelAsset: {fileID: 5022602860645237092, guid: 64993b6de827b4935b0110af3c894d7b, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: 1c3c50cb9f4b03d40acb0fef45a20494, type: 3}
+  workerType: 256
   overrideResolution: {x: 256, y: 256}
-  useTestData: 0
-  rawImage: {fileID: 76938650}
   arCameraManager: {fileID: 1070768330}
+  segmentationDisplay: {fileID: 76938650}
+  classNameText: {fileID: 0}
+  paintManager: {fileID: 0}
+  displayNameDuration: 1.5
   postProcessShader: {fileID: 7200000, guid: 7bfc0a34d6f3d0240824b2bf861971d9, type: 3}
   classIndexToPaint: -1
+  classIndexToPaint2: -1
+  paintColor: {r: 0, g: 0, b: 1, a: 1}
+  mirrorX: 0
+  mirrorY: 1
+  preprocessorShader: {fileID: 7200000, guid: cea464de1154d4a1c8266a3caaf19d25, type: 3}
 --- !u!4 &187315540
 Transform:
   m_ObjectHideFlags: 0
@@ -323,10 +331,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2512387469002778309, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
 --- !u!1 &702413256
 GameObject:
