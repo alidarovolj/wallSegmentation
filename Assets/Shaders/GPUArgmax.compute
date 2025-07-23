@@ -1,0 +1,54 @@
+#pragma kernel CSMain
+
+// Входные данные
+Texture2D<float4> InputTensor;
+StructuredBuffer<float2> TapPositions; // UV координаты тапов
+int NumTaps;
+int NumClasses;
+int TensorWidth;
+int TensorHeight;
+
+// Выходные данные
+RWStructuredBuffer<int> Result; // Результат Argmax для каждого тапа
+
+[numthreads(32, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    uint tapIndex = id.x;
+    
+    // Проверяем границы
+    if (tapIndex >= (uint)NumTaps) return;
+    
+    // Получаем UV координаты тапа
+    float2 tapUV = TapPositions[tapIndex];
+    
+    // Конвертируем в координаты тензора
+    int tensorX = (int)(tapUV.x * TensorWidth);
+    int tensorY = (int)(tapUV.y * TensorHeight);
+    
+    // Ограничиваем координаты
+    tensorX = clamp(tensorX, 0, TensorWidth - 1);
+    tensorY = clamp(tensorY, 0, TensorHeight - 1);
+    
+    // Выполняем Argmax для данного пикселя
+    int bestClass = 0;
+    float maxLogit = -3.402823466e+38F; // float.MinValue
+    
+    for (int c = 0; c < NumClasses; c++)
+    {
+        // Вычисляем индекс в тензоре (предполагаем NCHW layout)
+        int2 texCoord = int2(tensorX + (c & 3) * TensorWidth, tensorY + (c >> 2) * TensorHeight);
+        
+        // Сэмплируем значение логита
+        float logit = InputTensor[texCoord].r;
+        
+        if (logit > maxLogit)
+        {
+            maxLogit = logit;
+            bestClass = c;
+        }
+    }
+    
+    // Записываем результат
+    Result[tapIndex] = bestClass;
+} 

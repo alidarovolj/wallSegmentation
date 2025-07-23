@@ -25,8 +25,12 @@ public class SegmentationManager : MonoBehaviour
       [SerializeField] private RawImage segmentationDisplay; // Changed from rawImage
       [SerializeField] private TextMeshProUGUI classNameText;
 
+      // [Header("Camera Feed")]
+      // [SerializeField] private CameraFeedCapture cameraFeedCapture; // Будет добавлено после компиляции
+
       [Header("Painting")]
       [SerializeField] private PaintManager paintManager; // Reference to the new PaintManager
+      // [SerializeField] private CommandManager commandManager; // Будет добавлено после компиляции
 
       [Header("Performance")]
       [Tooltip("How long the class name stays on screen in seconds.")]
@@ -56,8 +60,8 @@ public class SegmentationManager : MonoBehaviour
 
       // Processing state
       private Vector2Int imageSize;
-      private float[] lastTensorData; // Cached tensor data for tap handling
-      private TensorShape lastTensorShape; // Cached shape for tap handling
+      [HideInInspector] public float[] lastTensorData; // Cached tensor data for tap handling
+      [HideInInspector] public TensorShape lastTensorShape; // Cached shape for tap handling
       private int numClasses = 21;
       private bool isProcessing = false;
       private Coroutine displayNameCoroutine;
@@ -255,11 +259,15 @@ public class SegmentationManager : MonoBehaviour
             int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
             postProcessShader.Dispatch(postProcessKernel, threadGroupsX_post, threadGroupsY_post, 1);
 
-            // --- NEW: Update PaintManager every frame ---
-            if (paintManager != null)
-            {
-                  paintManager.UpdateSegmentationTexture(segmentationTexture);
-            }
+            // --- NEW: Глобальная шина данных для шейдеров ---
+            // Устанавливаем segmentationTexture как глобальную текстуру для всех шейдеров
+            Shader.SetGlobalTexture("_GlobalSegmentationTexture", segmentationTexture);
+
+            // Больше не нужно обновлять PaintManager напрямую - используем глобальные свойства
+            // if (paintManager != null)
+            // {
+            //       paintManager.UpdateSegmentationTexture(segmentationTexture);
+            // }
 
             Debug.Log("✅ Segmentation processing completed!");
             isProcessing = false;
@@ -287,6 +295,14 @@ public class SegmentationManager : MonoBehaviour
       {
             classIndexToPaint = -1;
             Debug.Log("🌈 Showing all classes");
+      }
+
+      // NEW: Метод для очистки покраски (используется UI)
+      public void ClearPainting()
+      {
+            classIndexToPaint = -1; // -1 означает "ничего не красить"
+            Shader.SetGlobalInt("_GlobalTargetClassID", classIndexToPaint);
+            Debug.Log("🧹 Покраска очищена");
       }
 
       public void ToggleTestMode()
@@ -392,15 +408,16 @@ public class SegmentationManager : MonoBehaviour
                   classIndexToPaint = tappedClass;
                   postProcessShader.SetInt("classIndexToPaint", classIndexToPaint);
 
-                  // --- NEW: Communicate with PaintManager ---
-                  if (paintManager != null)
-                  {
-                        // Tell the paint manager which class to paint
-                        paintManager.SetTargetClass(tappedClass);
+                  // --- NEW: Глобальная передача данных в шейдеры ---
+                  // Устанавливаем целевой класс как глобальную переменную для всех шейдеров
+                  Shader.SetGlobalInt("_GlobalTargetClassID", classIndexToPaint);
 
-                        // Pass the latest segmentation texture to the paint manager's material
-                        paintManager.UpdateSegmentationTexture(segmentationTexture);
-                  }
+                  // Больше не нужен прямой вызов PaintManager - все через глобальные свойства
+                  // if (paintManager != null)
+                  // {
+                  //       paintManager.SetTargetClass(tappedClass);
+                  //       paintManager.UpdateSegmentationTexture(segmentationTexture);
+                  // }
             }
       }
 
@@ -513,6 +530,33 @@ public class SegmentationManager : MonoBehaviour
             {
                   Destroy(testTexture);
             }
+      }
+
+      /// <summary>
+      /// Получить текущую текстуру сегментации для других компонентов
+      /// </summary>
+      public RenderTexture GetSegmentationTexture()
+      {
+            return segmentationTexture;
+      }
+
+      /// <summary>
+      /// Принудительно обновить отображение сегментации
+      /// </summary>
+      [ContextMenu("Force Update Segmentation Display")]
+      public void ForceUpdateSegmentationDisplay()
+      {
+            Debug.Log("🔄 Принудительное обновление отображения сегментации...");
+
+            if (segmentationDisplay != null && segmentationTexture != null)
+            {
+                  segmentationDisplay.texture = segmentationTexture;
+                  Debug.Log($"✅ Обновлен RawImage: {segmentationTexture.width}x{segmentationTexture.height}");
+            }
+
+            // Обновляем глобальные свойства
+            Shader.SetGlobalTexture("_GlobalSegmentationTexture", segmentationTexture);
+            Debug.Log("✅ Обновлены глобальные свойства шейдеров");
       }
 
       /// <summary>

@@ -1,0 +1,24 @@
+#pragma kernel CSMain
+
+// Входные данные
+Texture2D<float> CurrentFrameMask; // Маска сегментации текущего кадра (выход PostProcessShader)
+Texture2D<float> PreviousFrameMask; // Сглаженная маска предыдущего кадра
+
+// Выход
+RWTexture2D<float> Result; // Финальная сглаженная маска
+
+// Параметры
+float SmoothingFactor; // Коэффициент сглаживания (0.0 - 1.0)
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float currentVal = CurrentFrameMask[id.xy];
+    float previousVal = PreviousFrameMask[id.xy];
+
+    // Линейная интерполяция между предыдущим и текущим значением
+    // Чем выше SmoothingFactor, тем быстрее реакция на изменения
+    float smoothedVal = lerp(previousVal, currentVal, SmoothingFactor);
+
+    Result[id.xy] = smoothedVal;
+} 
