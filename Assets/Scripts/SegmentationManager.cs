@@ -34,12 +34,21 @@ public class SegmentationManager : MonoBehaviour
 
       [Header("Rendering")]
       [SerializeField] private ComputeShader postProcessShader;
-      [SerializeField] private int classIndexToPaint = -1; // Default to all classes
-      [SerializeField] private int classIndexToPaint2 = -1; // Second class to paint
       [SerializeField, Range(0.1f, 10f)] private float edgeHardness = 2.5f; // Controls edge smoothness
+      [SerializeField] private bool pixelPerfectSharpness = false; // Toggle for crisp, pixel-perfect edges
       [SerializeField] private Color paintColor = Color.blue;
       [SerializeField] private bool mirrorX = false;
       [SerializeField] private bool mirrorY = true;
+
+      [Header("Class Toggles")]
+      [Tooltip("Show all classes, ignoring toggles below.")]
+      public bool showAllClasses = false;
+      public bool showWall = true;
+      public bool showCeiling = true;
+      public bool showFloor = false;
+      public bool showChair = false;
+      public bool showTable = false;
+      public bool showDoor = false;
 
       [Header("Preprocessing")]
       [SerializeField] private ComputeShader preprocessorShader;
@@ -54,6 +63,8 @@ public class SegmentationManager : MonoBehaviour
       private RenderTexture segmentationTexture;
       private ComputeBuffer tensorDataBuffer;
       private ComputeBuffer colorMapBuffer;
+      private ComputeBuffer selectedClassesBuffer;
+      private List<int> selectedClasses = new List<int>();
       private int postProcessKernel;
 
       // Processing state
@@ -66,6 +77,15 @@ public class SegmentationManager : MonoBehaviour
 
       // Class names and colors
       private readonly List<Color> colorMap = new List<Color>();
+
+      // Class constants
+      private const int WALL_CLASS_INDEX = 0;
+      private const int FLOOR_CLASS_INDEX = 3;
+      private const int CEILING_CLASS_INDEX = 5;
+      private const int DOOR_CLASS_INDEX = 14;
+      private const int TABLE_CLASS_INDEX = 15;
+      private const int CHAIR_CLASS_INDEX = 19;
+
 
       void Start()
       {
@@ -157,6 +177,10 @@ public class SegmentationManager : MonoBehaviour
                   colorMapBuffer.SetData(colorMap);
                   postProcessShader.SetBuffer(postProcessKernel, "ColorMap", colorMapBuffer);
                   postProcessShader.SetInt("numClasses", colorMap.Count);
+
+                  // Buffer for selected classes
+                  selectedClassesBuffer = new ComputeBuffer(colorMap.Count, sizeof(int));
+                  postProcessShader.SetBuffer(postProcessKernel, "SelectedClasses", selectedClassesBuffer);
             }
 
             // Assign to UI
@@ -251,9 +275,8 @@ public class SegmentationManager : MonoBehaviour
             postProcessShader.SetInt("tensorHeight", shape[2]);
             this.numClasses = shape[1];
             postProcessShader.SetInt("numClasses", this.numClasses);
-            postProcessShader.SetInt("classIndexToPaint", classIndexToPaint);
-            postProcessShader.SetInt("classIndexToPaint2", classIndexToPaint2);
             postProcessShader.SetFloat("edgeHardness", edgeHardness);
+            postProcessShader.SetBool("pixelPerfect", pixelPerfectSharpness);
 
             int threadGroupsX_post = Mathf.CeilToInt(segmentationTexture.width / 8.0f);
             int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
@@ -275,32 +298,13 @@ public class SegmentationManager : MonoBehaviour
 
             tensorDataBuffer?.Release();
             colorMapBuffer?.Release();
+            selectedClassesBuffer?.Release();
 
             if (segmentationTexture != null) segmentationTexture.Release();
             if (preprocessedTexture != null) preprocessedTexture.Release();
       }
 
-      // Public methods for UI control
-      public void SetClassToPaint(int classIndex)
-      {
-            classIndexToPaint = classIndex;
-            classIndexToPaint2 = -1; // Reset second class
-            Debug.Log($"🎨 Class to paint set to: {classIndex}");
-      }
-
-      public void ShowAllClasses()
-      {
-            classIndexToPaint = -1;
-            classIndexToPaint2 = -1;
-            Debug.Log("🌈 Showing all classes");
-      }
-
-      public void ToggleTestMode()
-      {
-            // This method is no longer relevant as test mode is removed.
-            // Keeping it for now, but it will do nothing.
-            Debug.Log("🔄 ToggleTestMode called, but test mode is removed.");
-      }
+      // Public methods for UI control are removed as they are replaced by toggles.
 
       [ContextMenu("Test ML Model")]
       public void TestMLModel()
@@ -333,37 +337,38 @@ public class SegmentationManager : MonoBehaviour
             }
       }
 
-      [ContextMenu("Show Only Chairs")]
-      public void ShowOnlyChairs()
-      {
-            classIndexToPaint = 19; // ADE20K index for chair
-            classIndexToPaint2 = -1;
-            Debug.Log("🎨 Showing only: chair (19)");
-      }
-
-      [ContextMenu("Show Only Walls")]
-      public void ShowOnlyWalls()
-      {
-            classIndexToPaint = 0; // Correct ADE20K index for 'wall' is 0 for this model
-            classIndexToPaint2 = -1;
-            Debug.Log("🎨 Showing only: wall (0)");
-      }
-
-      [ContextMenu("Show Walls and Floor")]
-      public void ShowWallsAndFloor()
-      {
-          classIndexToPaint = 0; // wall
-          classIndexToPaint2 = 3; // floor
-          Debug.Log("🎨 Showing only: wall (0) and floor (3)");
-      }
-
       // =====================================================
-      // INTERACTIVE TAP HANDLING
+      // INTERACTIVE TAP HANDLING & CLASS SELECTION
       // =====================================================
 
       private void Update()
       {
             HandleTap();
+            UpdateSelectedClasses();
+      }
+
+      private void UpdateSelectedClasses()
+      {
+            selectedClasses.Clear();
+            if (showAllClasses)
+            {
+                  // When showing all, we pass 0 to numSelectedClasses, and the shader will handle it.
+            }
+            else
+            {
+                  if (showWall) selectedClasses.Add(WALL_CLASS_INDEX);
+                  if (showCeiling) selectedClasses.Add(CEILING_CLASS_INDEX);
+                  if (showFloor) selectedClasses.Add(FLOOR_CLASS_INDEX);
+                  if (showChair) selectedClasses.Add(CHAIR_CLASS_INDEX);
+                  if (showTable) selectedClasses.Add(TABLE_CLASS_INDEX);
+                  if (showDoor) selectedClasses.Add(DOOR_CLASS_INDEX);
+            }
+
+            if (selectedClasses.Count > 0)
+            {
+                  selectedClassesBuffer.SetData(selectedClasses);
+            }
+            postProcessShader.SetInt("numSelectedClasses", selectedClasses.Count);
       }
 
       private void HandleTap()
@@ -375,13 +380,10 @@ public class SegmentationManager : MonoBehaviour
                   Vector2 screenPos = Input.mousePosition;
 
                   // Convert screen position to UV coordinates (0-1 range)
-                  // Note: This assumes the segmentationDisplay RawImage covers the full screen.
-                  // If not, you'll need RectTransformUtility.ScreenPointToLocalPointInRectangle.
                   float uv_x = screenPos.x / Screen.width;
                   float uv_y = screenPos.y / Screen.height;
 
-                  // Flip coordinates to match our shader logic if necessary
-                  // Based on our last fix, both are inverted.
+                  // Flip coordinates
                   uv_x = 1.0f - uv_x;
                   uv_y = 1.0f - uv_y;
 
@@ -409,12 +411,16 @@ public class SegmentationManager : MonoBehaviour
                         }
                   }
 
-                  Debug.Log($"Tapped on class: {tappedClass}. Setting it as the target for painting.");
+                  Debug.Log($"Tapped on class: {tappedClass} ({ColorMap.GetClassName(tappedClass)}). Setting it as the only visible class.");
 
-                  // Set the class index to be painted in the post-process shader
-                  classIndexToPaint = tappedClass;
-                  postProcessShader.SetInt("classIndexToPaint", classIndexToPaint);
-                  postProcessShader.SetInt("classIndexToPaint2", -1); // Reset second class on tap
+                  // Uncheck 'Show All' and set the toggles based on the tapped class
+                  showAllClasses = false;
+                  showWall = (tappedClass == WALL_CLASS_INDEX);
+                  showCeiling = (tappedClass == CEILING_CLASS_INDEX);
+                  showFloor = (tappedClass == FLOOR_CLASS_INDEX);
+                  showChair = (tappedClass == CHAIR_CLASS_INDEX);
+                  showTable = (tappedClass == TABLE_CLASS_INDEX);
+                  showDoor = (tappedClass == DOOR_CLASS_INDEX);
 
                   // --- NEW: Communicate with PaintManager ---
                   if (paintManager != null)
@@ -766,13 +772,5 @@ public class SegmentationManager : MonoBehaviour
             Debug.Log($"   Try: MirrorX=true, MirrorY=false (only horizontal)");
             Debug.Log($"   Try: MirrorX=false, MirrorY=false (no mirrors)");
             Debug.Log("💡 Change values in inspector and restart play mode to test each combination.");
-      }
-
-      [ContextMenu("Diagnose Vertical Lines")]
-      private void DiagnoseVerticalLines()
-      {
-            // This method needs to be adapted to read from the latest processed data
-            // For now, it will just log a warning.
-            Debug.LogWarning("⚠️ DiagnoseVerticalLines is not fully functional with new async processing.");
       }
 }

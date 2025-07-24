@@ -5,9 +5,9 @@ using TMPro;
 public class PerformanceControlUI : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Button extremeOptimizationButton;
-    [SerializeField] private Button pauseModelButton;
-    [SerializeField] private Button forceRunButton;
+    [SerializeField] private Button showWallsAndCeilingButton;
+    [SerializeField] private Button showFurnishingButton;
+    [SerializeField] private Button showAllButton;
     [SerializeField] private Slider maxProcessingTimeSlider;
     [SerializeField] private TextMeshProUGUI maxTimeLabel;
     [SerializeField] private Toggle autoOptimizationToggle;
@@ -36,30 +36,19 @@ public class PerformanceControlUI : MonoBehaviour
     private void SetupUI()
     {
         // Setup buttons for Sentis 2.0 SegmentationManager
-        if (extremeOptimizationButton != null)
+        if (showWallsAndCeilingButton != null)
         {
-            extremeOptimizationButton.onClick.AddListener(() =>
-            {
-                segmentationManager.ToggleTestMode();
-                UpdateButtonText();
-            });
+            showWallsAndCeilingButton.onClick.AddListener(SelectWallsAndCeiling);
         }
 
-        if (pauseModelButton != null)
+        if (showFurnishingButton != null)
         {
-            pauseModelButton.onClick.AddListener(() =>
-            {
-                segmentationManager.ShowAllClasses();
-                UpdateButtonText();
-            });
+            showFurnishingButton.onClick.AddListener(SelectFurnishings);
         }
 
-        if (forceRunButton != null)
+        if (showAllButton != null)
         {
-            forceRunButton.onClick.AddListener(() =>
-            {
-                segmentationManager.SetClassToPaint(15); // Show person class
-            });
+            showAllButton.onClick.AddListener(SelectAllClasses);
         }
 
         // Setup slider
@@ -94,9 +83,38 @@ public class PerformanceControlUI : MonoBehaviour
         {
             qualityButton.onClick.AddListener(ApplyQualitySettings);
         }
-
-        UpdateButtonText();
     }
+
+    private void SelectWallsAndCeiling()
+    {
+        segmentationManager.showAllClasses = false;
+        segmentationManager.showWall = true;
+        segmentationManager.showCeiling = true;
+        segmentationManager.showFloor = true;
+        segmentationManager.showChair = false;
+        segmentationManager.showTable = false;
+        segmentationManager.showDoor = false;
+        Debug.Log("UI: Selected Walls, Ceiling, and Floor.");
+    }
+
+    private void SelectFurnishings()
+    {
+        segmentationManager.showAllClasses = false;
+        segmentationManager.showWall = false;
+        segmentationManager.showCeiling = false;
+        segmentationManager.showFloor = false;
+        segmentationManager.showChair = true;
+        segmentationManager.showTable = true;
+        segmentationManager.showDoor = true;
+        Debug.Log("UI: Selected Furnishings (Chair, Table, Door).");
+    }
+
+    private void SelectAllClasses()
+    {
+        segmentationManager.showAllClasses = true;
+        Debug.Log("UI: Selected All Classes.");
+    }
+
 
     private void OnMaxProcessingTimeChanged(float value)
     {
@@ -117,94 +135,68 @@ public class PerformanceControlUI : MonoBehaviour
         }
     }
 
-    private void UpdateButtonText()
-    {
-        // Update button texts based on current state
-        // This is basic - you could make it more sophisticated
-        if (extremeOptimizationButton != null)
-        {
-            var textComponent = extremeOptimizationButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (textComponent != null)
-            {
-                textComponent.text = "Toggle Extreme Mode";
-            }
-        }
-
-        if (pauseModelButton != null)
-        {
-            var textComponent = pauseModelButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (textComponent != null)
-            {
-                textComponent.text = "Toggle Pause";
-            }
-        }
-    }
-
     // Quick setting presets
     private void ApplyUltraFastSettings()
     {
         Debug.Log("Applying ULTRA FAST settings");
 
-        // Enable extreme optimization (Sentis 2.0: Toggle test mode)
-        segmentationManager.ToggleTestMode();
+        SelectWallsAndCeiling(); // Show structural elements for speed
 
-        // Set very low processing time threshold
         if (maxProcessingTimeSlider != null)
         {
             maxProcessingTimeSlider.value = 100f;
             OnMaxProcessingTimeChanged(100f);
         }
 
-        // Enable auto-optimization
         if (autoOptimizationToggle != null)
         {
             autoOptimizationToggle.isOn = true;
             OnAutoOptimizationChanged(true);
         }
 
-        Debug.Log("✅ Ultra Fast mode applied: Extreme optimization ON, 100ms max processing, Auto-optimization ON");
+        Debug.Log("✅ Ultra Fast mode applied: Structural elements, 100ms max processing, Auto-optimization ON");
     }
 
     private void ApplyBalancedSettings()
     {
         Debug.Log("Applying BALANCED settings");
 
-        // Set moderate processing time
+        SelectAllClasses(); // Show everything
+
         if (maxProcessingTimeSlider != null)
         {
             maxProcessingTimeSlider.value = 200f;
             OnMaxProcessingTimeChanged(200f);
         }
 
-        // Enable auto-optimization
         if (autoOptimizationToggle != null)
         {
             autoOptimizationToggle.isOn = true;
             OnAutoOptimizationChanged(true);
         }
 
-        Debug.Log("✅ Balanced mode applied: 200ms max processing, Auto-optimization ON");
+        Debug.Log("✅ Balanced mode applied: All classes, 200ms max processing, Auto-optimization ON");
     }
 
     private void ApplyQualitySettings()
     {
         Debug.Log("Applying QUALITY settings");
 
-        // Allow longer processing time for better quality
+        SelectAllClasses(); // Show everything
+
         if (maxProcessingTimeSlider != null)
         {
             maxProcessingTimeSlider.value = 400f;
             OnMaxProcessingTimeChanged(400f);
         }
 
-        // Disable auto-optimization to prevent quality reduction
         if (autoOptimizationToggle != null)
         {
             autoOptimizationToggle.isOn = false;
             OnAutoOptimizationChanged(false);
         }
 
-        Debug.Log("✅ Quality mode applied: 400ms max processing, Auto-optimization OFF");
+        Debug.Log("✅ Quality mode applied: All classes, 400ms max processing, Auto-optimization OFF");
     }
 
     // Public methods for external control
@@ -215,18 +207,5 @@ public class PerformanceControlUI : MonoBehaviour
             maxProcessingTimeSlider.value = timeMs;
             OnMaxProcessingTimeChanged(timeMs);
         }
-    }
-
-    public void PauseModel()
-    {
-        segmentationManager.ShowAllClasses(); // Sentis 2.0: Show all classes instead
-        UpdateButtonText();
-    }
-
-    public void EnableExtremeMode(bool enable)
-    {
-        // This would need to track current state to toggle correctly
-        segmentationManager.ToggleTestMode(); // Sentis 2.0: Toggle test mode for optimization
-        UpdateButtonText();
     }
 }

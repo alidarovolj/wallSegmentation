@@ -9,13 +9,16 @@ RWTexture2D<float4> OutputTexture;
 // Color map for classes
 StructuredBuffer<float4> ColorMap;
 
+// Selected classes to display
+StructuredBuffer<int> SelectedClasses;
+int numSelectedClasses;
+
 // Tensor dimensions and rendering parameters
 int tensorWidth;
 int tensorHeight;
 int numClasses;
-int classIndexToPaint;
-int classIndexToPaint2;
 float edgeHardness; // Controls the smoothness of edges
+bool pixelPerfect; // Toggle for crisp, pixel-perfect edges
 
 // Find the two most dominant classes for a given pixel
 void FindTopTwoClasses(uint2 tensorCoord, out int topClass, out int secondClass, out float topLogit, out float secondLogit)
@@ -56,66 +59,119 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    // --- High-Quality Upscaling and Edge Smoothing ---
     float2 uv = float2((float)id.x / (float)outputWidth, (float)id.y / (float)outputHeight);
-    float2 tensorUV = float2(1.0f - uv.x, 1.0f - uv.y) * float2(tensorWidth, tensorHeight);
+    float2 tensorUV_raw = float2(1.0f - uv.x, 1.0f - uv.y) * float2(tensorWidth, tensorHeight);
 
-    // Get the integer and fractional parts of the tensor coordinate
-    float2 tensorCoord_f = floor(tensorUV - 0.5f);
-    float2 t = tensorUV - 0.5f - tensorCoord_f; // Interpolation factor
-
-    // Bilinear interpolation for smoother results
-    float4 finalColor = float4(0, 0, 0, 0);
-    for (int j = 0; j <= 1; j++)
+    if (pixelPerfect)
     {
-        for (int i = 0; i <= 1; i++)
+        // --- Pixel-Perfect Path (No Blending) ---
+        uint2 sampleCoord = uint2(floor(tensorUV_raw));
+        sampleCoord.x = clamp(sampleCoord.x, 0, tensorWidth - 1);
+        sampleCoord.y = clamp(sampleCoord.y, 0, tensorHeight - 1);
+
+        int topClass, secondClass;
+        float topLogit, secondLogit;
+        FindTopTwoClasses(sampleCoord, topClass, secondClass, topLogit, secondLogit);
+
+        float4 finalColor = ColorMap[topClass];
+
+        bool isTopClassSelected = false;
+        if (numSelectedClasses > 0)
         {
-            uint2 sampleCoord = uint2(tensorCoord_f) + uint2(i, j);
-            
-            // Clamp coordinates to be within tensor bounds
-            sampleCoord.x = clamp(sampleCoord.x, 0, tensorWidth - 1);
-            sampleCoord.y = clamp(sampleCoord.y, 0, tensorHeight - 1);
-
-            int topClass, secondClass;
-            float topLogit, secondLogit;
-            FindTopTwoClasses(sampleCoord, topClass, secondClass, topLogit, secondLogit);
-            
-            // --- Edge blending factor ---
-            float diff = abs(topLogit - secondLogit);
-            float blendFactor = 1.0f - exp(-diff * edgeHardness);
-            blendFactor = pow(blendFactor, 1.5); // Tweak to control falloff
-
-            // Get colors for the top two classes
-            float4 color1 = ColorMap[topClass];
-            float4 color2 = ColorMap[secondClass];
-
-            // Mix the colors based on the blend factor
-            float4 mixedColor = lerp(color2, color1, blendFactor);
-            
-            // --- Apply Highlighting ---
-            bool isTopClassSelected = (classIndexToPaint != -1 && topClass == classIndexToPaint) || (classIndexToPaint2 != -1 && topClass == classIndexToPaint2);
-            bool anyClassSelected = classIndexToPaint != -1 || classIndexToPaint2 != -1;
-
-            float alpha = 0.0f;
-            if (anyClassSelected)
+            for (int k = 0; k < numSelectedClasses; k++)
             {
-                if (isTopClassSelected)
+                if (topClass == SelectedClasses[k])
                 {
-                    alpha = lerp(0.0f, 0.9f, blendFactor); // Fade in based on confidence
+                    isTopClassSelected = true;
+                    break;
                 }
             }
-            else // Show all classes semi-transparent
-            {
-                alpha = lerp(0.3f, 0.7f, blendFactor); // Blend between two transparencies
-            }
-
-            mixedColor.a = alpha;
-
-            // Bilinear interpolation weight
-            float weight = (1 - abs(t.x - i)) * (1 - abs(t.y - j));
-            finalColor += weight * mixedColor;
         }
+
+        float alpha = 0.0f;
+        if (numSelectedClasses > 0)
+        {
+            if (isTopClassSelected) { alpha = 0.85f; } // Solid alpha for selected
+        }
+        else
+        {
+            alpha = 0.7f; // Solid alpha for all classes
+        }
+        finalColor.a = alpha;
+
+        OutputTexture[id.xy] = finalColor;
     }
-    
-    OutputTexture[id.xy] = finalColor;
+    else
+    {
+        // --- High-Quality Upscaling and Edge Smoothing Path ---
+        float2 tensorUV = tensorUV_raw;
+        // Get the integer and fractional parts of the tensor coordinate
+        float2 tensorCoord_f = floor(tensorUV - 0.5f);
+        float2 t = tensorUV - 0.5f - tensorCoord_f; // Interpolation factor
+
+        // Bilinear interpolation for smoother results
+        float4 finalColor = float4(0, 0, 0, 0);
+        for (int j = 0; j <= 1; j++)
+        {
+            for (int i = 0; i <= 1; i++)
+            {
+                uint2 sampleCoord = uint2(tensorCoord_f) + uint2(i, j);
+                
+                // Clamp coordinates to be within tensor bounds
+                sampleCoord.x = clamp(sampleCoord.x, 0, tensorWidth - 1);
+                sampleCoord.y = clamp(sampleCoord.y, 0, tensorHeight - 1);
+
+                int topClass, secondClass;
+                float topLogit, secondLogit;
+                FindTopTwoClasses(sampleCoord, topClass, secondClass, topLogit, secondLogit);
+                
+                // --- Edge blending factor ---
+                float diff = abs(topLogit - secondLogit);
+                float blendFactor = 1.0f - exp(-diff * edgeHardness);
+                blendFactor = pow(abs(blendFactor), 1.5); // Tweak to control falloff
+
+                // Get colors for the top two classes
+                float4 color1 = ColorMap[topClass];
+                float4 color2 = ColorMap[secondClass];
+
+                // Mix the colors based on the blend factor
+                float4 mixedColor = lerp(color2, color1, blendFactor);
+                
+                // --- Apply Highlighting ---
+                bool isTopClassSelected = false;
+                if (numSelectedClasses > 0)
+                {
+                    for (int k = 0; k < numSelectedClasses; k++)
+                    {
+                        if (topClass == SelectedClasses[k])
+                        {
+                            isTopClassSelected = true;
+                            break;
+                        }
+                    }
+                }
+
+                float alpha = 0.0f;
+                if (numSelectedClasses > 0)
+                {
+                    if (isTopClassSelected)
+                    {
+                        alpha = lerp(0.5f, 0.95f, blendFactor); // Fade in based on confidence - MORE OPAQUE
+                    }
+                }
+                else // Show all classes semi-transparent (if numSelectedClasses is 0)
+                {
+                    alpha = lerp(0.4f, 0.8f, blendFactor); // Blend between two transparencies - MORE OPAQUE
+                }
+
+                mixedColor.a = alpha;
+
+                // Bilinear interpolation weight
+                float weight = (1 - abs(t.x - i)) * (1 - abs(t.y - j));
+                finalColor += weight * mixedColor;
+            }
+        }
+        
+        OutputTexture[id.xy] = finalColor;
+    }
 } 

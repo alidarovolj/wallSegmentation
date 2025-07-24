@@ -93,21 +93,21 @@ F4 - Enable extreme optimization
         GUI.Label(new Rect(10, 10, 400, 300), performanceText, labelStyle);
 
         // Быстрые кнопки действий для SegmentationManager
-        if (GUI.Button(new Rect(10, 320, 150, 30), "🎯 Test Mode"))
+        if (GUI.Button(new Rect(10, 320, 150, 30), "Show Selected"))
         {
             var segmentationManager = FindFirstObjectByType<SegmentationManager>();
             if (segmentationManager != null)
             {
-                segmentationManager.ToggleTestMode();
+                segmentationManager.showAllClasses = false;
             }
         }
 
-        if (GUI.Button(new Rect(170, 320, 150, 30), "🌈 All Classes"))
+        if (GUI.Button(new Rect(170, 320, 150, 30), "Show All Classes"))
         {
             var segmentationManager = FindFirstObjectByType<SegmentationManager>();
             if (segmentationManager != null)
             {
-                segmentationManager.ShowAllClasses();
+                segmentationManager.showAllClasses = true;
             }
         }
     }
