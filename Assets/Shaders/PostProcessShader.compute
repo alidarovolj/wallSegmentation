@@ -18,7 +18,7 @@ int tensorWidth;
 int tensorHeight;
 int numClasses;
 float edgeHardness; // Controls the smoothness of edges
-bool pixelPerfect; // Toggle for crisp, pixel-perfect edges
+bool pixelPerfect = false; // Toggle for crisp, pixel-perfect edges
 
 // Find the two most dominant classes for a given pixel
 void FindTopTwoClasses(uint2 tensorCoord, out int topClass, out int secondClass, out float topLogit, out float secondLogit)
@@ -128,7 +128,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
                 // --- Edge blending factor ---
                 float diff = abs(topLogit - secondLogit);
                 float blendFactor = 1.0f - exp(-diff * edgeHardness);
-                blendFactor = pow(abs(blendFactor), 1.5); // Tweak to control falloff
+                blendFactor = pow(abs(blendFactor), 2.2); // Sharpen the falloff for crisper edges
 
                 // Get colors for the top two classes
                 float4 color1 = ColorMap[topClass];

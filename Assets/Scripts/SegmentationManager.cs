@@ -34,7 +34,7 @@ public class SegmentationManager : MonoBehaviour
 
       [Header("Rendering")]
       [SerializeField] private ComputeShader postProcessShader;
-      [SerializeField, Range(0.1f, 10f)] private float edgeHardness = 2.5f; // Controls edge smoothness
+      [SerializeField, Range(0.1f, 10f)] private float edgeHardness = 8f; // Increased for sharper edges
       [SerializeField] private bool pixelPerfectSharpness = false; // Toggle for crisp, pixel-perfect edges
       [SerializeField] private Color paintColor = Color.blue;
       [SerializeField] private bool mirrorX = false;
@@ -86,6 +86,32 @@ public class SegmentationManager : MonoBehaviour
       private const int TABLE_CLASS_INDEX = 15;
       private const int CHAIR_CLASS_INDEX = 19;
 
+      [Header("Debug & Testing")]
+      [Tooltip("Enable test mode with simulated segmentation data (bypass AR camera)")]
+      public bool enableTestMode = false;
+      
+      private bool lastTestModeState = false;
+
+
+      /// <summary>
+      /// Sets the paint color from an external script, like the color palette.
+      /// </summary>
+      /// <param name="newColor">The new color to use for painting.</param>
+      public void SetPaintColor(Color newColor)
+      {
+            paintColor = newColor;
+            // We might need to update the shader uniform here if it's used directly for painting.
+            // For now, let's assume the PaintManager handles this.
+            Debug.Log($"🎨 Paint color changed to: {newColor}");
+
+            // If paintManager exists, let it know about the new color
+            if (paintManager != null)
+            {
+                // This assumes PaintManager has a method to set the color.
+                // We'll need to check PaintManager and potentially add this method.
+                paintManager.SetPaintColor(newColor); 
+            }
+      }
 
       void Start()
       {
@@ -134,16 +160,25 @@ public class SegmentationManager : MonoBehaviour
 
       private void DetermineInputResolution()
       {
+            const int minResolution = 384;
             if (overrideResolution.x > 0 && overrideResolution.y > 0)
             {
-                  imageSize = overrideResolution;
-                  Debug.Log($"✅ Using override resolution: {imageSize}");
+                  if (overrideResolution.x < minResolution || overrideResolution.y < minResolution)
+                  {
+                      Debug.LogWarning($"⚠️ Override resolution {overrideResolution} is low for good quality. Forcing {minResolution}x{minResolution}.");
+                      imageSize = new Vector2Int(minResolution, minResolution);
+                  }
+                  else
+                  {
+                      imageSize = overrideResolution;
+                      Debug.Log($"✅ Using override resolution: {imageSize}");
+                  }
             }
             else
             {
-                  // Fallback for safety, though override should always be set.
-                  imageSize = new Vector2Int(512, 512);
-                  Debug.LogWarning("⚠️ Override resolution not set. Using fallback 512x512.");
+                  // Fallback for safety.
+                  imageSize = new Vector2Int(minResolution, minResolution);
+                  Debug.LogWarning($"⚠️ Override resolution not set. Using fallback {minResolution}x{minResolution}.");
             }
       }
 
@@ -195,6 +230,12 @@ public class SegmentationManager : MonoBehaviour
 
       private void OnCameraFrameReceived(ARCameraFrameEventArgs eventArgs)
       {
+            // Пропускаем AR-обработку в тестовом режиме
+            if (enableTestMode)
+            {
+                  return;
+            }
+
             if (isProcessing || worker == null) return;
 
             if (!arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage image))
@@ -208,7 +249,7 @@ public class SegmentationManager : MonoBehaviour
       private IEnumerator ProcessFrame(XRCpuImage image)
       {
             isProcessing = true;
-            Debug.Log("🔄 Starting camera image processing...");
+            // Debug.Log("🔄 Starting camera image processing..."); // Removed for performance
 
             var conversionParams = new XRCpuImage.ConversionParams
             {
@@ -237,7 +278,7 @@ public class SegmentationManager : MonoBehaviour
             }
             Destroy(texture);
 
-            yield return new WaitForEndOfFrame();
+            // yield return new WaitForEndOfFrame(); // Removed to reduce latency
 
             var outputTensor = worker.PeekOutput() as Tensor<float>;
             if (outputTensor == null)
@@ -288,7 +329,7 @@ public class SegmentationManager : MonoBehaviour
                   paintManager.UpdateSegmentationTexture(segmentationTexture);
             }
 
-            Debug.Log("✅ Segmentation processing completed!");
+            // Debug.Log("✅ Segmentation processing completed!"); // Removed for performance
             isProcessing = false;
       }
 
@@ -343,6 +384,27 @@ public class SegmentationManager : MonoBehaviour
 
       private void Update()
       {
+            // Check if test mode checkbox changed
+            if (enableTestMode != lastTestModeState)
+            {
+                  lastTestModeState = enableTestMode;
+                  
+                  if (enableTestMode)
+                  {
+                        Debug.Log("🧪 Test Mode enabled via checkbox");
+                        TestPaintingMode();
+                  }
+                  else
+                  {
+                        Debug.Log("🔄 Test Mode disabled - returning to normal AR mode");
+                        // Restore normal segmentation texture
+                        if (segmentationDisplay != null)
+                        {
+                              segmentationDisplay.texture = segmentationTexture;
+                        }
+                  }
+            }
+
             HandleTap();
             UpdateSelectedClasses();
       }
@@ -373,7 +435,8 @@ public class SegmentationManager : MonoBehaviour
 
       private void HandleTap()
       {
-            if (Input.GetMouseButtonDown(0))
+            // --- MODIFIED: Check if pointer is over a UI element ---
+            if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
                   if (lastTensorData == null || lastTensorShape.rank == 0) return;
 
@@ -772,5 +835,182 @@ public class SegmentationManager : MonoBehaviour
             Debug.Log($"   Try: MirrorX=true, MirrorY=false (only horizontal)");
             Debug.Log($"   Try: MirrorX=false, MirrorY=false (no mirrors)");
             Debug.Log("💡 Change values in inspector and restart play mode to test each combination.");
+      }
+
+      /// <summary>
+      /// Public method to activate test mode - can be called from UI buttons
+      /// </summary>
+      public void ActivateTestMode()
+      {
+            TestPaintingMode();
+      }
+
+      [ContextMenu("Test Painting Mode")]
+      private void TestPaintingMode()
+      {
+            Debug.Log("🎨 Activating Test Painting Mode...");
+            StartCoroutine(CreateTestSegmentationData());
+      }
+
+      private IEnumerator CreateTestSegmentationData()
+      {
+            // 1. Создаем простую тестовую картинку с разными зонами
+            var testTexture = new Texture2D(imageSize.x, imageSize.y, TextureFormat.RGBA32, false);
+            var pixels = new Color32[imageSize.x * imageSize.y];
+
+            for (int y = 0; y < imageSize.y; y++)
+            {
+                  for (int x = 0; x < imageSize.x; x++)
+                  {
+                        int index = y * imageSize.x + x;
+                        
+                        // Создаем простую картинку с разными зонами
+                        if (x < imageSize.x / 3)
+                        {
+                              // Левая треть - "стена" (серый)
+                              pixels[index] = new Color32(128, 128, 128, 255);
+                        }
+                        else if (x < (imageSize.x * 2) / 3)
+                        {
+                              // Средняя треть - "пол" (коричневый)
+                              pixels[index] = new Color32(139, 69, 19, 255);
+                        }
+                        else
+                        {
+                              // Правая треть - "потолок" (белый)
+                              pixels[index] = new Color32(255, 255, 255, 255);
+                        }
+                  }
+            }
+
+            testTexture.SetPixels32(pixels);
+            testTexture.Apply();
+
+            // 2. Устанавливаем эту картинку как фон
+            if (segmentationDisplay != null)
+            {
+                  segmentationDisplay.texture = testTexture;
+                  Debug.Log("✅ Test background image set to segmentationDisplay");
+            }
+
+            // 3. Создаем тестовые данные сегментации
+            CreateTestSegmentationMask();
+
+            yield return null;
+
+            Debug.Log("🎯 Test Painting Mode activated!");
+            Debug.Log("🖱️ Click anywhere to test painting:");
+            Debug.Log("   • Entire screen = Wall (class 0)");
+      }
+
+      private void CreateTestSegmentationMask()
+      {
+            // Создаем простые тестовые данные для сегментации
+            int totalPixels = imageSize.x * imageSize.y;
+            float[] testTensorData = new float[totalPixels * numClasses];
+
+            for (int y = 0; y < imageSize.y; y++)
+            {
+                  for (int x = 0; x < imageSize.x; x++)
+                  {
+                        int pixelIndex = y * imageSize.x + x;
+                        
+                        // ИЗМЕНЕНО: Весь экран теперь class 0 (wall) для простого тестирования
+                        int targetClass = WALL_CLASS_INDEX; // Весь экран = стена
+                        
+                        // Заполняем тензор данными (логиты для каждого класса)
+                        for (int c = 0; c < numClasses; c++)
+                        {
+                              int tensorIndex = c * totalPixels + pixelIndex;
+                              
+                              if (c == targetClass)
+                              {
+                                    // Высокий логит для целевого класса
+                                    testTensorData[tensorIndex] = 10.0f;
+                              }
+                              else
+                              {
+                                    // Низкий логит для остальных классов
+                                    testTensorData[tensorIndex] = -10.0f;
+                              }
+                        }
+                  }
+            }
+
+            // Сохраняем тестовые данные как "последние полученные"
+            lastTensorData = testTensorData;
+            lastTensorShape = new TensorShape(1, numClasses, imageSize.y, imageSize.x);
+
+            // Обновляем compute shader с тестовыми данными
+            if (tensorDataBuffer == null || tensorDataBuffer.count != testTensorData.Length)
+            {
+                  tensorDataBuffer?.Dispose();
+                  tensorDataBuffer = new ComputeBuffer(testTensorData.Length, sizeof(float));
+                  postProcessShader.SetBuffer(postProcessKernel, "TensorData", tensorDataBuffer);
+            }
+            tensorDataBuffer.SetData(testTensorData);
+
+            postProcessShader.SetInt("tensorWidth", imageSize.x);
+            postProcessShader.SetInt("tensorHeight", imageSize.y);
+            postProcessShader.SetInt("numClasses", numClasses);
+            postProcessShader.SetFloat("edgeHardness", edgeHardness);
+            postProcessShader.SetBool("pixelPerfect", pixelPerfectSharpness);
+
+            // Запускаем compute shader для создания тестовой маски
+            int threadGroupsX_post = Mathf.CeilToInt(segmentationTexture.width / 8.0f);
+            int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
+            postProcessShader.Dispatch(postProcessKernel, threadGroupsX_post, threadGroupsY_post, 1);
+
+            // Обновляем PaintManager
+            if (paintManager != null)
+            {
+                  paintManager.UpdateSegmentationTexture(segmentationTexture);
+                  
+                  // Создаем тестовый меш для покраски
+                  CreateTestPaintMesh();
+            }
+
+            Debug.Log("✅ Test segmentation data created and set up");
+            Debug.Log("🎯 IMPORTANT: Entire screen is now class 0 (wall). Click anywhere and select class 0 to see painting!");
+      }
+
+      private void CreateTestPaintMesh()
+      {
+            // Создаем простой куб для тестирования покраски
+            GameObject testCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            testCube.name = "TestPaintCube";
+            
+            // Позиционируем куб прямо перед камерой
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                  Vector3 forward = mainCamera.transform.forward;
+                  testCube.transform.position = mainCamera.transform.position + forward * 3f;
+                  testCube.transform.localScale = Vector3.one * 1.5f;
+                  Debug.Log($"🧊 Test cube positioned at: {testCube.transform.position}");
+            }
+            else
+            {
+                  testCube.transform.position = new Vector3(0, 0, 2); // Fallback position
+                  testCube.transform.localScale = Vector3.one * 1.5f;
+                  Debug.Log("⚠️ Main camera not found, using fallback position");
+            }
+            
+            // Получаем MeshFilter
+            MeshFilter meshFilter = testCube.GetComponent<MeshFilter>();
+            
+            if (meshFilter != null && paintManager != null)
+            {
+                  // Добавляем тестовый меш в PaintManager
+                  paintManager.AddTestMesh(meshFilter);
+                  Debug.Log("🧊 Test cube created and added to PaintManager");
+                  
+                  // Дополнительная диагностика
+                  MeshRenderer meshRenderer = testCube.GetComponent<MeshRenderer>();
+                  if (meshRenderer != null)
+                  {
+                        Debug.Log($"🎭 Original cube material: {meshRenderer.material.name}");
+                  }
+            }
       }
 }
