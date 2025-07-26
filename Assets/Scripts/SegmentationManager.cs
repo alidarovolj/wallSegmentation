@@ -26,7 +26,7 @@ public class SegmentationManager : MonoBehaviour
       [SerializeField] private TextMeshProUGUI classNameText;
 
       [Header("Painting")]
-      [SerializeField] private PaintManager paintManager; // Reference to the new PaintManager
+      [SerializeField] private Color paintColor = Color.blue;
 
       [Header("Performance")]
       [Tooltip("How long the class name stays on screen in seconds.")]
@@ -36,7 +36,6 @@ public class SegmentationManager : MonoBehaviour
       [SerializeField] private ComputeShader postProcessShader;
       [SerializeField, Range(0.1f, 10f)] private float edgeHardness = 8f; // Increased for sharper edges
       [SerializeField] private bool pixelPerfectSharpness = false; // Toggle for crisp, pixel-perfect edges
-      [SerializeField] private Color paintColor = Color.blue;
       [SerializeField] private bool mirrorX = false;
       [SerializeField] private bool mirrorY = true;
 
@@ -89,9 +88,10 @@ public class SegmentationManager : MonoBehaviour
       [Header("Debug & Testing")]
       [Tooltip("Enable test mode with simulated segmentation data (bypass AR camera)")]
       public bool enableTestMode = false;
-      
       private bool lastTestModeState = false;
 
+      // --- НОВАЯ ЛОГИКА ПОКРАСКИ ---
+      private int classToPaint = -1; // -1 означает, что ничего не красим
 
       /// <summary>
       /// Sets the paint color from an external script, like the color palette.
@@ -100,17 +100,7 @@ public class SegmentationManager : MonoBehaviour
       public void SetPaintColor(Color newColor)
       {
             paintColor = newColor;
-            // We might need to update the shader uniform here if it's used directly for painting.
-            // For now, let's assume the PaintManager handles this.
             Debug.Log($"🎨 Paint color changed to: {newColor}");
-
-            // If paintManager exists, let it know about the new color
-            if (paintManager != null)
-            {
-                // This assumes PaintManager has a method to set the color.
-                // We'll need to check PaintManager and potentially add this method.
-                paintManager.SetPaintColor(newColor); 
-            }
       }
 
       void Start()
@@ -165,13 +155,13 @@ public class SegmentationManager : MonoBehaviour
             {
                   if (overrideResolution.x < minResolution || overrideResolution.y < minResolution)
                   {
-                      Debug.LogWarning($"⚠️ Override resolution {overrideResolution} is low for good quality. Forcing {minResolution}x{minResolution}.");
-                      imageSize = new Vector2Int(minResolution, minResolution);
+                        Debug.LogWarning($"⚠️ Override resolution {overrideResolution} is low for good quality. Forcing {minResolution}x{minResolution}.");
+                        imageSize = new Vector2Int(minResolution, minResolution);
                   }
                   else
                   {
-                      imageSize = overrideResolution;
-                      Debug.Log($"✅ Using override resolution: {imageSize}");
+                        imageSize = overrideResolution;
+                        Debug.Log($"✅ Using override resolution: {imageSize}");
                   }
             }
             else
@@ -319,17 +309,14 @@ public class SegmentationManager : MonoBehaviour
             postProcessShader.SetFloat("edgeHardness", edgeHardness);
             postProcessShader.SetBool("pixelPerfect", pixelPerfectSharpness);
 
+            // --- НОВЫЕ ПАРАМЕТРЫ ДЛЯ ШЕЙДЕРА ---
+            postProcessShader.SetInt("classToPaint", classToPaint);
+            postProcessShader.SetVector("paintColor", paintColor);
+
             int threadGroupsX_post = Mathf.CeilToInt(segmentationTexture.width / 8.0f);
             int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
             postProcessShader.Dispatch(postProcessKernel, threadGroupsX_post, threadGroupsY_post, 1);
 
-            // --- NEW: Update PaintManager every frame ---
-            if (paintManager != null)
-            {
-                  paintManager.UpdateSegmentationTexture(segmentationTexture);
-            }
-
-            // Debug.Log("✅ Segmentation processing completed!"); // Removed for performance
             isProcessing = false;
       }
 
@@ -388,7 +375,7 @@ public class SegmentationManager : MonoBehaviour
             if (enableTestMode != lastTestModeState)
             {
                   lastTestModeState = enableTestMode;
-                  
+
                   if (enableTestMode)
                   {
                         Debug.Log("🧪 Test Mode enabled via checkbox");
@@ -438,64 +425,47 @@ public class SegmentationManager : MonoBehaviour
             // --- MODIFIED: Check if pointer is over a UI element ---
             if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
+                  // 1. Определяем класс под курсором
                   if (lastTensorData == null || lastTensorShape.rank == 0) return;
-
                   Vector2 screenPos = Input.mousePosition;
+                  int tappedClass = GetClassAtScreenPosition(screenPos);
 
-                  // Convert screen position to UV coordinates (0-1 range)
-                  float uv_x = screenPos.x / Screen.width;
-                  float uv_y = screenPos.y / Screen.height;
-
-                  // Flip coordinates
-                  uv_x = 1.0f - uv_x;
-                  uv_y = 1.0f - uv_y;
-
-                  // Convert UV coordinates to tensor coordinates
-                  int tensorX = (int)(uv_x * lastTensorShape[3]);
-                  int tensorY = (int)(uv_y * lastTensorShape[2]);
-
-                  // --- Perform Argmax on CPU for the tapped pixel ---
-                  int tappedClass = 0;
-                  float maxLogit = float.MinValue;
-                  int tensorWidth = lastTensorShape[3];
-                  int tensorHeight = lastTensorShape[2];
-
-                  for (int c = 0; c < numClasses; c++)
-                  {
-                        int logitIndex = c * (tensorWidth * tensorHeight) + tensorY * tensorWidth + tensorX;
-                        if (logitIndex < lastTensorData.Length)
-                        {
-                              float currentLogit = lastTensorData[logitIndex];
-                              if (currentLogit > maxLogit)
-                              {
-                                    maxLogit = currentLogit;
-                                    tappedClass = c;
-                              }
-                        }
-                  }
-
-                  Debug.Log($"Tapped on class: {tappedClass} ({ColorMap.GetClassName(tappedClass)}). Setting it as the only visible class.");
-
-                  // Uncheck 'Show All' and set the toggles based on the tapped class
-                  showAllClasses = false;
-                  showWall = (tappedClass == WALL_CLASS_INDEX);
-                  showCeiling = (tappedClass == CEILING_CLASS_INDEX);
-                  showFloor = (tappedClass == FLOOR_CLASS_INDEX);
-                  showChair = (tappedClass == CHAIR_CLASS_INDEX);
-                  showTable = (tappedClass == TABLE_CLASS_INDEX);
-                  showDoor = (tappedClass == DOOR_CLASS_INDEX);
-
-                  // --- NEW: Communicate with PaintManager ---
-                  if (paintManager != null)
-                  {
-                        // Tell the paint manager which class to paint
-                        paintManager.SetTargetClass(tappedClass);
-
-                        // Pass the latest segmentation texture to the paint manager's material
-                        paintManager.UpdateSegmentationTexture(segmentationTexture);
-                  }
+                  // 2. Устанавливаем этот класс как активный для покраски
+                  classToPaint = tappedClass;
+                  Debug.Log($"🎨 Класс для покраски установлен: {ColorMap.GetClassName(tappedClass)} ({tappedClass})");
             }
       }
+
+      private int GetClassAtScreenPosition(Vector2 screenPos)
+      {
+            float uv_x = screenPos.x / Screen.width;
+            float uv_y = screenPos.y / Screen.height;
+            uv_x = 1.0f - uv_x;
+            uv_y = 1.0f - uv_y;
+            int tensorX = (int)(uv_x * lastTensorShape[3]);
+            int tensorY = (int)(uv_y * lastTensorShape[2]);
+
+            int tappedClass = 0;
+            float maxLogit = float.MinValue;
+            int tensorWidth = lastTensorShape[3];
+            int tensorHeight = lastTensorShape[2];
+
+            for (int c = 0; c < numClasses; c++)
+            {
+                  int logitIndex = c * (tensorWidth * tensorHeight) + tensorY * tensorWidth + tensorX;
+                  if (logitIndex < lastTensorData.Length)
+                  {
+                        float currentLogit = lastTensorData[logitIndex];
+                        if (currentLogit > maxLogit)
+                        {
+                              maxLogit = currentLogit;
+                              tappedClass = c;
+                        }
+                  }
+            }
+            return tappedClass;
+      }
+
 
       private IEnumerator ShowClassName(string name)
       {
@@ -863,7 +833,7 @@ public class SegmentationManager : MonoBehaviour
                   for (int x = 0; x < imageSize.x; x++)
                   {
                         int index = y * imageSize.x + x;
-                        
+
                         // Создаем простую картинку с разными зонами
                         if (x < imageSize.x / 3)
                         {
@@ -899,8 +869,6 @@ public class SegmentationManager : MonoBehaviour
             yield return null;
 
             Debug.Log("🎯 Test Painting Mode activated!");
-            Debug.Log("🖱️ Click anywhere to test painting:");
-            Debug.Log("   • Entire screen = Wall (class 0)");
       }
 
       private void CreateTestSegmentationMask()
@@ -914,15 +882,15 @@ public class SegmentationManager : MonoBehaviour
                   for (int x = 0; x < imageSize.x; x++)
                   {
                         int pixelIndex = y * imageSize.x + x;
-                        
+
                         // ИЗМЕНЕНО: Весь экран теперь class 0 (wall) для простого тестирования
                         int targetClass = WALL_CLASS_INDEX; // Весь экран = стена
-                        
+
                         // Заполняем тензор данными (логиты для каждого класса)
                         for (int c = 0; c < numClasses; c++)
                         {
                               int tensorIndex = c * totalPixels + pixelIndex;
-                              
+
                               if (c == targetClass)
                               {
                                     // Высокий логит для целевого класса
@@ -956,61 +924,15 @@ public class SegmentationManager : MonoBehaviour
             postProcessShader.SetFloat("edgeHardness", edgeHardness);
             postProcessShader.SetBool("pixelPerfect", pixelPerfectSharpness);
 
+            // --- НОВЫЕ ПАРАМЕТРЫ ДЛЯ ШЕЙДЕРА (в тестовом режиме) ---
+            postProcessShader.SetInt("classToPaint", classToPaint);
+            postProcessShader.SetVector("paintColor", paintColor);
+
             // Запускаем compute shader для создания тестовой маски
             int threadGroupsX_post = Mathf.CeilToInt(segmentationTexture.width / 8.0f);
             int threadGroupsY_post = Mathf.CeilToInt(segmentationTexture.height / 8.0f);
             postProcessShader.Dispatch(postProcessKernel, threadGroupsX_post, threadGroupsY_post, 1);
 
-            // Обновляем PaintManager
-            if (paintManager != null)
-            {
-                  paintManager.UpdateSegmentationTexture(segmentationTexture);
-                  
-                  // Создаем тестовый меш для покраски
-                  CreateTestPaintMesh();
-            }
-
             Debug.Log("✅ Test segmentation data created and set up");
-            Debug.Log("🎯 IMPORTANT: Entire screen is now class 0 (wall). Click anywhere and select class 0 to see painting!");
-      }
-
-      private void CreateTestPaintMesh()
-      {
-            // Создаем простой куб для тестирования покраски
-            GameObject testCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            testCube.name = "TestPaintCube";
-            
-            // Позиционируем куб прямо перед камерой
-            Camera mainCamera = Camera.main;
-            if (mainCamera != null)
-            {
-                  Vector3 forward = mainCamera.transform.forward;
-                  testCube.transform.position = mainCamera.transform.position + forward * 3f;
-                  testCube.transform.localScale = Vector3.one * 1.5f;
-                  Debug.Log($"🧊 Test cube positioned at: {testCube.transform.position}");
-            }
-            else
-            {
-                  testCube.transform.position = new Vector3(0, 0, 2); // Fallback position
-                  testCube.transform.localScale = Vector3.one * 1.5f;
-                  Debug.Log("⚠️ Main camera not found, using fallback position");
-            }
-            
-            // Получаем MeshFilter
-            MeshFilter meshFilter = testCube.GetComponent<MeshFilter>();
-            
-            if (meshFilter != null && paintManager != null)
-            {
-                  // Добавляем тестовый меш в PaintManager
-                  paintManager.AddTestMesh(meshFilter);
-                  Debug.Log("🧊 Test cube created and added to PaintManager");
-                  
-                  // Дополнительная диагностика
-                  MeshRenderer meshRenderer = testCube.GetComponent<MeshRenderer>();
-                  if (meshRenderer != null)
-                  {
-                        Debug.Log($"🎭 Original cube material: {meshRenderer.material.name}");
-                  }
-            }
       }
 }

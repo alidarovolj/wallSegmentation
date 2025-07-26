@@ -20,6 +20,10 @@ int numClasses;
 float edgeHardness; // Controls the smoothness of edges
 bool pixelPerfect = false; // Toggle for crisp, pixel-perfect edges
 
+// --- НОВЫЕ ПАРАМЕТРЫ ДЛЯ ПОКРАСКИ ---
+int classToPaint;
+float4 paintColor;
+
 // Find the two most dominant classes for a given pixel
 void FindTopTwoClasses(uint2 tensorCoord, out int topClass, out int secondClass, out float topLogit, out float secondLogit)
 {
@@ -73,7 +77,16 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         float topLogit, secondLogit;
         FindTopTwoClasses(sampleCoord, topClass, secondClass, topLogit, secondLogit);
 
-        float4 finalColor = ColorMap[topClass];
+        float4 finalColor;
+        // --- Логика покраски ---
+        if (topClass == classToPaint)
+        {
+            finalColor = paintColor;
+        }
+        else
+        {
+            finalColor = ColorMap[topClass];
+        }
 
         bool isTopClassSelected = false;
         if (numSelectedClasses > 0)
@@ -135,7 +148,15 @@ void CSMain(uint3 id : SV_DispatchThreadID)
                 float4 color2 = ColorMap[secondClass];
 
                 // Mix the colors based on the blend factor
-                float4 mixedColor = lerp(color2, color1, blendFactor);
+                float4 mixedColor;
+                if (topClass == classToPaint)
+                {
+                    mixedColor = lerp(color2, paintColor, blendFactor);
+                }
+                else
+                {
+                    mixedColor = lerp(color2, color1, blendFactor);
+                }
                 
                 // --- Apply Highlighting ---
                 bool isTopClassSelected = false;

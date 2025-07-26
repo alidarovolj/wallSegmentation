@@ -2,10 +2,9 @@ Shader "Unlit/SurfacePaintShader"
 {
     Properties
     {
-        _PaintColor ("Paint Color", Color) = (1, 0, 0, 0.5)
-        _SegmentationTex ("Segmentation Texture", 2D) = "white" {}
-        _CameraFeedTex ("Camera Feed Texture", 2D) = "white" {}
-        _TargetClassID ("Target Class ID", Float) = 0
+        // Эта текстура будет нашим "холстом" для рисования.
+        // Она будет уникальной для каждой поверхности через MaterialPropertyBlock.
+        _PaintMap ("Paint Map", 2D) = "white" {}
     }
     SubShader
     {
@@ -14,9 +13,9 @@ Shader "Unlit/SurfacePaintShader"
 
         Pass
         {
-            Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite Off
-            Cull Off
+            Blend SrcAlpha OneMinusSrcAlpha // Стандартный альфа-блендинг
+            ZWrite Off // Не пишем в Z-буфер, т.к. поверхность уже существует
+            Cull Off // Отключаем отсечение, т.к. меши могут быть видны с обеих сторон
 
             CGPROGRAM
             #pragma vertex vert
@@ -31,50 +30,30 @@ Shader "Unlit/SurfacePaintShader"
 
             struct v2f
             {
+                float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
-                float4 screenPos : TEXCOORD0;
             };
 
-            sampler2D _SegmentationTex;
-            sampler2D _CameraFeedTex;
-            float4 _PaintColor;
-            float _TargetClassID;
+            sampler2D _PaintMap;
 
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.screenPos = ComputeScreenPos(o.vertex);
+                // Просто передаем UV координаты меша во фрагментный шейдер
+                o.uv = v.uv;
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // Convert screen position to UV coordinates
-                float2 screenUV = i.screenPos.xy / i.screenPos.w;
-
-                // Sample segmentation texture to get the class ID
-                // Note: We'll need to pass the segmentation data here.
-                // This is a simplified example. The real implementation will be more complex.
-                // For now, let's assume we have a way to read the class ID.
-                float classID = _TargetClassID; // Placeholder
-
-                // Sample the real-world color from the camera feed
-                fixed4 cameraColor = tex2D(_CameraFeedTex, screenUV);
+                // Сэмплируем нашу текстуру-холст по UV координатам меша
+                fixed4 paintColor = tex2D(_PaintMap, i.uv);
                 
-                // If the class ID at this pixel matches our target, paint it
-                if (classID == _TargetClassID)
-                {
-                    // Blend the paint color with the camera color
-                    // 'Multiply' blending mode often gives a nice, realistic tint
-                    fixed3 blendedColor = cameraColor.rgb * _PaintColor.rgb;
-                    return fixed4(blendedColor, _PaintColor.a);
-                }
-                else
-                {
-                    // If it's not the target class, make it fully transparent
-                    return fixed4(0, 0, 0, 0);
-                }
+                // Финальный цвет - это то, что нарисовано на холсте.
+                // Альфа-канал определяет, насколько сильно мы закрашиваем.
+                // Если на холсте ничего нет (альфа = 0), пиксель будет полностью прозрачным.
+                return paintColor;
             }
             ENDCG
         }
