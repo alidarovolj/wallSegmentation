@@ -103,6 +103,22 @@ public class SegmentationManager : MonoBehaviour
             Debug.Log($"🎨 Paint color changed to: {newColor}");
       }
 
+      /// <summary>
+      /// Публичный метод для установки класса для покраски из другого скрипта (например, UnityMessageBridge).
+      /// </summary>
+      public void SelectClassForPainting(int classId)
+      {
+            if (classId >= 0 && classId < numClasses)
+            {
+                  classToPaint = classId;
+                  Debug.Log($"🎨 Класс для покраски программно установлен: {ColorMap.GetClassName(classId)} ({classId})");
+            }
+            else
+            {
+                  Debug.LogWarning($"Попытка установить некорректный класс для покраски: {classId}");
+            }
+      }
+
       void Start()
       {
             // Initialize color map
@@ -581,6 +597,7 @@ public class SegmentationManager : MonoBehaviour
       /// <summary>
       /// Переключение на BiSeNet модель
       /// </summary>
+#if UNITY_EDITOR
       [ContextMenu("Switch to BiSeNet Model")]
       private void SwitchToBiSeNetModel()
       {
@@ -607,10 +624,12 @@ public class SegmentationManager : MonoBehaviour
                   Debug.LogError("📋 Make sure bisenet-bisenet-float.onnx is in Assets/Models/ folder");
             }
       }
+#endif
 
       /// <summary>
       /// Переключение на DeepLabV3+ модель
       /// </summary>
+#if UNITY_EDITOR
       [ContextMenu("Switch to DeepLabV3+ Model")]
       private void SwitchToDeepLabModel()
       {
@@ -636,10 +655,12 @@ public class SegmentationManager : MonoBehaviour
                   Debug.LogError("❌ DeepLabV3+ model not found at: " + deeplabModelPath);
             }
       }
+#endif
 
       /// <summary>
       /// Переключение на SegFormer модель
       /// </summary>
+#if UNITY_EDITOR
       [ContextMenu("Switch to SegFormer Model")]
       private void SwitchToSegFormerModel()
       {
@@ -667,6 +688,7 @@ public class SegmentationManager : MonoBehaviour
                   Debug.LogError("📋 Make sure model_fp16.onnx is in Assets/Models/ folder");
             }
       }
+#endif
 
       /// <summary>
       /// Сброс Override Resolution для автоматического определения

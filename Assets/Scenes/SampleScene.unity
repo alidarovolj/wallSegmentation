@@ -240,23 +240,22 @@ MonoBehaviour:
   arCameraManager: {fileID: 1070768330}
   segmentationDisplay: {fileID: 76938650}
   classNameText: {fileID: 0}
-  paintManager: {fileID: 946524320}
+  paintColor: {r: 0, g: 0, b: 1, a: 1}
   displayNameDuration: 1.5
   postProcessShader: {fileID: 7200000, guid: 7bfc0a34d6f3d0240824b2bf861971d9, type: 3}
   edgeHardness: 10
   pixelPerfectSharpness: 0
-  paintColor: {r: 0, g: 0, b: 1, a: 1}
   mirrorX: 0
   mirrorY: 1
   showAllClasses: 0
   showWall: 1
-  showCeiling: 1
+  showCeiling: 0
   showFloor: 0
   showChair: 0
   showTable: 0
   showDoor: 0
   preprocessorShader: {fileID: 7200000, guid: cea464de1154d4a1c8266a3caaf19d25, type: 3}
-  enableTestMode: 1
+  enableTestMode: 0
 --- !u!4 &187315540
 Transform:
   m_ObjectHideFlags: 0
@@ -413,7 +412,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &393184431
 RectTransform:
   m_ObjectHideFlags: 0
@@ -593,6 +592,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   paintMaterial: {fileID: 2100000, guid: fd55c2ec68af93d409f4a665136c8735, type: 2}
+  brushSize: 0.1
+  brushStrength: 0.8
+  textureResolution: 1024
+  meshManager: {fileID: 0}
+  currentPaintColor:
+    r: 0
+    g: 0
+    b: 1
+    a: 1
 --- !u!114 &946524321
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -843,6 +851,63 @@ MonoBehaviour:
   m_VerticalAxis: Vertical
   m_SubmitButton: Submit
   m_CancelButton: Cancel
+--- !u!1 &1341188530
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1341188531}
+  - component: {fileID: 1341188532}
+  m_Layer: 5
+  m_Name: PerformanceControl
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1341188531
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1341188530}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2099970469}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1341188532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1341188530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42305b3c2a665de4295dd6c85537ba02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showWallsAndCeilingButton: {fileID: 0}
+  showFurnishingButton: {fileID: 0}
+  showAllButton: {fileID: 0}
+  maxProcessingTimeSlider: {fileID: 0}
+  maxTimeLabel: {fileID: 0}
+  autoOptimizationToggle: {fileID: 0}
+  ultraFastButton: {fileID: 0}
+  balancedButton: {fileID: 0}
+  qualityButton: {fileID: 0}
 --- !u!114 &2001374502 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6402244310720262706, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
@@ -952,6 +1017,7 @@ RectTransform:
   m_Children:
   - {fileID: 76938652}
   - {fileID: 393184431}
+  - {fileID: 1341188531}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
