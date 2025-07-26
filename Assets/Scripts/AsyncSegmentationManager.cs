@@ -29,13 +29,15 @@ public class AsyncSegmentationManager : MonoBehaviour
       [Header("Performance Settings")]
       [SerializeField] private Vector2Int overrideResolution = new Vector2Int(960, 720);
       [SerializeField, Range(0.01f, 1.0f)] private float smoothingFactor = 0.2f;
-      [SerializeField] private bool useCpuArgmax = false; // Переключился на GPU по умолчанию
+      [SerializeField] private bool useCpuArgmax = true; // Переключаемся на CPU для лучшей производительности
       [SerializeField, Range(1, 10)] public int frameSkipRate = 2; // Обрабатывать каждый N-й кадр
       [SerializeField, Range(0.016f, 0.1f)] public float minFrameInterval = 0.033f; // ~30 FPS максимум
 
       // Internal textures and buffers
       private Texture2D cameraTexture;
+      private Texture2D cpuSegmentationTexture; // For CPU path
       private RenderTexture preprocessedTexture;
+      private RenderTexture neuralNetworkOutputTexture; // Raw output from neural network
       private RenderTexture segmentationTexture;
       private RenderTexture smoothedSegmentationTexture;
       private RenderTexture previousFrameTexture;
@@ -48,6 +50,7 @@ public class AsyncSegmentationManager : MonoBehaviour
       private bool isProcessingFrame = false;
       private int frameCounter = 0;
       private float lastProcessTime = 0f;
+      private float lastUpdateTime = 0f; // Добавляем для измерения времени между кадрами
 
       private int preprocessKernel;
       private int temporalSmoothingKernel;
@@ -66,6 +69,7 @@ public class AsyncSegmentationManager : MonoBehaviour
       void OnEnable()
       {
             cancellationTokenSource = new CancellationTokenSource();
+            lastUpdateTime = Time.realtimeSinceStartup;
             InitializeAsync(cancellationTokenSource.Token);
       }
 
@@ -80,7 +84,9 @@ public class AsyncSegmentationManager : MonoBehaviour
             tensorBuffer?.Dispose();
 
             Destroy(cameraTexture);
+            Destroy(cpuSegmentationTexture);
             ReleaseRenderTexture(preprocessedTexture);
+            ReleaseRenderTexture(neuralNetworkOutputTexture);
             ReleaseRenderTexture(segmentationTexture);
             ReleaseRenderTexture(smoothedSegmentationTexture);
             ReleaseRenderTexture(previousFrameTexture);
@@ -94,7 +100,16 @@ public class AsyncSegmentationManager : MonoBehaviour
                 !isProcessingFrame &&
                 CanProcessNextFrame())
             {
-                  OnCameraFrameReceived(default);
+                if (arCameraManager.TryAcquireLatestCpuImage(out var image))
+                {
+                    var timeSinceLastFrame = (Time.realtimeSinceStartup - lastUpdateTime) * 1000f;
+                    Debug.Log($"⏱️ Frame interval: {timeSinceLastFrame:F1}ms");
+                    lastUpdateTime = Time.realtimeSinceStartup;
+                    
+                    isProcessingFrame = true;
+                    // Передаем владение XRCpuImage в асинхронный метод
+                    ProcessImageAsync(image, cancellationTokenSource.Token);
+                }
             }
       }
 
@@ -156,113 +171,130 @@ public class AsyncSegmentationManager : MonoBehaviour
       void InitializeTextures()
       {
             cameraTexture = new Texture2D(overrideResolution.x, overrideResolution.y, TextureFormat.RGB24, false);
+            cpuSegmentationTexture = new Texture2D(overrideResolution.x, overrideResolution.y, TextureFormat.RFloat, false);
             preprocessedTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.ARGB32);
-            segmentationTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.RFloat);
+            neuralNetworkOutputTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.ARGB32);
+            segmentationTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.ARGB32);
             smoothedSegmentationTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.RFloat);
             previousFrameTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.RFloat);
 
             if (segmentationDisplay != null)
             {
-                  segmentationDisplay.texture = smoothedSegmentationTexture;
+                  segmentationDisplay.texture = segmentationTexture;
             }
       }
 
-      void OnCameraFrameReceived(ARCameraFrameEventArgs args)
+      async void ProcessImageAsync(XRCpuImage image, CancellationToken token)
       {
-            if (isProcessingFrame || !enabled) return;
-            if (!arCameraManager.TryAcquireLatestCpuImage(out var image)) return;
-
-            isProcessingFrame = true;
-            ProcessImageAsync(image);
-            image.Dispose();
-      }
-
-      async void ProcessImageAsync(XRCpuImage image)
-      {
+            var frameStartTime = Time.realtimeSinceStartup;
             try
             {
-                  var conversionParams = GetConversionParameters(image);
+                if (token.IsCancellationRequested) return;
 
-                  // Оптимизированное ожидание конверсии
-                  Debug.Log("Starting async conversion...");
-                  var convertTask = image.ConvertAsync(conversionParams);
+                var conversionParams = GetConversionParameters(image);
 
-                  // Ждем завершения конверсии более эффективно
-                  while (!convertTask.status.IsDone())
-                  {
-                        await Task.Delay(1); // Более эффективно чем Task.Yield для ожидания GPU операций
-                  }
-                  Debug.Log("Conversion completed.");
+                Debug.Log("Starting async conversion...");
+                var conversionStartTime = Time.realtimeSinceStartup;
+                var convertTask = image.ConvertAsync(conversionParams);
 
-                  var data = convertTask.GetData<byte>();
+                while (!convertTask.status.IsDone())
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        convertTask.Dispose();
+                        return;
+                    }
+                    await Task.Yield();
+                }
+                var conversionTime = (Time.realtimeSinceStartup - conversionStartTime) * 1000f;
+                Debug.Log($"Conversion completed in {conversionTime:F1}ms");
 
-                  // Перед загрузкой данных убедимся, что размер текстуры совпадает
-                  if (cameraTexture.width != conversionParams.outputDimensions.x || cameraTexture.height != conversionParams.outputDimensions.y)
-                  {
-                        cameraTexture.Reinitialize(conversionParams.outputDimensions.x, conversionParams.outputDimensions.y);
-                  }
-                  cameraTexture.LoadRawTextureData(data);
-                  cameraTexture.Apply();
-                  convertTask.Dispose();
+                if (convertTask.status != XRCpuImage.AsyncConversionStatus.Ready)
+                {
+                    Debug.LogError($"Conversion failed with status: {convertTask.status}");
+                    return;
+                }
 
-                  Debug.Log("Texture updated from camera image.");
+                var textureStartTime = Time.realtimeSinceStartup;
+                var data = convertTask.GetData<byte>();
 
-                  Graphics.Blit(cameraTexture, preprocessedTexture);
+                if (cameraTexture.width != conversionParams.outputDimensions.x || cameraTexture.height != conversionParams.outputDimensions.y)
+                {
+                    cameraTexture.Reinitialize(conversionParams.outputDimensions.x, conversionParams.outputDimensions.y);
+                }
+                cameraTexture.LoadRawTextureData(data);
+                cameraTexture.Apply();
+                convertTask.Dispose();
 
-                  var inputTensor = TextureConverter.ToTensor(preprocessedTexture);
+                Graphics.Blit(cameraTexture, preprocessedTexture);
+                var textureTime = (Time.realtimeSinceStartup - textureStartTime) * 1000f;
+                Debug.Log($"Texture updated from camera image in {textureTime:F1}ms");
 
-                  Debug.Log("Scheduling inference...");
-                  worker.Schedule(inputTensor);
-                  await Task.Yield();
-                  inputTensor.Dispose();
+                var inferenceStartTime = Time.realtimeSinceStartup;
+                var inputTensor = TextureConverter.ToTensor(preprocessedTexture);
 
-                  // Оптимизированное ожидание результата
-                  Tensor outputTensor = null;
-                  while (outputTensor == null)
-                  {
-                        outputTensor = worker.PeekOutput();
-                        if (outputTensor == null)
-                              await Task.Yield();
-                  }
-                  Debug.Log("Inference complete, output tensor received.");
+                Debug.Log("Scheduling inference...");
+                worker.Schedule(inputTensor);
+                await Task.Yield();
+                if (token.IsCancellationRequested) return;
+                inputTensor.Dispose();
 
-                  // Используем GPU для argmax если доступно
-                  if (!useCpuArgmax && argmaxShader != null)
-                  {
-                        await ProcessSegmentationTensorWithGPU(outputTensor as Tensor<float>);
-                        Debug.Log("GPU processing complete.");
-                  }
-                  else
-                  {
-                        // Fallback to CPU processing
-                        var readbackTensor = (outputTensor as Tensor<float>).ReadbackAndClone();
-                        outputTensor.Dispose();
+                Tensor outputTensor = null;
+                while (outputTensor == null)
+                {
+                    if (token.IsCancellationRequested) return;
+                    outputTensor = worker.PeekOutput();
+                    if (outputTensor == null)
+                        await Task.Yield();
+                }
+                var inferenceTime = (Time.realtimeSinceStartup - inferenceStartTime) * 1000f;
+                Debug.Log($"Inference complete in {inferenceTime:F1}ms, output tensor received.");
 
-                        float[] segmentationData = await Task.Run(() => ProcessSegmentationTensorWithCPU(readbackTensor));
-                        Debug.Log("CPU processing complete.");
+                if (token.IsCancellationRequested)
+                {
+                    outputTensor.Dispose();
+                    return;
+                }
 
-                        if (segmentationData != null)
-                        {
-                              UpdateSegmentationTexture(segmentationData, readbackTensor.shape);
-                        }
-                  }
+                var processingStartTime = Time.realtimeSinceStartup;
+                if (!useCpuArgmax && argmaxShader != null)
+                {
+                    await ProcessSegmentationTensorWithGPU(outputTensor as Tensor<float>, token);
+                    var processingTime = (Time.realtimeSinceStartup - processingStartTime) * 1000f;
+                    Debug.Log($"GPU processing complete in {processingTime:F1}ms");
+                }
+                else
+                {
+                    var readbackTensor = (outputTensor as Tensor<float>).ReadbackAndClone();
+                    outputTensor.Dispose();
 
-                  // ApplyTemporalSmoothing();
+                    float[] segmentationData = await Task.Run(() => ProcessSegmentationTensorWithCPU(readbackTensor), token);
+                    var processingTime = (Time.realtimeSinceStartup - processingStartTime) * 1000f;
+                    Debug.Log($"CPU processing complete in {processingTime:F1}ms");
 
-                  // Прямое присваивание для теста, без сглаживания
-                  if (segmentationDisplay != null)
-                  {
-                        segmentationDisplay.texture = segmentationTexture;
-                        Debug.Log("Updated segmentation display texture!");
-                  }
+                    if (token.IsCancellationRequested) return;
+
+                    if (segmentationData != null)
+                    {
+                        UpdateSegmentationTexture(segmentationData, readbackTensor.shape);
+                    }
+                }
+
+                if (segmentationDisplay != null)
+                {
+                    segmentationDisplay.texture = segmentationTexture;
+                    var totalTime = (Time.realtimeSinceStartup - frameStartTime) * 1000f;
+                    Debug.Log($"🎯 TOTAL FRAME TIME: {totalTime:F1}ms (Conv: {conversionTime:F1}ms, Tex: {textureTime:F1}ms, Inf: {inferenceTime:F1}ms, Proc: {(Time.realtimeSinceStartup - processingStartTime) * 1000f:F1}ms)");
+                }
             }
             catch (Exception e)
             {
-                  Debug.LogError($"Error in ProcessImageAsync: {e}");
+                Debug.LogError($"Error in ProcessImageAsync: {e}");
             }
             finally
             {
-                  isProcessingFrame = false;
+                image.Dispose(); // Гарантированное освобождение ресурса
+                isProcessingFrame = false;
             }
       }
 
@@ -301,85 +333,96 @@ public class AsyncSegmentationManager : MonoBehaviour
       /// Обрабатывает выходной тензор сегментации на CPU для поиска класса с максимальным значением (argmax).
       /// Этот метод предназначен для запуска в фоновом потоке и возвращает массив данных для текстуры.
       /// </summary>
-      private float[] ProcessSegmentationTensorWithCPU(Tensor<float> readbackTensor)
+      private float[] ProcessSegmentationTensorWithCPU(Tensor<float> tensor)
       {
-            try
+            var shape = tensor.shape;
+            int h = shape[2];
+            int w = shape[3];
+            int numClasses = shape[1];
+            
+            Debug.Log($"CPU processing tensor: {w}x{h}x{numClasses} classes");
+            
+            // Получаем данные как массив для совместимости с Parallel.For
+            float[] data = tensor.AsReadOnlySpan().ToArray();
+            float[] result = new float[w * h];
+            
+            // Параллельная обработка пикселей для улучшения производительности
+            System.Threading.Tasks.Parallel.For(0, h, y =>
             {
-                  var shape = readbackTensor.shape;
-                  int h = shape[2];
-                  int w = shape[3];
-                  int numClasses = shape[1];
-
-                  // Тензор уже считан из GPU, поэтому мы можем обрабатывать его напрямую.
-
-                  float[] segmentationData = new float[w * h];
-
-                  for (int y = 0; y < h; y++)
-                  {
-                        for (int x = 0; x < w; x++)
+                for (int x = 0; x < w; x++)
+                {
+                    int pixelIndex = y * w + x;
+                    float maxValue = float.MinValue;
+                    int maxClass = 0;
+                    
+                    // Optimized argmax: найти класс с максимальным значением
+                    for (int c = 0; c < numClasses; c++)
+                    {
+                        // Индекс в тензоре: [batch=0, class=c, height=y, width=x]
+                        int tensorIndex = c * h * w + pixelIndex;
+                        float value = data[tensorIndex];
+                        
+                        if (value > maxValue)
                         {
-                              float maxVal = -float.MaxValue;
-                              int maxIndex = 0;
-                              for (int c = 0; c < numClasses; c++)
-                              {
-                                    float val = readbackTensor[0, c, y, x];
-                                    if (val > maxVal)
-                                    {
-                                          maxVal = val;
-                                          maxIndex = c;
-                                    }
-                              }
-                              segmentationData[y * w + x] = (float)maxIndex / (numClasses - 1);
+                            maxValue = value;
+                            maxClass = c;
                         }
-                  }
-                  return segmentationData;
-            }
-            catch (Exception e)
-            {
-                  Debug.LogError($"Error processing segmentation tensor on CPU: {e}");
-                  return null;
-            }
-            finally
-            {
-                  // Гарантированно удаляем тензор с данными CPU после обработки
-                  readbackTensor.Dispose();
-            }
+                    }
+                    
+                    // Нормализуем класс в диапазон [0, 1] для текстуры
+                    result[pixelIndex] = (float)maxClass / (numClasses - 1);
+                }
+            });
+            
+            return result;
       }
 
-      private async Task ProcessSegmentationTensorWithGPU(Tensor<float> outputTensor)
+      private async Task ProcessSegmentationTensorWithGPU(Tensor<float> outputTensor, CancellationToken token)
       {
+            if (token.IsCancellationRequested)
+            {
+                outputTensor.Dispose();
+                return;
+            }
+
             var shape = outputTensor.shape;
             int h = shape[2];
             int w = shape[3];
             int numClasses = shape[1];
-            int totalElements = w * h * numClasses;
 
-            // Создаем или пересоздаем буфер если размер изменился
+            Debug.Log($"Tensor shape: {w}x{h}x{numClasses}, Processing with optimized argmax shader");
+
+            // Создаем буфер для всех данных тензора
+            int totalElements = w * h * numClasses;
             if (tensorBuffer == null || tensorBuffer.count != totalElements)
             {
-                  tensorBuffer?.Dispose();
-                  tensorBuffer = new ComputeBuffer(totalElements, sizeof(float));
+                tensorBuffer?.Dispose();
+                tensorBuffer = new ComputeBuffer(totalElements, sizeof(float));
             }
 
-            // Копируем данные из тензора в compute buffer
+            // Эффективно копируем данные из тензора
             var readbackTensor = outputTensor.ReadbackAndClone();
             var tensorData = readbackTensor.AsReadOnlySpan().ToArray();
             tensorBuffer.SetData(tensorData);
             readbackTensor.Dispose();
 
-            // Настраиваем compute shader
+            // Настраиваем compute shader для обработки всех классов
             argmaxShader.SetBuffer(argmaxKernel, "_InputTensor", tensorBuffer);
             argmaxShader.SetTexture(argmaxKernel, "_OutputTexture", segmentationTexture);
             argmaxShader.SetInt("_TensorWidth", w);
             argmaxShader.SetInt("_TensorHeight", h);
             argmaxShader.SetInt("_NumClasses", numClasses);
 
-            // Выполняем compute shader
-            int groupsX = Mathf.CeilToInt(w / 8.0f);
-            int groupsY = Mathf.CeilToInt(h / 8.0f);
+            // Вычисляем оптимальные группы потоков для блоков 16x16
+            int groupsX = (w + 15) / 16;
+            int groupsY = (h + 15) / 16;
+
+            Debug.Log($"Dispatching optimized argmax shader with groups: {groupsX}x{groupsY}, classes: {numClasses}");
+
+            // Запускаем shader
             argmaxShader.Dispatch(argmaxKernel, groupsX, groupsY, 1);
 
-            // Ждем завершения GPU операции
+            // Ждем завершения на GPU
             await Task.Yield();
 
             outputTensor.Dispose();
@@ -390,13 +433,17 @@ public class AsyncSegmentationManager : MonoBehaviour
             int h = shape[2];
             int w = shape[3];
 
-            // Создаем временную Texture2D для данных и копируем в RenderTexture
-            var tempTexture = new Texture2D(w, h, TextureFormat.RFloat, false);
-            tempTexture.SetPixelData(segmentationData, 0);
-            tempTexture.Apply();
+            // Переиспользуем текстуру для данных CPU, избегая создания новой каждый кадр
+            if (cpuSegmentationTexture == null || cpuSegmentationTexture.width != w || cpuSegmentationTexture.height != h)
+            {
+                if(cpuSegmentationTexture != null) Destroy(cpuSegmentationTexture);
+                cpuSegmentationTexture = new Texture2D(w, h, TextureFormat.RFloat, false);
+            }
 
-            Graphics.Blit(tempTexture, segmentationTexture);
-            Destroy(tempTexture);
+            cpuSegmentationTexture.SetPixelData(segmentationData, 0);
+            cpuSegmentationTexture.Apply();
+
+            Graphics.Blit(cpuSegmentationTexture, segmentationTexture);
       }
 
       void ApplyTemporalSmoothing()

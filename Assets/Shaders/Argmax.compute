@@ -1,46 +1,97 @@
 #pragma kernel Argmax
 
-// The multi-channel output from the Sentis model
+// Multi-channel input data from neural network (up to 150 classes)
 StructuredBuffer<float> _InputTensor;
 
-// The output texture with a single channel (class index)
-RWTexture2D<float> _OutputTexture;
+// The output texture with RGB colors
+RWTexture2D<float4> _OutputTexture;
 
 // Dimensions of the tensor
 uint _TensorWidth;
 uint _TensorHeight;
 uint _NumClasses;
 
-[numthreads(8,8,1)]
-void Argmax (uint3 id : SV_DispatchThreadID)
+// Simple color map for different classes
+float4 GetClassColor(uint classIndex)
 {
-    // Prevent writing out of bounds
-    if (id.x >= _TensorWidth || id.y >= _TensorHeight)
+    // Простая цветовая карта для первых классов
+    switch(classIndex % 19)
     {
-        return;
+        case 0: return float4(0.0, 0.0, 0.0, 1.0);      // Background - Black
+        case 1: return float4(1.0, 0.0, 0.0, 1.0);      // Wall - Red
+        case 2: return float4(0.0, 1.0, 0.0, 1.0);      // Floor - Green
+        case 3: return float4(0.0, 0.0, 1.0, 1.0);      // Ceiling - Blue
+        case 4: return float4(1.0, 1.0, 0.0, 1.0);      // Door - Yellow
+        case 5: return float4(1.0, 0.0, 1.0, 1.0);      // Window - Magenta
+        case 6: return float4(0.0, 1.0, 1.0, 1.0);      // Picture - Cyan
+        case 7: return float4(0.5, 0.5, 0.5, 1.0);      // Cabinet - Gray
+        case 8: return float4(1.0, 0.5, 0.0, 1.0);      // Cushion - Orange
+        case 9: return float4(0.5, 0.0, 1.0, 1.0);      // Sofa - Purple
+        case 10: return float4(0.0, 0.5, 0.5, 1.0);     // Table - Teal
+        case 11: return float4(0.5, 1.0, 0.0, 1.0);     // Curtain - Lime
+        case 12: return float4(1.0, 0.0, 0.5, 1.0);     // Chair - Pink
+        case 13: return float4(0.0, 1.0, 0.5, 1.0);     // Refrigerator - Spring Green
+        case 14: return float4(0.5, 0.0, 0.0, 1.0);     // Shower Curtain - Maroon
+        case 15: return float4(0.0, 0.0, 0.5, 1.0);     // Toilet - Navy
+        case 16: return float4(0.5, 0.5, 0.0, 1.0);     // Sink - Olive
+        case 17: return float4(0.0, 0.5, 1.0, 1.0);     // Bathtub - Sky Blue
+        case 18: return float4(0.8, 0.4, 0.2, 1.0);     // Other - Brown
+        default: return float4(0.2, 0.2, 0.2, 1.0);     // Unknown - Dark Gray
     }
+}
 
-    float maxValue = -3.402823466e+38F; // FLT_MIN
-    uint maxClassIndex = 0;
-
-    uint pixel_offset = (id.y * _TensorWidth) + id.x;
-    uint plane_size = _TensorWidth * _TensorHeight;
-
-    // Iterate through all classes for the current pixel
-    for (uint c = 0; c < _NumClasses; ++c)
+// Оптимизированная функция для поиска максимума с unrolling
+float4 FindMaxValue(uint baseIndex, uint stride)
+{
+    float maxValue = -1000000.0;
+    uint maxClass = 0;
+    
+    // Unroll первые 16 классов для лучшей производительности
+    [unroll(16)]
+    for (uint i = 0; i < 16 && i < _NumClasses; i++)
     {
-        uint index = (c * plane_size) + pixel_offset;
-        float value = _InputTensor[index];
-
+        float value = _InputTensor[baseIndex + i * stride];
         if (value > maxValue)
         {
             maxValue = value;
-            maxClassIndex = c;
+            maxClass = i;
         }
     }
-
-    // Normalize the class index to a [0, 1] range for visualization
-    float normalizedValue = (float)maxClassIndex / (_NumClasses - 1);
     
-    _OutputTexture[id.xy] = normalizedValue;
+    // Обрабатываем остальные классы блоками по 8
+    for (uint blockStart = 16; blockStart < _NumClasses; blockStart += 8)
+    {
+        [unroll(8)]
+        for (uint i = 0; i < 8 && (blockStart + i) < _NumClasses; i++)
+        {
+            uint classIdx = blockStart + i;
+            float value = _InputTensor[baseIndex + classIdx * stride];
+            if (value > maxValue)
+            {
+                maxValue = value;
+                maxClass = classIdx;
+            }
+        }
+    }
+    
+    return float4(maxValue, maxClass, 0, 1);
+}
+
+[numthreads(16,16,1)]  // Увеличиваем размер блока для лучшей утилизации GPU
+void Argmax (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _TensorWidth || id.y >= _TensorHeight)
+        return;
+
+    // Вычисляем базовый индекс для данного пикселя
+    // Формат данных: [batch, classes, height, width]
+    uint baseIndex = id.y * _TensorWidth + id.x;
+    uint stride = _TensorHeight * _TensorWidth;
+    
+    // Используем оптимизированную функцию поиска максимума
+    float4 result = FindMaxValue(baseIndex, stride);
+    uint maxClass = (uint)result.y;
+
+    // Применяем цветовую карту
+    _OutputTexture[id.xy] = GetClassColor(maxClass);
 } 

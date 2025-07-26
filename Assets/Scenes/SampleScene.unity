@@ -804,7 +804,7 @@ MonoBehaviour:
   temporalSmoothingShader: {fileID: 7200000, guid: 0422907fd91c541d78cf3ee01fedca38, type: 3}
   overrideResolution: {x: 960, y: 720}
   smoothingFactor: 0.2
-  useCpuArgmax: 1
+  useCpuArgmax: 0
   frameSkipRate: 2
   minFrameInterval: 0.033
 --- !u!4 &1430626605
