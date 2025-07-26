@@ -1,0 +1,46 @@
+#pragma kernel Argmax
+
+// The multi-channel output from the Sentis model
+StructuredBuffer<float> _InputTensor;
+
+// The output texture with a single channel (class index)
+RWTexture2D<float> _OutputTexture;
+
+// Dimensions of the tensor
+uint _TensorWidth;
+uint _TensorHeight;
+uint _NumClasses;
+
+[numthreads(8,8,1)]
+void Argmax (uint3 id : SV_DispatchThreadID)
+{
+    // Prevent writing out of bounds
+    if (id.x >= _TensorWidth || id.y >= _TensorHeight)
+    {
+        return;
+    }
+
+    float maxValue = -3.402823466e+38F; // FLT_MIN
+    uint maxClassIndex = 0;
+
+    uint pixel_offset = (id.y * _TensorWidth) + id.x;
+    uint plane_size = _TensorWidth * _TensorHeight;
+
+    // Iterate through all classes for the current pixel
+    for (uint c = 0; c < _NumClasses; ++c)
+    {
+        uint index = (c * plane_size) + pixel_offset;
+        float value = _InputTensor[index];
+
+        if (value > maxValue)
+        {
+            maxValue = value;
+            maxClassIndex = c;
+        }
+    }
+
+    // Normalize the class index to a [0, 1] range for visualization
+    float normalizedValue = (float)maxClassIndex / (_NumClasses - 1);
+    
+    _OutputTexture[id.xy] = normalizedValue;
+} 

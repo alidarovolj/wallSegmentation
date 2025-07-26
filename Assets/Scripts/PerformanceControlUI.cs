@@ -13,200 +13,236 @@ public class PerformanceControlUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI maxTimeLabel;
     [SerializeField] private Toggle autoOptimizationToggle;
 
+    [Header("Performance Controls")]
+    [SerializeField] private Slider frameSkipSlider;
+    [SerializeField] private TextMeshProUGUI frameSkipLabel;
+    [SerializeField] private Slider minFrameIntervalSlider;
+    [SerializeField] private TextMeshProUGUI minFrameIntervalLabel;
+    [SerializeField] private Toggle gpuProcessingToggle;
+    [SerializeField] private TextMeshProUGUI gpuProcessingLabel;
+
     [Header("Quick Settings")]
     [SerializeField] private Button ultraFastButton;
     [SerializeField] private Button balancedButton;
     [SerializeField] private Button qualityButton;
 
-    private SegmentationManager segmentationManager;
+    [SerializeField] private TMP_Text resolutionText;
+    [SerializeField] private TMP_Text fpsText;
+
+    // Ссылка на наш новый менеджер
+    private AsyncSegmentationManager segmentationManager;
+
+    private float fpsUpdateTimer = 0.5f;
+    private float lastFpsUpdateTime;
 
     private void Start()
     {
-        segmentationManager = FindFirstObjectByType<SegmentationManager>();
-
+        // Ищем новый AsyncSegmentationManager
+        segmentationManager = FindObjectOfType<AsyncSegmentationManager>();
         if (segmentationManager == null)
         {
-            Debug.LogError("SegmentationManager not found! PerformanceControlUI will not work.");
+            Debug.LogError("AsyncSegmentationManager not found! PerformanceControlUI will not work.");
             gameObject.SetActive(false);
             return;
         }
 
-        SetupUI();
+        SetupPerformanceControls();
+        SetupQuickSettingsButtons();
+        UpdateUI();
     }
 
-    private void SetupUI()
+    void Update()
     {
-        // Setup buttons for Sentis 2.0 SegmentationManager
-        if (showWallsAndCeilingButton != null)
+        if (Time.unscaledTime - lastFpsUpdateTime > fpsUpdateTimer)
         {
-            showWallsAndCeilingButton.onClick.AddListener(SelectWallsAndCeiling);
+            UpdateFps();
+            lastFpsUpdateTime = Time.unscaledTime;
+        }
+    }
+
+    private void SetupPerformanceControls()
+    {
+        // Настройка слайдера пропуска кадров
+        if (frameSkipSlider != null)
+        {
+            frameSkipSlider.minValue = 1;
+            frameSkipSlider.maxValue = 10;
+            frameSkipSlider.wholeNumbers = true;
+            frameSkipSlider.onValueChanged.AddListener(OnFrameSkipChanged);
         }
 
-        if (showFurnishingButton != null)
+        // Настройка слайдера минимального интервала кадров
+        if (minFrameIntervalSlider != null)
         {
-            showFurnishingButton.onClick.AddListener(SelectFurnishings);
+            minFrameIntervalSlider.minValue = 0.016f; // ~60 FPS
+            minFrameIntervalSlider.maxValue = 0.1f;   // ~10 FPS
+            minFrameIntervalSlider.onValueChanged.AddListener(OnMinFrameIntervalChanged);
         }
 
-        if (showAllButton != null)
+        // Настройка переключателя GPU обработки
+        if (gpuProcessingToggle != null)
         {
-            showAllButton.onClick.AddListener(SelectAllClasses);
+            gpuProcessingToggle.onValueChanged.AddListener(OnGpuProcessingToggleChanged);
         }
+    }
 
-        // Setup slider
-        if (maxProcessingTimeSlider != null)
-        {
-            maxProcessingTimeSlider.minValue = 50f;
-            maxProcessingTimeSlider.maxValue = 500f;
-            maxProcessingTimeSlider.value = 200f; // Default
-            maxProcessingTimeSlider.onValueChanged.AddListener(OnMaxProcessingTimeChanged);
-            UpdateMaxTimeLabel();
-        }
-
-        // Setup toggle
-        if (autoOptimizationToggle != null)
-        {
-            autoOptimizationToggle.isOn = true; // Default enabled
-            autoOptimizationToggle.onValueChanged.AddListener(OnAutoOptimizationChanged);
-        }
-
-        // Setup quick setting buttons
+    private void SetupQuickSettingsButtons()
+    {
         if (ultraFastButton != null)
-        {
-            ultraFastButton.onClick.AddListener(ApplyUltraFastSettings);
-        }
+            ultraFastButton.onClick.AddListener(() => SetQuickPreset(PerformancePreset.UltraFast));
 
         if (balancedButton != null)
-        {
-            balancedButton.onClick.AddListener(ApplyBalancedSettings);
-        }
+            balancedButton.onClick.AddListener(() => SetQuickPreset(PerformancePreset.Balanced));
 
         if (qualityButton != null)
+            qualityButton.onClick.AddListener(() => SetQuickPreset(PerformancePreset.Quality));
+    }
+
+    private void OnFrameSkipChanged(float value)
+    {
+        int frameSkip = Mathf.RoundToInt(value);
+        SetFrameSkipRate(frameSkip);
+        UpdateFrameSkipLabel(frameSkip);
+    }
+
+    private void OnMinFrameIntervalChanged(float value)
+    {
+        SetMinFrameInterval(value);
+        UpdateMinFrameIntervalLabel(value);
+    }
+
+    private void OnGpuProcessingToggleChanged(bool useGpu)
+    {
+        SetGpuProcessing(!useGpu); // Инвертируем, так как в AsyncSegmentationManager useCpuArgmax
+        UpdateGpuProcessingLabel(!useGpu);
+    }
+
+    private void UpdateFrameSkipLabel(int frameSkip)
+    {
+        if (frameSkipLabel != null)
         {
-            qualityButton.onClick.AddListener(ApplyQualitySettings);
+            frameSkipLabel.text = $"Пропуск кадров: каждый {frameSkip}-й";
         }
     }
 
-    private void SelectWallsAndCeiling()
+    private void UpdateMinFrameIntervalLabel(float interval)
     {
-        segmentationManager.showAllClasses = false;
-        segmentationManager.showWall = true;
-        segmentationManager.showCeiling = true;
-        segmentationManager.showFloor = true;
-        segmentationManager.showChair = false;
-        segmentationManager.showTable = false;
-        segmentationManager.showDoor = false;
-        Debug.Log("UI: Selected Walls, Ceiling, and Floor.");
-    }
-
-    private void SelectFurnishings()
-    {
-        segmentationManager.showAllClasses = false;
-        segmentationManager.showWall = false;
-        segmentationManager.showCeiling = false;
-        segmentationManager.showFloor = false;
-        segmentationManager.showChair = true;
-        segmentationManager.showTable = true;
-        segmentationManager.showDoor = true;
-        Debug.Log("UI: Selected Furnishings (Chair, Table, Door).");
-    }
-
-    private void SelectAllClasses()
-    {
-        segmentationManager.showAllClasses = true;
-        Debug.Log("UI: Selected All Classes.");
-    }
-
-
-    private void OnMaxProcessingTimeChanged(float value)
-    {
-        Debug.Log($"⚙️ Processing time setting: {value}ms (Sentis 2.0 auto-optimizes)");
-        UpdateMaxTimeLabel();
-    }
-
-    private void OnAutoOptimizationChanged(bool enabled)
-    {
-        Debug.Log($"🔧 Auto optimization: {(enabled ? "Enabled" : "Disabled")} (Built into Sentis 2.0)");
-    }
-
-    private void UpdateMaxTimeLabel()
-    {
-        if (maxTimeLabel != null && maxProcessingTimeSlider != null)
+        if (minFrameIntervalLabel != null)
         {
-            maxTimeLabel.text = $"Max Processing: {maxProcessingTimeSlider.value:F0}ms";
+            float fps = 1.0f / interval;
+            minFrameIntervalLabel.text = $"Макс. FPS: {fps:F0}";
         }
     }
 
-    // Quick setting presets
-    private void ApplyUltraFastSettings()
+    private void UpdateGpuProcessingLabel(bool useGpu)
     {
-        Debug.Log("Applying ULTRA FAST settings");
-
-        SelectWallsAndCeiling(); // Show structural elements for speed
-
-        if (maxProcessingTimeSlider != null)
+        if (gpuProcessingLabel != null)
         {
-            maxProcessingTimeSlider.value = 100f;
-            OnMaxProcessingTimeChanged(100f);
+            gpuProcessingLabel.text = useGpu ? "GPU обработка" : "CPU обработка";
         }
-
-        if (autoOptimizationToggle != null)
-        {
-            autoOptimizationToggle.isOn = true;
-            OnAutoOptimizationChanged(true);
-        }
-
-        Debug.Log("✅ Ultra Fast mode applied: Structural elements, 100ms max processing, Auto-optimization ON");
     }
 
-    private void ApplyBalancedSettings()
+    private void UpdateFps()
     {
-        Debug.Log("Applying BALANCED settings");
-
-        SelectAllClasses(); // Show everything
-
-        if (maxProcessingTimeSlider != null)
+        if (fpsText != null)
         {
-            maxProcessingTimeSlider.value = 200f;
-            OnMaxProcessingTimeChanged(200f);
+            float fps = 1.0f / Time.unscaledDeltaTime;
+            fpsText.text = $"FPS: {fps:F1}";
         }
-
-        if (autoOptimizationToggle != null)
-        {
-            autoOptimizationToggle.isOn = true;
-            OnAutoOptimizationChanged(true);
-        }
-
-        Debug.Log("✅ Balanced mode applied: All classes, 200ms max processing, Auto-optimization ON");
     }
 
-    private void ApplyQualitySettings()
+    private void UpdateUI()
     {
-        Debug.Log("Applying QUALITY settings");
-
-        SelectAllClasses(); // Show everything
-
-        if (maxProcessingTimeSlider != null)
+        // Обновляем UI элементы текущими значениями из AsyncSegmentationManager
+        if (frameSkipSlider != null)
         {
-            maxProcessingTimeSlider.value = 400f;
-            OnMaxProcessingTimeChanged(400f);
+            int currentFrameSkip = GetFrameSkipRate();
+            frameSkipSlider.value = currentFrameSkip;
+            UpdateFrameSkipLabel(currentFrameSkip);
         }
 
-        if (autoOptimizationToggle != null)
+        if (minFrameIntervalSlider != null)
         {
-            autoOptimizationToggle.isOn = false;
-            OnAutoOptimizationChanged(false);
+            float currentInterval = GetMinFrameInterval();
+            minFrameIntervalSlider.value = currentInterval;
+            UpdateMinFrameIntervalLabel(currentInterval);
         }
 
-        Debug.Log("✅ Quality mode applied: All classes, 400ms max processing, Auto-optimization OFF");
+        if (gpuProcessingToggle != null)
+        {
+            bool useGpu = !GetUseCpuArgmax();
+            gpuProcessingToggle.isOn = useGpu;
+            UpdateGpuProcessingLabel(useGpu);
+        }
     }
 
-    // Public methods for external control
-    public void SetMaxProcessingTime(float timeMs)
+    public enum PerformancePreset
     {
-        if (maxProcessingTimeSlider != null)
+        UltraFast,
+        Balanced,
+        Quality
+    }
+
+    public void SetQuickPreset(PerformancePreset preset)
+    {
+        switch (preset)
         {
-            maxProcessingTimeSlider.value = timeMs;
-            OnMaxProcessingTimeChanged(timeMs);
+            case PerformancePreset.UltraFast:
+                SetFrameSkipRate(5);
+                SetMinFrameInterval(0.1f); // 10 FPS
+                SetGpuProcessing(true);
+                Debug.Log("Применен пресет: Ультра быстро");
+                break;
+
+            case PerformancePreset.Balanced:
+                SetFrameSkipRate(2);
+                SetMinFrameInterval(0.033f); // 30 FPS
+                SetGpuProcessing(true);
+                Debug.Log("Применен пресет: Сбалансированно");
+                break;
+
+            case PerformancePreset.Quality:
+                SetFrameSkipRate(1);
+                SetMinFrameInterval(0.016f); // 60 FPS
+                SetGpuProcessing(true);
+                Debug.Log("Применен пресет: Качество");
+                break;
         }
+
+        UpdateUI();
+    }
+
+    // Методы для взаимодействия с AsyncSegmentationManager через прямой доступ
+    private void SetFrameSkipRate(int value)
+    {
+        if (segmentationManager != null)
+            segmentationManager.frameSkipRate = value;
+    }
+
+    private int GetFrameSkipRate()
+    {
+        return segmentationManager != null ? segmentationManager.frameSkipRate : 2;
+    }
+
+    private void SetMinFrameInterval(float value)
+    {
+        if (segmentationManager != null)
+            segmentationManager.minFrameInterval = value;
+    }
+
+    private float GetMinFrameInterval()
+    {
+        return segmentationManager != null ? segmentationManager.minFrameInterval : 0.033f;
+    }
+
+    private void SetGpuProcessing(bool useGpu)
+    {
+        if (segmentationManager != null)
+            segmentationManager.UseCpuArgmax = !useGpu; // Инвертируем
+    }
+
+    private bool GetUseCpuArgmax()
+    {
+        return segmentationManager != null ? segmentationManager.UseCpuArgmax : false;
     }
 }

@@ -47,11 +47,11 @@ public class ColorPaletteManager : MonoBehaviour
         public List<ColorData> data;
     }
 
-    public GameObject colorSwatchPrefab; 
-    public Transform paletteContainer; 
+    public GameObject colorSwatchPrefab;
+    public Transform paletteContainer;
 
     // Добавлена ссылка на SegmentationManager
-    public SegmentationManager segmentationManager;
+    // public SegmentationManager segmentationManager;
 
     private const string ApiUrl = "https://api.remalux.kz/api/colors?page=1&perPage=10";
 
@@ -66,7 +66,7 @@ public class ColorPaletteManager : MonoBehaviour
         {
             // Устанавливаем заголовки, как в вашем примере
             webRequest.SetRequestHeader("Accept", "application/json, text/plain, */*");
-            
+
             yield return webRequest.SendWebRequest();
 
             if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError)
@@ -91,6 +91,7 @@ public class ColorPaletteManager : MonoBehaviour
         }
 
         // Проверяем, назначен ли SegmentationManager
+        /*
         if (segmentationManager == null)
         {
             Debug.LogError("SegmentationManager is not assigned in the inspector!");
@@ -102,6 +103,7 @@ public class ColorPaletteManager : MonoBehaviour
                 return;
             }
         }
+        */
 
         // Очищаем предыдущие цвета, если они есть
         foreach (Transform child in paletteContainer)
@@ -113,7 +115,7 @@ public class ColorPaletteManager : MonoBehaviour
         {
             GameObject swatch = Instantiate(colorSwatchPrefab, paletteContainer);
             UnityEngine.UI.Image image = swatch.GetComponent<UnityEngine.UI.Image>();
-            
+
             // Получаем или добавляем компонент Button
             UnityEngine.UI.Button button = swatch.GetComponent<UnityEngine.UI.Button>();
             if (button == null)
@@ -137,6 +139,7 @@ public class ColorPaletteManager : MonoBehaviour
 
     void OnColorSelected(Color selectedColor)
     {
+        /*
         if (segmentationManager != null)
         {
             segmentationManager.SetPaintColor(selectedColor);
@@ -145,5 +148,7 @@ public class ColorPaletteManager : MonoBehaviour
         {
             Debug.LogError("Cannot set color because SegmentationManager is not available.");
         }
+        */
+        Debug.Log($"Color selected: {selectedColor}, but painting is disabled for now.");
     }
-} 
+}

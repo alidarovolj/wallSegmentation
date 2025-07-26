@@ -1,0 +1,27 @@
+#pragma kernel TemporalSmoothing
+
+// Input: The raw segmentation mask for the current frame
+Texture2D<float> _CurrentFrame;
+// Input: The smoothed segmentation mask from the previous frame
+Texture2D<float> _PreviousFrame;
+// Output: The newly smoothed segmentation mask
+RWTexture2D<float> _SmoothedFrame;
+
+// Blending factor, from 0 to 1.
+// 0.0 = use only the previous frame
+// 1.0 = use only the current frame
+float _SmoothingFactor;
+
+[numthreads(8,8,1)]
+void TemporalSmoothing (uint3 id : SV_DispatchThreadID)
+{
+    // Get the values from the current and previous frames
+    float current_value = _CurrentFrame[id.xy];
+    float previous_value = _PreviousFrame[id.xy];
+
+    // Apply linear interpolation (lerp)
+    float smoothed_value = lerp(previous_value, current_value, _SmoothingFactor);
+
+    // Write the result to the output texture
+    _SmoothedFrame[id.xy] = smoothed_value;
+} 
