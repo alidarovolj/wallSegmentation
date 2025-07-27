@@ -3,6 +3,9 @@ Shader "Unlit/VisualizeMask"
     Properties
     {
         _MaskTex ("Segmentation Mask (RFloat)", 2D) = "white" {}
+        _SelectedClass ("Selected Class (-1 for all)", Int) = -1
+        _Opacity ("Opacity", Range(0, 1)) = 0.5
+        _PaintColor ("Paint Color", Color) = (1, 0, 0, 1)
     }
     SubShader
     {
@@ -33,26 +36,23 @@ Shader "Unlit/VisualizeMask"
             };
 
             sampler2D _MaskTex;
+            int _SelectedClass;
+            float _Opacity;
+            fixed4 _PaintColor;
             
-            // Простая цветовая карта на 16 классов
-            static const float3 colorMap[16] = {
-                float3(0, 0, 0),        // 0: background
-                float3(1, 0, 0),        // 1: wall (Red)
-                float3(0, 1, 0),        // 2: floor (Green)
-                float3(0, 0, 1),        // 3: ceiling (Blue)
-                float3(1, 1, 0),        // 4: door (Yellow)
-                float3(0, 1, 1),        // 5: window (Cyan)
-                float3(0.5, 0.5, 0.5),  // 6: cabinet (Gray)
-                float3(1, 0, 1),        // 7: chair (Magenta)
-                float3(0.5, 0, 1),      // 8: sofa (Purple)
-                float3(0, 0.5, 0.5),    // 9: table (Teal)
-                float3(1, 0.5, 0),      // 10: bed (Orange)
-                float3(0.5, 1, 0),      // 11: person (Lime)
-                float3(0.2, 0.8, 0.2),  // 12: plant (Forest Green)
-                float3(1, 0.75, 0.8),   // 13: furniture_other (Pink)
-                float3(0.8, 0.6, 0.4),  // 14: decoration (Brown)
-                float3(0.3, 0.3, 0.8)   // 15: electronics (Indigo)
-            };
+            // Функция для генерации процедурного цвета на основе ID класса
+            float3 getClassColor(int classId)
+            {
+                // Используем HSV в RGB конвертацию для получения приятных, различных цветов
+                float hue = frac((float)classId * 0.61803398875f); // Золотое сечение
+                float saturation = 0.8f;
+                float value = 0.95f;
+
+                float3 hsv = float3(hue, saturation, value);
+                float3 rgb = cos(2.0 * 3.14159265 * (hsv.x + float3(0.0, -1.0/3.0, 1.0/3.0)));
+                rgb = hsv.z * (1.0 - hsv.y + hsv.y * (0.5 + 0.5 * rgb));
+                return rgb;
+            }
 
             v2f vert (appdata v)
             {
@@ -68,16 +68,39 @@ Shader "Unlit/VisualizeMask"
                 float class_index_float = tex2Dlod(_MaskTex, float4(i.uv, 0, 0)).r;
                 int class_index = (int)round(class_index_float);
 
-                // Показываем только класс 'wall' (ID 1)
-                if (class_index == 1)
+                // Если _SelectedClass = -2, ничего не показываем
+                if (_SelectedClass == -2)
                 {
-                    // Используем красный цвет для стен с полупрозрачностью
-                    return fixed4(1.0, 0.0, 0.0, 0.5); 
+                    return fixed4(0, 0, 0, 0);
+                }
+
+                // Если _SelectedClass = -1, показываем все классы
+                // Если _SelectedClass >= 0, показываем только выбранный класс
+                if (_SelectedClass >= 0)
+                {
+                    if (class_index == _SelectedClass)
+                    {
+                        // Показываем выбранный класс, используя цвет для покраски
+                        return fixed4(_PaintColor.rgb, _Opacity);
+                    }
+                    else
+                    {
+                        // Скрываем все остальные классы
+                        return fixed4(0, 0, 0, 0);
+                    }
                 }
                 else
                 {
-                    // Все остальные классы делаем невидимыми
-                    return fixed4(0, 0, 0, 0);
+                    // Показываем все классы (кроме background)
+                    // Для этой модели нет background класса, поэтому показываем все с ID > -1
+                    if (class_index >= 0)
+                    {
+                        return fixed4(getClassColor(class_index), _Opacity);
+                    }
+                    else
+                    {
+                        return fixed4(0, 0, 0, 0);
+                    }
                 }
             }
             ENDCG

@@ -800,8 +800,16 @@ MonoBehaviour:
   segmentationDisplay: {fileID: 76938650}
   modelAsset: {fileID: 5022602860645237092, guid: b8b2d82c84198a646a8836a3c5d86bc7, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
+  imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
   visualizationMaterial: {fileID: 2100000, guid: 14d565b5b3f0d9c4bbde8f5628f16cde, type: 2}
   processingResolution: {x: 512, y: 512}
+  selectedClass: -1
+  visualizationOpacity: 0.5
+  paintColor: {r: 1, g: 0, b: 0, a: 1}
+  showAllClasses: 0
+  showWalls: 1
+  showFloors: 0
+  showCeilings: 0
   frameSkipRate: 1
 --- !u!4 &1430626605
 Transform:

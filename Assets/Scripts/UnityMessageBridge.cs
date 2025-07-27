@@ -2,59 +2,51 @@ using UnityEngine;
 
 public class UnityMessageBridge : MonoBehaviour
 {
-      // Ссылка на ваш SegmentationManager
-      [SerializeField] private SegmentationManager segmentationManager;
+      [Tooltip("Ссылка на менеджер сегментации для управления цветом.")]
+      [SerializeField]
+      private AsyncSegmentationManager segmentationManager;
+
+      void Start()
+      {
+            // Попытка найти менеджер автоматически, если он не назначен в инспекторе
+            if (segmentationManager == null)
+            {
+                  segmentationManager = FindObjectOfType<AsyncSegmentationManager>();
+                  if (segmentationManager == null)
+                  {
+                        Debug.LogError("UnityMessageBridge: AsyncSegmentationManager не найден на сцене! Покраска из Flutter не будет работать.");
+                  }
+            }
+      }
 
       /// <summary>
-      /// Этот метод будет вызываться из Flutter для установки цвета.
-      /// Flutter передаст цвет в виде строки HTML (например, "#FF0000").
+      /// Этот метод должен вызываться из Flutter для установки цвета покраски.
       /// </summary>
-      /// <param name="colorString">Строка с цветом в формате HTML.</param>
-      public void SetPaintColorFromString(string colorString)
+      /// <param name="hexColor">Строка с цветом в HEX-формате (например, "#RRGGBB").</param>
+      public void SetPaintColorFromHex(string hexColor)
       {
             if (segmentationManager == null)
             {
-                  Debug.LogError("SegmentationManager не назначен в UnityMessageBridge!");
+                  Debug.LogError("Невозможно установить цвет: AsyncSegmentationManager не найден.");
+                  return;
+            }
+
+            if (string.IsNullOrEmpty(hexColor))
+            {
+                  Debug.LogError("Получена пустая строка цвета.");
                   return;
             }
 
             Color newColor;
-            if (ColorUtility.TryParseHtmlString(colorString, out newColor))
+            // Используем ColorUtility для парсинга HEX-строки
+            if (ColorUtility.TryParseHtmlString(hexColor, out newColor))
             {
+                  Debug.Log($"🎨 Получен цвет из Flutter: {hexColor}. Устанавливаем его для покраски.");
                   segmentationManager.SetPaintColor(newColor);
-                  Debug.Log($"[UnityMessageBridge] Цвет из Flutter установлен: {colorString}");
             }
             else
             {
-                  Debug.LogError($"[UnityMessageBridge] Не удалось распознать цвет из строки: {colorString}");
+                  Debug.LogError($"Не удалось распознать HEX-цвет: {hexColor}");
             }
       }
-
-      /// <summary>
-      /// Этот метод будет вызываться из Flutter для выбора класса для покраски.
-      /// Flutter передаст ID класса в виде строки.
-      /// </summary>
-      /// <param name="classIdString">ID класса в виде строки.</param>
-      public void SetClassToPaint(string classIdString)
-      {
-            if (segmentationManager == null)
-            {
-                  Debug.LogError("SegmentationManager не назначен в UnityMessageBridge!");
-                  return;
-            }
-
-            if (int.TryParse(classIdString, out int classId))
-            {
-                  // Здесь нам нужен новый метод в SegmentationManager, который мы сейчас добавим.
-                  segmentationManager.SelectClassForPainting(classId);
-                  Debug.Log($"[UnityMessageBridge] Класс для покраски из Flutter установлен: {classId}");
-            }
-            else
-            {
-                  Debug.LogError($"[UnityMessageBridge] Не удалось распознать ID класса из строки: {classIdString}");
-            }
-      }
-
-      // В будущем здесь можно добавить методы для отправки сообщений во Flutter,
-      // например, о том, какой класс был выбран тапом в Unity.
 }
