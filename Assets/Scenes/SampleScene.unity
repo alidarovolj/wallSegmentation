@@ -798,15 +798,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
   segmentationDisplay: {fileID: 76938650}
-  modelAsset: {fileID: 5022602860645237092, guid: 1c3c50cb9f4b03d40acb0fef45a20494, type: 3}
-  preprocessingShader: {fileID: 7200000, guid: cea464de1154d4a1c8266a3caaf19d25, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: b8b2d82c84198a646a8836a3c5d86bc7, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
-  temporalSmoothingShader: {fileID: 7200000, guid: 0422907fd91c541d78cf3ee01fedca38, type: 3}
-  overrideResolution: {x: 960, y: 720}
-  smoothingFactor: 0.2
-  useCpuArgmax: 0
-  frameSkipRate: 2
-  minFrameInterval: 0.033
+  visualizationMaterial: {fileID: 2100000, guid: 14d565b5b3f0d9c4bbde8f5628f16cde, type: 2}
+  processingResolution: {x: 512, y: 512}
+  frameSkipRate: 1
 --- !u!4 &1430626605
 Transform:
   m_ObjectHideFlags: 0
