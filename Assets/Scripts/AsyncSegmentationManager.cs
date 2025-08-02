@@ -156,6 +156,18 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     void Update()
     {
+        // Обновляем параметр ориентации в шейдере
+        if (displayMaterialInstance != null)
+        {
+            // Используем пропорции для определения ориентации, чтобы было согласовано с ConvertCpuImageToTexture
+            bool isPortrait = Screen.height > Screen.width;
+            bool isRealDevice = !Application.isEditor;
+
+            // Передаем информацию о портретном режиме и типе устройства в шейдер
+            displayMaterialInstance.SetFloat("_IsPortrait", isPortrait ? 1.0f : 0.0f);
+            displayMaterialInstance.SetFloat("_IsRealDevice", isRealDevice ? 1.0f : 0.0f);
+        }
+
         // Отладка: определяем класс по клику
         if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
         {
@@ -240,8 +252,10 @@ public class AsyncSegmentationManager : MonoBehaviour
             worker = new Worker(runtimeModel, BackendType.GPUCompute);
             Debug.Log("✅ Worker создан с GPUCompute backend");
 
-            cameraInputTexture = CreateRenderTexture(processingResolution.x, processingResolution.y, RenderTextureFormat.ARGB32);
-            normalizedTexture = CreateRenderTexture(processingResolution.x, processingResolution.y, RenderTextureFormat.ARGBFloat);
+            // Создаем текстуры с максимальным разрешением (будем изменять размер динамически)
+            int maxRes = processingResolution.x;
+            cameraInputTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGB32);
+            normalizedTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGBFloat);
 
             if (segmentationDisplay != null && visualizationMaterial != null)
             {
@@ -259,6 +273,9 @@ public class AsyncSegmentationManager : MonoBehaviour
             }
 
             Debug.Log("🎉 AsyncSegmentationManager инициализация завершена успешно!");
+
+            // Автоматически показываем только стены для удобства тестирования
+            Invoke(nameof(ShowOnlyWalls), 1f);
         }
         catch (System.Exception e)
         {
@@ -270,31 +287,25 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     private void SetupCorrectAspectRatio()
     {
-        // Корректная настройка AspectRatioFitter для телефона
+        // Убираем AspectRatioFitter - он создает искажения
         var fitter = segmentationDisplay.GetComponent<AspectRatioFitter>();
-        if (fitter == null)
+        if (fitter != null)
         {
-            fitter = segmentationDisplay.gameObject.AddComponent<AspectRatioFitter>();
+            DestroyImmediate(fitter);
+            Debug.Log("🗑️ AspectRatioFitter удален для предотвращения искажений");
         }
 
-        // Настройка для растягивания на весь экран
+        // Настройка для точного растягивания на весь экран без искажений
         var rectTransform = segmentationDisplay.rectTransform;
         rectTransform.anchorMin = Vector2.zero;
         rectTransform.anchorMax = Vector2.one;
         rectTransform.offsetMin = Vector2.zero;
         rectTransform.offsetMax = Vector2.zero;
 
-        // Правильное соотношение сторон для телефона
-        // Большинство телефонов имеют портретную ориентацию (высота > ширина)
-        float screenAspect = (float)Screen.width / Screen.height;
+        // Масштаб остается 1:1 - отражение только в шейдере
+        rectTransform.localScale = Vector3.one;
 
-        fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-        fitter.aspectRatio = screenAspect;
-
-        // Правильное отзеркаливание для соответствия AR-камере
-        rectTransform.localScale = new Vector3(-1, -1, 1);
-
-        Debug.Log($"✅ AspectRatioFitter настроен для экрана {Screen.width}x{Screen.height}, соотношение: {screenAspect}");
+        Debug.Log($"✅ RawImage настроен на точное покрытие экрана {Screen.width}x{Screen.height} без AspectRatioFitter");
     }
 
     private System.Collections.IEnumerator ForceMaterialUpdate()
@@ -326,7 +337,8 @@ public class AsyncSegmentationManager : MonoBehaviour
             NormalizeImage();
 
             inputTensor?.Dispose();
-            inputTensor = TextureConverter.ToTensor(normalizedTexture, processingResolution.x, processingResolution.y, 3);
+            // Используем размеры текстуры, а не processingResolution
+            inputTensor = TextureConverter.ToTensor(normalizedTexture, normalizedTexture.width, normalizedTexture.height, 3);
 
             worker.Schedule(inputTensor);
 
@@ -374,9 +386,21 @@ public class AsyncSegmentationManager : MonoBehaviour
         }
 
         var shape = outputTensor.shape;
+        // Используем размеры из тензора
+        int batchSize = shape[0];
+        int numClasses = shape[1];
         int height = shape[2];
         int width = shape[3];
-        int numClasses = shape[1];
+
+        Debug.Log($"🔍 Размеры тензора: batch={batchSize}, classes={numClasses}, height={height}, width={width}");
+        Debug.Log($"📏 Входная текстура: {cameraInputTexture.width}x{cameraInputTexture.height}");
+
+        // Проверяем соответствие размеров
+        if (width != height)
+        {
+            Debug.LogError($"❌ Тензор не квадратный: {width}x{height}!");
+            return;
+        }
 
         if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
         {
@@ -451,13 +475,55 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     private async Task ConvertCpuImageToTexture(XRCpuImage cpuImage)
     {
+        // Определяем правильную трансформацию в зависимости от ориентации
+        // Используем пропорции экрана для определения ориентации - это надежнее, чем Screen.orientation в редакторе.
+        bool isScreenPortrait = Screen.height > Screen.width;
+
+        var transformation = XRCpuImage.Transformation.MirrorY;
+
+        // На реальном устройстве в портретном режиме нужен поворот на 90°
+        if (isScreenPortrait && !Application.isEditor)
+        {
+            transformation = XRCpuImage.Transformation.MirrorY | XRCpuImage.Transformation.MirrorX;
+            Debug.Log($"📱 Реальное устройство в портретном режиме ({Screen.width}x{Screen.height}). Трансформация: {transformation}");
+        }
+        else if (isScreenPortrait && Application.isEditor)
+        {
+            // В редакторе портретный режим обрабатывается по-другому
+            transformation = XRCpuImage.Transformation.MirrorY;
+            Debug.Log($"📱 Редактор в портретном режиме ({Screen.width}x{Screen.height}). Трансформация: {transformation}");
+        }
+        else
+        {
+            Debug.Log($"📱 Ландшафтный режим ({Screen.width}x{Screen.height}). Трансформация: {transformation}");
+        }
+
+        // Вычисляем максимальное разрешение, которое не превышает входное изображение
+        int maxDimension = Mathf.Min(cpuImage.width, cpuImage.height);
+        int targetResolution = Mathf.Min(processingResolution.x, maxDimension);
+
+        // Используем полное изображение без обрезки. Оно будет сжато до квадратного разрешения.
         conversionParams = new XRCpuImage.ConversionParams
         {
             inputRect = new RectInt(0, 0, cpuImage.width, cpuImage.height),
-            outputDimensions = new Vector2Int(processingResolution.x, processingResolution.y),
+            outputDimensions = new Vector2Int(targetResolution, targetResolution),
             outputFormat = TextureFormat.RGBA32,
-            transformation = XRCpuImage.Transformation.MirrorY
+            transformation = transformation
         };
+
+        Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height}, сжатие до {targetResolution}x{targetResolution}");
+
+        // Пересоздаем текстуры, если размер изменился
+        if (cameraInputTexture.width != targetResolution || cameraInputTexture.height != targetResolution)
+        {
+            ReleaseRenderTexture(cameraInputTexture);
+            ReleaseRenderTexture(normalizedTexture);
+
+            cameraInputTexture = CreateRenderTexture(targetResolution, targetResolution, RenderTextureFormat.ARGB32);
+            normalizedTexture = CreateRenderTexture(targetResolution, targetResolution, RenderTextureFormat.ARGBFloat);
+
+            Debug.Log($"🔄 Пересоздали текстуры для разрешения {targetResolution}x{targetResolution}");
+        }
 
         var conversionRequest = cpuImage.ConvertAsync(conversionParams);
 
@@ -532,9 +598,14 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         var data = request.GetData<float>();
 
-        // UV-координаты с правильной коррекцией для отзеркаленного изображения
-        float uv_x = 1.0f - (screenPos.x / Screen.width);
-        float uv_y = 1.0f - (screenPos.y / Screen.height);
+        // Преобразуем экранные координаты в координаты текстуры
+        Vector2 screenUV = new Vector2(screenPos.x / Screen.width, screenPos.y / Screen.height);
+
+        // Применяем те же преобразования, что и в шейдере
+        float uv_x = 1.0f - screenUV.x; // Горизонтальное отражение (как в шейдере)
+        float uv_y = 1.0f - screenUV.y; // Вертикальное отражение
+
+        Debug.Log($"🎯 Клик: экран={screenPos}, screenUV=({screenUV.x:F3}, {screenUV.y:F3}), finalUV=({uv_x:F3}, {uv_y:F3})");
 
         int textureX = (int)(uv_x * segmentationMaskTexture.width);
         int textureY = (int)(uv_y * segmentationMaskTexture.height);
@@ -561,9 +632,15 @@ public class AsyncSegmentationManager : MonoBehaviour
     /// </summary>
     private void UpdateMaterialParameters()
     {
-        if (displayMaterialInstance == null) return;
+        if (displayMaterialInstance == null)
+        {
+            Debug.LogWarning("⚠️ displayMaterialInstance is null в UpdateMaterialParameters!");
+            return;
+        }
 
-        int classToShow = -2;
+        int classToShow = selectedClass;
+
+        // Логика определения какой класс показывать
         if (showAllClasses)
         {
             classToShow = -1;
@@ -580,14 +657,13 @@ public class AsyncSegmentationManager : MonoBehaviour
         {
             classToShow = 5;
         }
-        else
-        {
-            classToShow = selectedClass;
-        }
+        // else используем selectedClass
 
         displayMaterialInstance.SetInt("_SelectedClass", classToShow);
         displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
         displayMaterialInstance.SetColor("_PaintColor", paintColor);
+
+        Debug.Log($"🎨 Обновлены параметры материала: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}, showWalls={showWalls}");
     }
 
     public void SetPaintColor(Color color)
@@ -624,5 +700,57 @@ public class AsyncSegmentationManager : MonoBehaviour
             selectedClass = -1;
         }
         UpdateMaterialParameters();
+    }
+
+    /// <summary>
+    /// Показывает только стены (класс 0)
+    /// </summary>
+    public void ShowOnlyWalls()
+    {
+        selectedClass = 0;
+        showAllClasses = false;
+        showWalls = true;
+        showFloors = false;
+        showCeilings = false;
+
+        // Принудительно обновляем параметры материала
+        UpdateMaterialParameters();
+
+        Debug.Log("🧱 Показываем только стены (класс 0)");
+
+        // Дополнительная проверка, что параметры установлены правильно
+        if (displayMaterialInstance != null)
+        {
+            int currentClass = displayMaterialInstance.GetInt("_SelectedClass");
+            Debug.Log($"🔍 Проверка: _SelectedClass в материале = {currentClass}");
+        }
+    }
+
+    /// <summary>
+    /// Скрывает всю сегментацию
+    /// </summary>
+    public void HideAllClasses()
+    {
+        selectedClass = -2;
+        showAllClasses = false;
+        showWalls = false;
+        showFloors = false;
+        showCeilings = false;
+        UpdateMaterialParameters();
+        Debug.Log("👻 Скрываем всю сегментацию");
+    }
+
+    /// <summary>
+    /// Показывает все классы разными цветами
+    /// </summary>
+    public void ShowAllClassesColored()
+    {
+        selectedClass = -1;
+        showAllClasses = true;
+        showWalls = false;
+        showFloors = false;
+        showCeilings = false;
+        UpdateMaterialParameters();
+        Debug.Log("🌈 Показываем все классы разными цветами");
     }
 }

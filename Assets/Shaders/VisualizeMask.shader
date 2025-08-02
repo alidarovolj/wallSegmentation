@@ -6,6 +6,9 @@ Shader "Unlit/VisualizeMask"
         _SelectedClass ("Selected Class (-1 for all)", Int) = -1
         _Opacity ("Opacity", Range(0, 1)) = 0.5
         _PaintColor ("Paint Color", Color) = (1, 0, 0, 1)
+        
+        [HideInInspector] _IsPortrait ("Is Portrait Mode", Float) = 0
+        [HideInInspector] _IsRealDevice ("Is Real Device", Float) = 0
     }
     SubShader
     {
@@ -31,37 +34,33 @@ Shader "Unlit/VisualizeMask"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float2 uv : TEXCOORD0;
             };
 
             sampler2D _MaskTex;
             int _SelectedClass;
             float _Opacity;
             fixed4 _PaintColor;
+            float _IsPortrait;
+            float _IsRealDevice;
             
-            // Функция для генерации процедурного цвета на основе ID класса
             float3 getClassColor(int classId)
             {
-                // Используем HSV → RGB конверсию для получения приятных, различных цветов
-                float hue = frac((float)classId * 0.61803398875f); // Золотое сечение
+                float hue = frac((float)classId * 0.61803398875f);
                 float saturation = 0.9f;
                 float value = 0.85f;
-
-                // Правильная HSV → RGB конверсия
                 float h = hue * 6.0f;
                 float c = value * saturation;
                 float x = c * (1.0f - abs(fmod(h, 2.0f) - 1.0f));
                 float m = value - c;
-
                 float3 rgb;
-                if (h < 1.0f)      rgb = float3(c, x, 0);
+                if (h < 1.0f) rgb = float3(c, x, 0);
                 else if (h < 2.0f) rgb = float3(x, c, 0);
                 else if (h < 3.0f) rgb = float3(0, c, x);
                 else if (h < 4.0f) rgb = float3(0, x, c);
                 else if (h < 5.0f) rgb = float3(x, 0, c);
-                else               rgb = float3(c, 0, x);
-
+                else rgb = float3(c, 0, x);
                 return rgb + m;
             }
 
@@ -69,52 +68,66 @@ Shader "Unlit/VisualizeMask"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
+
+                // Применяем трансформации UV для соответствия камере
+                float2 uv = v.uv;
+                
+                // Базовые трансформации
+                uv.y = 1.0 - uv.y; // Инверсия Y для RawImage
+                
+                // Для реального устройства в портретном режиме нужна дополнительная логика
+                if (_IsRealDevice > 0.5 && _IsPortrait > 0.5)
+                {
+                    // На реальном устройстве в портретном режиме поворачиваем на 90°
+                    float2 rotatedUV;
+                    rotatedUV.x = uv.y;           // X становится Y
+                    rotatedUV.y = 1.0 - uv.x;     // Y становится инвертированным X
+                    uv = rotatedUV;
+                }
+                else
+                {
+                    // В редакторе или ландшафтном режиме просто отражаем по X
+                    uv.x = 1.0 - uv.x;
+                }
+                
+                o.uv = uv;
+                
                 return o;
             }
             
             fixed4 frag (v2f i) : SV_Target
             {
-                // Считываем индекс класса из RFloat текстуры
-                float class_index_float = tex2Dlod(_MaskTex, float4(i.uv, 0, 0)).r;
+                float class_index_float = tex2D(_MaskTex, i.uv).r;
                 int class_index = (int)round(class_index_float);
 
-                // Если _SelectedClass = -2, ничего не показываем
                 if (_SelectedClass == -2)
                 {
                     return fixed4(0, 0, 0, 0);
                 }
 
-                // Если _SelectedClass = -1, показываем все классы
-                // Если _SelectedClass >= 0, показываем только выбранный класс
                 if (_SelectedClass >= 0)
                 {
+                    // Показываем ТОЛЬКО выбранный класс
                     if (class_index == _SelectedClass)
                     {
-                        // Показываем выбранный класс, используя цвет для покраски
                         return fixed4(_PaintColor.rgb, _Opacity);
                     }
                     else
                     {
-                        // Скрываем все остальные классы
+                        // Все остальные классы полностью прозрачны
                         return fixed4(0, 0, 0, 0);
                     }
                 }
-                else
+                
+                // Показываем все классы разными цветами
+                if (class_index >= 0)
                 {
-                    // Показываем все классы (кроме background)
-                    // Для этой модели нет background класса, поэтому показываем все с ID > -1
-                    if (class_index >= 0)
-                    {
-                        return fixed4(getClassColor(class_index), _Opacity);
-                    }
-                    else
-                    {
-                        return fixed4(0, 0, 0, 0);
-                    }
+                    return fixed4(getClassColor(class_index), _Opacity);
                 }
+
+                return fixed4(0, 0, 0, 0);
             }
             ENDCG
         }
     }
-} 
+}

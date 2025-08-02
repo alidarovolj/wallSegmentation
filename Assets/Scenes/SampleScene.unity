@@ -809,7 +809,7 @@ MonoBehaviour:
   selectedClass: -1
   visualizationOpacity: 0.202
   paintColor: {r: 1, g: 0, b: 0, a: 1}
-  showAllClasses: 1
+  showAllClasses: 0
   showWalls: 1
   showFloors: 0
   showCeilings: 0
