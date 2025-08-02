@@ -24,6 +24,8 @@ public class AsyncSegmentationManager : MonoBehaviour
     [SerializeField]
     private ComputeShader imageNormalizerShader; // Шейдер для нормализации
     [SerializeField]
+    private ComputeShader maskPostProcessingShader; // Шейдер для сглаживания маски
+    [SerializeField]
     private Material visualizationMaterial; // Материал для визуализации маски
 
     private Model runtimeModel;
@@ -32,6 +34,12 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Header("Processing & Visualization")]
     [SerializeField]
     private Vector2Int processingResolution = new Vector2Int(512, 512);
+    [Tooltip("Enable median filter to smooth the mask")]
+    [SerializeField]
+    private bool enableMaskSmoothing = true;
+    [Tooltip("Number of smoothing passes to apply.")]
+    [SerializeField, Range(1, 10)]
+    private int maskSmoothingIterations = 2;
 
     [Header("Class Visualization")]
     [Tooltip("Selected class to display (-1 for all classes)")]
@@ -63,6 +71,8 @@ public class AsyncSegmentationManager : MonoBehaviour
     private RenderTexture cameraInputTexture;
     private RenderTexture normalizedTexture; // Текстура для нормализованного изображения
     private RenderTexture segmentationMaskTexture; // RFloat texture with class indices
+    private RenderTexture smoothedMaskTexture; // RFloat texture for the smoothed mask
+    private RenderTexture pingPongMaskTexture; // Temporary texture for multi-pass smoothing
     private Material displayMaterialInstance;
 
     // Sentis Tensors
@@ -140,6 +150,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         ReleaseRenderTexture(cameraInputTexture);
         ReleaseRenderTexture(normalizedTexture);
         ReleaseRenderTexture(segmentationMaskTexture);
+        ReleaseRenderTexture(smoothedMaskTexture);
+        ReleaseRenderTexture(pingPongMaskTexture);
     }
 
     void Update()
@@ -170,12 +182,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         {
             if (arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
             {
-                Debug.Log($"🎥 Обрабатываем кадр #{frameCount}");
                 ProcessFrameAsync(cpuImage);
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Не удалось получить изображение с камеры");
             }
         }
         frameCount++;
@@ -197,7 +204,6 @@ public class AsyncSegmentationManager : MonoBehaviour
                 }
             }
         }
-
 
         Debug.Log("🚀 AsyncSegmentationManager: Начинаем инициализацию...");
 
@@ -224,22 +230,18 @@ public class AsyncSegmentationManager : MonoBehaviour
             runtimeModel = ModelLoader.Load(modelAsset);
             Debug.Log($"✅ Модель загружена: {modelAsset.name}");
 
-            // Используем разрешение, указанное в инспекторе.
-            // Авто-определение убрано, чтобы избежать ошибки "Cannot get value of dim which is not static"
             if (processingResolution.x <= 0 || processingResolution.y <= 0)
             {
                 Debug.LogError("🚨 'processingResolution' в инспекторе имеет значение 0! Установите корректное значение (например, 512x512).");
-                return; // Прерываем инициализацию
+                return;
             }
             Debug.Log($"✅ Используется разрешение входа из инспектора: {processingResolution.x}x{processingResolution.y}");
 
             worker = new Worker(runtimeModel, BackendType.GPUCompute);
             Debug.Log("✅ Worker создан с GPUCompute backend");
 
-            // Инициализация текстур
             cameraInputTexture = CreateRenderTexture(processingResolution.x, processingResolution.y, RenderTextureFormat.ARGB32);
             normalizedTexture = CreateRenderTexture(processingResolution.x, processingResolution.y, RenderTextureFormat.ARGBFloat);
-            // segmentationMaskTexture будет создана динамически по размеру выхода модели
 
             if (segmentationDisplay != null && visualizationMaterial != null)
             {
@@ -248,14 +250,8 @@ public class AsyncSegmentationManager : MonoBehaviour
                 UpdateMaterialParameters();
                 Debug.Log("✅ Материал для отображения настроен");
 
-                // Растягиваем RawImage на весь экран
-                var rectTransform = segmentationDisplay.rectTransform;
-                rectTransform.anchorMin = Vector2.zero;
-                rectTransform.anchorMax = Vector2.one;
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-                rectTransform.localScale = new Vector3(-1, -1, 1); // Отзеркаливаем по X и Y
-                Debug.Log("✅ SegmentationDisplay растянут на весь экран и отзеркален");
+                // Настраиваем правильное соотношение сторон для телефона
+                SetupCorrectAspectRatio();
             }
             else
             {
@@ -272,12 +268,42 @@ public class AsyncSegmentationManager : MonoBehaviour
         StartCoroutine(ForceMaterialUpdate());
     }
 
+    private void SetupCorrectAspectRatio()
+    {
+        // Корректная настройка AspectRatioFitter для телефона
+        var fitter = segmentationDisplay.GetComponent<AspectRatioFitter>();
+        if (fitter == null)
+        {
+            fitter = segmentationDisplay.gameObject.AddComponent<AspectRatioFitter>();
+        }
+
+        // Настройка для растягивания на весь экран
+        var rectTransform = segmentationDisplay.rectTransform;
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
+        // Правильное соотношение сторон для телефона
+        // Большинство телефонов имеют портретную ориентацию (высота > ширина)
+        float screenAspect = (float)Screen.width / Screen.height;
+
+        fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+        fitter.aspectRatio = screenAspect;
+
+        // Правильное отзеркаливание для соответствия AR-камере
+        rectTransform.localScale = new Vector3(-1, -1, 1);
+
+        Debug.Log($"✅ AspectRatioFitter настроен для экрана {Screen.width}x{Screen.height}, соотношение: {screenAspect}");
+    }
+
     private System.Collections.IEnumerator ForceMaterialUpdate()
     {
         while (true)
         {
             yield return new WaitForSeconds(1f);
-            if (segmentationDisplay != null && segmentationDisplay.material.shader.name != "Unlit/VisualizeMask")
+            if (segmentationDisplay != null && segmentationDisplay.material != null &&
+                segmentationDisplay.material.shader.name != "Unlit/VisualizeMask")
             {
                 Debug.LogWarning("⚠️ Обнаружен неверный материал! Принудительно устанавливаем правильный материал.");
                 var displayMaterial = new Material(visualizationMaterial);
@@ -290,7 +316,6 @@ public class AsyncSegmentationManager : MonoBehaviour
     private async void ProcessFrameAsync(XRCpuImage cpuImage)
     {
         isProcessing = true;
-        Debug.Log("🔄 Начинаем асинхронную обработку кадра...");
 
         try
         {
@@ -298,19 +323,14 @@ public class AsyncSegmentationManager : MonoBehaviour
             await convertTask;
             if (cancellationTokenSource.IsCancellationRequested || !convertTask.IsCompletedSuccessfully) return;
 
-            // Нормализация изображения
             NormalizeImage();
 
-            // Конвертация в тензор из нормализованной текстуры
             inputTensor?.Dispose();
             inputTensor = TextureConverter.ToTensor(normalizedTexture, processingResolution.x, processingResolution.y, 3);
-            Debug.Log($"✅ Тензор создан: {inputTensor.shape}");
 
             worker.Schedule(inputTensor);
-            Debug.Log("✅ Inference запущен");
 
             ProcessOutputWithArgmaxShader();
-            Debug.Log("✅ Постобработка завершена");
         }
         catch (Exception e)
         {
@@ -333,7 +353,6 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         int kernel = imageNormalizerShader.FindKernel("Normalize");
 
-        // Стандартные значения для моделей, обученных на ImageNet
         imageNormalizerShader.SetVector("image_mean", new Vector4(0.485f, 0.456f, 0.406f, 0));
         imageNormalizerShader.SetVector("image_std", new Vector4(0.229f, 0.224f, 0.225f, 0));
 
@@ -359,16 +378,20 @@ public class AsyncSegmentationManager : MonoBehaviour
         int width = shape[3];
         int numClasses = shape[1];
 
-        // Динамически создаем или изменяем размер текстуры для маски
         if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
         {
             ReleaseRenderTexture(segmentationMaskTexture);
             segmentationMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
 
+            ReleaseRenderTexture(smoothedMaskTexture);
+            smoothedMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+            ReleaseRenderTexture(pingPongMaskTexture);
+            pingPongMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
             if (displayMaterialInstance != null)
             {
                 displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
-                UpdateMaterialParameters(); // Обновляем параметры при каждом обновлении текстуры
+                UpdateMaterialParameters();
                 Debug.Log($"✅ Текстура маски создана/изменена на {width}x{height} и привязана к материалу");
             }
         }
@@ -391,6 +414,33 @@ public class AsyncSegmentationManager : MonoBehaviour
         int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
         int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
         cmd.DispatchCompute(argmaxShader, kernel, threadGroupsX, threadGroupsY, 1);
+
+        if (enableMaskSmoothing && maskPostProcessingShader != null && maskSmoothingIterations > 0)
+        {
+            int postProcessingKernel = maskPostProcessingShader.FindKernel("MedianFilter");
+            cmd.SetComputeIntParam(maskPostProcessingShader, "width", width);
+            cmd.SetComputeIntParam(maskPostProcessingShader, "height", height);
+
+            RenderTexture source = segmentationMaskTexture;
+            RenderTexture destination = smoothedMaskTexture;
+
+            for (int i = 0; i < maskSmoothingIterations; i++)
+            {
+                cmd.SetComputeTextureParam(maskPostProcessingShader, postProcessingKernel, "InputMask", source);
+                cmd.SetComputeTextureParam(maskPostProcessingShader, postProcessingKernel, "ResultMask", destination);
+                cmd.DispatchCompute(maskPostProcessingShader, postProcessingKernel, threadGroupsX, threadGroupsY, 1);
+
+                RenderTexture temp = source;
+                source = destination;
+
+                destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
+            }
+            displayMaterialInstance.SetTexture("_MaskTex", source);
+        }
+        else
+        {
+            displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+        }
 
         Graphics.ExecuteCommandBuffer(cmd);
         cmd.Dispose();
@@ -448,7 +498,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         var rt = new RenderTexture(width, height, 0, format)
         {
             enableRandomWrite = true,
-            filterMode = FilterMode.Point // Используем точечную фильтрацию для четких краев
+            filterMode = FilterMode.Point
         };
         rt.Create();
         return rt;
@@ -482,7 +532,7 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         var data = request.GetData<float>();
 
-        // UV-координаты отзеркалены, так как RawImage повернут на 180 градусов
+        // UV-координаты с правильной коррекцией для отзеркаленного изображения
         float uv_x = 1.0f - (screenPos.x / Screen.width);
         float uv_y = 1.0f - (screenPos.y / Screen.height);
 
@@ -498,7 +548,6 @@ public class AsyncSegmentationManager : MonoBehaviour
             string className = classNames.ContainsKey(classIndex) ? classNames[classIndex] : "Unknown";
             Debug.Log($"👇 Класс в точке клика: {className} (ID: {classIndex})");
 
-            // Устанавливаем выбранный класс и отключаем все UI-переключатели
             selectedClass = classIndex;
             showAllClasses = false;
             showWalls = false;
@@ -514,11 +563,10 @@ public class AsyncSegmentationManager : MonoBehaviour
     {
         if (displayMaterialInstance == null) return;
 
-        // Определяем какой класс показывать, исходя из состояния UI
-        int classToShow = -2; // По умолчанию ничего не показываем
+        int classToShow = -2;
         if (showAllClasses)
         {
-            classToShow = -1; // Показать все
+            classToShow = -1;
         }
         else if (showWalls)
         {
@@ -534,37 +582,23 @@ public class AsyncSegmentationManager : MonoBehaviour
         }
         else
         {
-            // Если ни один переключатель не активен, используем класс, выбранный кликом
             classToShow = selectedClass;
         }
 
-
-        // Устанавливаем параметры шейдера
         displayMaterialInstance.SetInt("_SelectedClass", classToShow);
         displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
         displayMaterialInstance.SetColor("_PaintColor", paintColor);
-
-        Debug.Log($"🎨 Обновлены параметры отображения: класс {classToShow}, прозрачность {visualizationOpacity}");
     }
 
-    /// <summary>
-    /// Sets the paint color for the selected class.
-    /// </summary>
-    /// <param name="color">The color to use for painting.</param>
     public void SetPaintColor(Color color)
     {
         paintColor = color;
-        // Если какой-то класс уже выбран, перекрашиваем его сразу
         if (selectedClass >= 0)
         {
             UpdateMaterialParameters();
         }
     }
 
-    /// <summary>
-    /// Устанавливает какой класс отображать
-    /// </summary>
-    /// <param name="classId">ID класса (-1 для всех классов)</param>
     public void SetSelectedClass(int classId)
     {
         selectedClass = classId;
@@ -575,19 +609,12 @@ public class AsyncSegmentationManager : MonoBehaviour
         UpdateMaterialParameters();
     }
 
-    /// <summary>
-    /// Устанавливает прозрачность отображения
-    /// </summary>
-    /// <param name="opacity">Значение от 0 до 1</param>
     public void SetVisualizationOpacity(float opacity)
     {
         visualizationOpacity = Mathf.Clamp01(opacity);
         UpdateMaterialParameters();
     }
 
-    /// <summary>
-    /// Переключает отображение всех классов
-    /// </summary>
     public void ToggleShowAllClasses()
     {
         showAllClasses = !showAllClasses;
@@ -598,6 +625,4 @@ public class AsyncSegmentationManager : MonoBehaviour
         }
         UpdateMaterialParameters();
     }
-
-
 }

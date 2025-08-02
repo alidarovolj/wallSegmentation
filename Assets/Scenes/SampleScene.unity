@@ -798,15 +798,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
   segmentationDisplay: {fileID: 76938650}
-  modelAsset: {fileID: 5022602860645237092, guid: b8b2d82c84198a646a8836a3c5d86bc7, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: ba6e34ed17eff6245af242118402b7c4, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
   imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
+  maskPostProcessingShader: {fileID: 7200000, guid: 1e8afd4d3de754dccbd0bff91ac31929, type: 3}
   visualizationMaterial: {fileID: 2100000, guid: 14d565b5b3f0d9c4bbde8f5628f16cde, type: 2}
   processingResolution: {x: 512, y: 512}
+  enableMaskSmoothing: 1
+  maskSmoothingIterations: 2
   selectedClass: -1
-  visualizationOpacity: 0.5
+  visualizationOpacity: 0.202
   paintColor: {r: 1, g: 0, b: 0, a: 1}
-  showAllClasses: 0
+  showAllClasses: 1
   showWalls: 1
   showFloors: 0
   showCeilings: 0

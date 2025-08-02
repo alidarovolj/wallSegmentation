@@ -170,7 +170,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.unity.template.ar_mobile
     Standalone: com.unity.template.ar-mobile
-    iPhone: kz.remalux.remaluxar.UnityFramework
+    iPhone: kz.remalux.remaluxar-
   buildNumber:
     Bratwurst: 0
     Standalone: 0
@@ -194,7 +194,7 @@ PlayerSettings:
   StripUnusedMeshComponents: 0
   strictShaderVariantMatching: 0
   VertexChannelCompressionMask: 4054
-  iPhoneSdkVersion: 989
+  iPhoneSdkVersion: 988
   iOSSimulatorArchitecture: 1
   iOSTargetOSVersionString: 13.0
   tvOSSdkVersion: 0
@@ -256,7 +256,7 @@ PlayerSettings:
   tvOSManualSigningProvisioningProfileType: 0
   VisionOSManualSigningProvisioningProfileType: 0
   appleEnableAutomaticSigning: 1
-  iOSRequireARKit: 0
+  iOSRequireARKit: 1
   iOSAutomaticallyDetectAndAddCapabilities: 1
   appleEnableProMotion: 0
   shaderPrecisionModel: 0
@@ -299,31 +299,6 @@ PlayerSettings:
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: iPhone
     m_Icons:
-    - m_Textures: []
-      m_Width: 180
-      m_Height: 180
-      m_Kind: 0
-      m_SubKind: iPhone
-    - m_Textures: []
-      m_Width: 120
-      m_Height: 120
-      m_Kind: 0
-      m_SubKind: iPhone
-    - m_Textures: []
-      m_Width: 167
-      m_Height: 167
-      m_Kind: 0
-      m_SubKind: iPad
-    - m_Textures: []
-      m_Width: 152
-      m_Height: 152
-      m_Kind: 0
-      m_SubKind: iPad
-    - m_Textures: []
-      m_Width: 76
-      m_Height: 76
-      m_Kind: 0
-      m_SubKind: iPad
     - m_Textures: []
       m_Width: 120
       m_Height: 120
@@ -369,6 +344,42 @@ PlayerSettings:
       m_Height: 29
       m_Kind: 1
       m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 5a804a4ff1f7e4038b1f1e6f4ad8a02b, type: 3}
+      m_Width: 180
+      m_Height: 180
+      m_Kind: 0
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 5a804a4ff1f7e4038b1f1e6f4ad8a02b, type: 3}
+      m_Width: 120
+      m_Height: 120
+      m_Kind: 0
+      m_SubKind: iPhone
+    - m_Textures:
+      - {fileID: 2800000, guid: 5a804a4ff1f7e4038b1f1e6f4ad8a02b, type: 3}
+      m_Width: 167
+      m_Height: 167
+      m_Kind: 0
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 5a804a4ff1f7e4038b1f1e6f4ad8a02b, type: 3}
+      m_Width: 152
+      m_Height: 152
+      m_Kind: 0
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 5a804a4ff1f7e4038b1f1e6f4ad8a02b, type: 3}
+      m_Width: 76
+      m_Height: 76
+      m_Kind: 0
+      m_SubKind: iPad
+    - m_Textures:
+      - {fileID: 2800000, guid: 5a804a4ff1f7e4038b1f1e6f4ad8a02b, type: 3}
+      m_Width: 1024
+      m_Height: 1024
+      m_Kind: 4
+      m_SubKind: App Store
     - m_Textures: []
       m_Width: 60
       m_Height: 60
@@ -389,11 +400,6 @@ PlayerSettings:
       m_Height: 20
       m_Kind: 2
       m_SubKind: iPad
-    - m_Textures: []
-      m_Width: 1024
-      m_Height: 1024
-      m_Kind: 4
-      m_SubKind: App Store
   - m_BuildTarget: Android
     m_Icons:
     - m_Textures: []
@@ -836,11 +842,11 @@ PlayerSettings:
     WebGL: 1
     Windows Store Apps: 1
     XboxOne: 1
-    iPhone: 1
+    iPhone: 3
     tvOS: 1
   incrementalIl2cppBuild: {}
   suppressCommonWarnings: 1
-  allowUnsafeCode: 0
+  allowUnsafeCode: 1
   useDeterministicCompilation: 1
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 1

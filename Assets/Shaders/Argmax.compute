@@ -8,9 +8,9 @@ StructuredBuffer<float> InputTensor;
 // где значение пикселя - это нормализованный индекс класса
 RWTexture2D<float> Result;
 
-int width;
-int height;
-int num_classes;
+uint width;
+uint height;
+uint num_classes;
 
 [numthreads(8,8,1)]
 void Argmax (uint3 id : SV_DispatchThreadID)
@@ -20,18 +20,18 @@ void Argmax (uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    float max_value = -1.0f / 0.0f; // -Infinity
-    int max_class_idx = 0;
+    float max_value = -3.402823466e+38f; // -Float.Max вместо деления на ноль
+    uint max_class_idx = 0;
 
     // Индекс пикселя в плоском представлении H*W
-    int pixel_offset = id.y * width + id.x;
+    uint pixel_offset = id.y * width + id.x;
     // Размер одного канала (H * W)
-    int channel_stride = width * height;
+    uint channel_stride = width * height;
 
-    for (int c = 0; c < num_classes; ++c)
+    for (uint c = 0; c < num_classes; ++c)
     {
         // Вычисляем индекс в одномерном буфере: c * (H*W) + y*W + x
-        int data_idx = c * channel_stride + pixel_offset;
+        uint data_idx = c * channel_stride + pixel_offset;
         float value = InputTensor[data_idx];
 
         if (value > max_value)
@@ -44,5 +44,5 @@ void Argmax (uint3 id : SV_DispatchThreadID)
     // Записываем нормализованный индекс класса в выходную текстуру.
     // Например, класс 3 из 16 станет 3.0.
     // Это позволяет использовать его в обычном шейдере для градиентов или пороговых значений.
-    Result[id.xy] = (float)max_class_idx;
+    Result[id.xy] = float(max_class_idx);
 } 

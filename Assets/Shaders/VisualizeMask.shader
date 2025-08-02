@@ -43,15 +43,26 @@ Shader "Unlit/VisualizeMask"
             // Функция для генерации процедурного цвета на основе ID класса
             float3 getClassColor(int classId)
             {
-                // Используем HSV в RGB конвертацию для получения приятных, различных цветов
+                // Используем HSV → RGB конверсию для получения приятных, различных цветов
                 float hue = frac((float)classId * 0.61803398875f); // Золотое сечение
-                float saturation = 0.8f;
-                float value = 0.95f;
+                float saturation = 0.9f;
+                float value = 0.85f;
 
-                float3 hsv = float3(hue, saturation, value);
-                float3 rgb = cos(2.0 * 3.14159265 * (hsv.x + float3(0.0, -1.0/3.0, 1.0/3.0)));
-                rgb = hsv.z * (1.0 - hsv.y + hsv.y * (0.5 + 0.5 * rgb));
-                return rgb;
+                // Правильная HSV → RGB конверсия
+                float h = hue * 6.0f;
+                float c = value * saturation;
+                float x = c * (1.0f - abs(fmod(h, 2.0f) - 1.0f));
+                float m = value - c;
+
+                float3 rgb;
+                if (h < 1.0f)      rgb = float3(c, x, 0);
+                else if (h < 2.0f) rgb = float3(x, c, 0);
+                else if (h < 3.0f) rgb = float3(0, c, x);
+                else if (h < 4.0f) rgb = float3(0, x, c);
+                else if (h < 5.0f) rgb = float3(x, 0, c);
+                else               rgb = float3(c, 0, x);
+
+                return rgb + m;
             }
 
             v2f vert (appdata v)
