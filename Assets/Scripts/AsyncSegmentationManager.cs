@@ -27,6 +27,8 @@ public class AsyncSegmentationManager : MonoBehaviour
     private ComputeShader maskPostProcessingShader; // Шейдер для сглаживания маски
     [SerializeField]
     private Material visualizationMaterial; // Материал для визуализации маски
+    [SerializeField]
+    private ARWallPresenter arWallPresenter; // Ссылка на презентер для фотореалистичной окраски
 
     private Model runtimeModel;
     private Worker worker;
@@ -44,7 +46,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Header("Class Visualization")]
     [Tooltip("Selected class to display (-1 for all classes)")]
     [SerializeField]
-    private int selectedClass = -2; // По умолчанию ничего не показываем
+    private int selectedClass = 0; // По умолчанию показываем только стены
     [Tooltip("Opacity of the segmentation overlay")]
     [SerializeField, Range(0f, 1f)]
     private float visualizationOpacity = 0.5f;
@@ -53,7 +55,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Tooltip("Show all classes with different colors")]
     public bool showAllClasses = false; // По умолчанию ничего не показываем
     [Tooltip("Show only walls (class 0)")]
-    public bool showWalls = false;
+    public bool showWalls = true; // Включаем отображение стен по умолчанию
     [Tooltip("Show only floors (class 3)")]
     public bool showFloors = false;
     [Tooltip("Show only ceilings (class 5)")]
@@ -122,7 +124,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     };
 
     // Поля для отслеживания изменений в настройках отображения
-    private int lastSelectedClass = -2; // Используем -2 как "не инициализировано"
+    private int lastSelectedClass = 0; // Стены по умолчанию
     private float lastOpacity = -1f;
     private bool lastShowAll = true;
 
@@ -392,8 +394,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         int height = shape[2];
         int width = shape[3];
 
-        Debug.Log($"🔍 Размеры тензора: batch={batchSize}, classes={numClasses}, height={height}, width={width}");
-        Debug.Log($"📏 Входная текстура: {cameraInputTexture.width}x{cameraInputTexture.height}");
+        // Debug.Log($"🔍 Размеры тензора: batch={batchSize}, classes={numClasses}, height={height}, width={width}"); // Убран частый лог
+        // Debug.Log($"📏 Входная текстура: {cameraInputTexture.width}x{cameraInputTexture.height}"); // Убран частый лог
 
         // Проверяем соответствие размеров
         if (width != height)
@@ -416,7 +418,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             {
                 displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
                 UpdateMaterialParameters();
-                Debug.Log($"✅ Текстура маски создана/изменена на {width}x{height} и привязана к материалу");
+                // Debug.Log($"✅ Текстура маски создана/изменена на {width}x{height} и привязана к материалу"); // Убран частый лог
             }
         }
 
@@ -439,6 +441,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
         cmd.DispatchCompute(argmaxShader, kernel, threadGroupsX, threadGroupsY, 1);
 
+        RenderTexture finalMask = segmentationMaskTexture; // По умолчанию используем исходную маску
+
         if (enableMaskSmoothing && maskPostProcessingShader != null && maskSmoothingIterations > 0)
         {
             int postProcessingKernel = maskPostProcessingShader.FindKernel("MedianFilter");
@@ -460,6 +464,7 @@ public class AsyncSegmentationManager : MonoBehaviour
                 destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
             }
             displayMaterialInstance.SetTexture("_MaskTex", source);
+            finalMask = source; // Запоминаем финальную сглаженную маску
         }
         else
         {
@@ -468,6 +473,17 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         Graphics.ExecuteCommandBuffer(cmd);
         cmd.Dispose();
+
+        // Передаем маску в ARWallPresenter для фотореалистичной окраски
+        if (arWallPresenter != null)
+        {
+            arWallPresenter.SetSegmentationMask(finalMask);
+            // Debug.Log("🎨 Маска передана в ARWallPresenter"); // Убран частый лог
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ ARWallPresenter не назначен в AsyncSegmentationManager!");
+        }
 
         tensorDataBuffer.Dispose();
         outputTensor.Dispose();
@@ -491,11 +507,11 @@ public class AsyncSegmentationManager : MonoBehaviour
         {
             // В редакторе портретный режим обрабатывается по-другому
             transformation = XRCpuImage.Transformation.MirrorY;
-            Debug.Log($"📱 Редактор в портретном режиме ({Screen.width}x{Screen.height}). Трансформация: {transformation}");
+            // Debug.Log($"📱 Редактор в портретном режиме ({Screen.width}x{Screen.height}). Трансформация: {transformation}"); // Убран частый лог
         }
         else
         {
-            Debug.Log($"📱 Ландшафтный режим ({Screen.width}x{Screen.height}). Трансформация: {transformation}");
+            // Debug.Log($"📱 Ландшафтный режим ({Screen.width}x{Screen.height}). Трансформация: {transformation}"); // Убран частый лог
         }
 
         // Вычисляем максимальное разрешение, которое не превышает входное изображение
@@ -511,7 +527,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             transformation = transformation
         };
 
-        Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height}, сжатие до {targetResolution}x{targetResolution}");
+        // Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height}, сжатие до {targetResolution}x{targetResolution}"); // Убран частый лог
 
         // Пересоздаем текстуры, если размер изменился
         if (cameraInputTexture.width != targetResolution || cameraInputTexture.height != targetResolution)
@@ -663,7 +679,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
         displayMaterialInstance.SetColor("_PaintColor", paintColor);
 
-        Debug.Log($"🎨 Обновлены параметры материала: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}, showWalls={showWalls}");
+        Debug.Log($"🎨 Обновлены параметры материала: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}, showWalls={showWalls}, showAllClasses={showAllClasses}, selectedClass={selectedClass}");
     }
 
     public void SetPaintColor(Color color)
