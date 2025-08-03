@@ -524,6 +524,19 @@ MonoBehaviour:
   flipHorizontally: 1
   flipVertically: 1
   invertMask: 1
+  blendMode: 1
+  applySharpEdges: 0
+  applySoftEdges: 1
+  applyMediumBlur: 1
+  applyMaxBlur: 1
+  applyLuminanceMode: 1
+  applyOverlayMode: 1
+  applyHybridMode: 1
+  useOptimizedShader: 1
+  optimizedMaterial: {fileID: 2100000, guid: 17716fcad76287a48b6fdffa3a064dd2, type: 2}
+  standardMaterial: {fileID: 2100000, guid: 49000288a3bfefa46a05a4539c3d44af, type: 2}
+  usePhotorealisticShader: 0
+  photorealisticMaterial: {fileID: 0}
 --- !u!33 &941417366
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -821,7 +834,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1341188531
 RectTransform:
   m_ObjectHideFlags: 0
