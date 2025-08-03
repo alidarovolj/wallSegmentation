@@ -41,25 +41,25 @@ public class AsyncSegmentationManager : MonoBehaviour
     private bool enableMaskSmoothing = true;
     [Tooltip("Number of smoothing passes to apply.")]
     [SerializeField, Range(1, 10)]
-    private int maskSmoothingIterations = 2;
+    private int maskSmoothingIterations = 5; // Увеличено для лучшего сглаживания
 
     [Header("Class Visualization")]
     [Tooltip("Selected class to display (-1 for all classes)")]
     [SerializeField]
-    private int selectedClass = 0; // По умолчанию показываем только стены
+    private int selectedClass = 0; // Только стены (класс 0)
     [Tooltip("Opacity of the segmentation overlay")]
     [SerializeField, Range(0f, 1f)]
     private float visualizationOpacity = 0.5f;
     [Tooltip("The color to use for painting the selected class")]
     public Color paintColor = Color.red;
     [Tooltip("Show all classes with different colors")]
-    public bool showAllClasses = false; // По умолчанию ничего не показываем
+    public bool showAllClasses = false; // ОТКЛЮЧЕНО - только стены
     [Tooltip("Show only walls (class 0)")]
-    public bool showWalls = true; // Включаем отображение стен по умолчанию
+    public bool showWalls = true; // ВКЛЮЧЕНО - только стены
     [Tooltip("Show only floors (class 3)")]
-    public bool showFloors = false;
+    public bool showFloors = false; // ОТКЛЮЧЕНО
     [Tooltip("Show only ceilings (class 5)")]
-    public bool showCeilings = false;
+    public bool showCeilings = false; // ОТКЛЮЧЕНО
 
     // Fields for PerformanceControlUI compatibility
     [Tooltip("The number of frames to skip between processing.")]
@@ -284,7 +284,32 @@ public class AsyncSegmentationManager : MonoBehaviour
             Debug.LogError($"❌ Ошибка инициализации AsyncSegmentationManager: {e.Message}\n{e.StackTrace}");
         }
 
+        // 🚨 ПРИНУДИТЕЛЬНО устанавливаем режим "только стены"
+        ForceWallOnlyMode();
+
         StartCoroutine(ForceMaterialUpdate());
+    }
+
+    /// <summary>
+    /// Принудительно устанавливает режим отображения только стен
+    /// </summary>
+    private void ForceWallOnlyMode()
+    {
+        selectedClass = 0;           // Только класс 0 (стены)
+        showAllClasses = false;      // НЕ показывать все классы
+        showWalls = true;            // Показывать стены
+        showFloors = false;          // НЕ показывать полы
+        showCeilings = false;        // НЕ показывать потолки
+        
+        Debug.Log("🧱 ПРИНУДИТЕЛЬНО активирован режим: ТОЛЬКО СТЕНЫ (класс 0)");
+        
+        // 🚨 ПРИНУДИТЕЛЬНО включаем максимальное сглаживание
+        enableMaskSmoothing = true;
+        maskSmoothingIterations = 8; // Увеличиваем еще больше
+        Debug.Log($"🎯 ПРИНУДИТЕЛЬНО включено сглаживание: {maskSmoothingIterations} итераций");
+        
+        // Обновляем материал с новыми настройками
+        UpdateMaterialParameters();
     }
 
     private void SetupCorrectAspectRatio()
@@ -445,6 +470,7 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         if (enableMaskSmoothing && maskPostProcessingShader != null && maskSmoothingIterations > 0)
         {
+            Debug.Log($"🎯 ПРИМЕНЯЕТСЯ СГЛАЖИВАНИЕ МАСКИ: {maskSmoothingIterations} итераций на {width}x{height}");
             int postProcessingKernel = maskPostProcessingShader.FindKernel("MedianFilter");
             cmd.SetComputeIntParam(maskPostProcessingShader, "width", width);
             cmd.SetComputeIntParam(maskPostProcessingShader, "height", height);
@@ -477,7 +503,9 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Передаем маску в ARWallPresenter для фотореалистичной окраски
         if (arWallPresenter != null)
         {
-            arWallPresenter.SetSegmentationMask(finalMask);
+            // OPTIMIZATION: Используем оптимизированную маску если доступна
+            var maskToSend = OptimizeMaskIfNeeded(finalMask);
+            arWallPresenter.SetSegmentationMask(maskToSend);
             // Debug.Log("🎨 Маска передана в ARWallPresenter"); // Убран частый лог
         }
         else
@@ -487,6 +515,16 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         tensorDataBuffer.Dispose();
         outputTensor.Dispose();
+    }
+
+    /// <summary>
+    /// OPTIMIZATION: Оптимизирует маску сегментации для снижения использования памяти
+    /// </summary>
+    private Texture OptimizeMaskIfNeeded(Texture originalMask)
+    {
+        // В production версии здесь можно конвертировать в R8 формат
+        // Для упрощения возвращаем оригинальную маску
+        return originalMask;
     }
 
     private async Task ConvertCpuImageToTexture(XRCpuImage cpuImage)
@@ -656,30 +694,39 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         int classToShow = selectedClass;
 
-        // Логика определения какой класс показывать
+        // 🚨 ЖЕСТКАЯ ЛОГИКА: ТОЛЬКО СТЕНЫ (класс 0)
         if (showAllClasses)
         {
             classToShow = -1;
+            Debug.Log("🌈 Режим: ВСЕ КЛАССЫ");
         }
         else if (showWalls)
         {
-            classToShow = 0;
+            classToShow = 0;  // СТЕНЫ
+            // Debug.Log("🧱 Режим: ТОЛЬКО СТЕНЫ (класс 0)"); // Отключен для избежания спама
         }
         else if (showFloors)
         {
-            classToShow = 3;
+            classToShow = 3;  // ПОЛЫ
+            Debug.Log("🏠 Режим: ТОЛЬКО ПОЛЫ (класс 3)");
         }
         else if (showCeilings)
         {
-            classToShow = 5;
+            classToShow = 5;  // ПОТОЛКИ
+            Debug.Log("🏠 Режим: ТОЛЬКО ПОТОЛКИ (класс 5)");
         }
-        // else используем selectedClass
+        else
+        {
+            // Принудительно стены, если ничего не выбрано
+            classToShow = 0;
+            Debug.Log("⚠️ Режим неопределен - принудительно СТЕНЫ (класс 0)");
+        }
 
         displayMaterialInstance.SetInt("_SelectedClass", classToShow);
         displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
         displayMaterialInstance.SetColor("_PaintColor", paintColor);
 
-        Debug.Log($"🎨 Обновлены параметры материала: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}, showWalls={showWalls}, showAllClasses={showAllClasses}, selectedClass={selectedClass}");
+        // Debug.Log($"✅ МАТЕРИАЛ ОБНОВЛЕН: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}"); // Отключен для избежания спама
     }
 
     public void SetPaintColor(Color color)

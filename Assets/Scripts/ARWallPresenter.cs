@@ -19,10 +19,10 @@ public class ARWallPresenter : MonoBehaviour
     [SerializeField]
     private Color paintColor = Color.blue;
 
-    [Tooltip("Насколько мягким будет переход на границе окрашенной области. Рекомендуемые значения от 0.05 до 0.5.")]
-    [Range(0.01f, 1.0f)]
+    [Tooltip("Насколько мягким будет переход на границе окрашенной области. Использует fwidth-based сглаживание. Рекомендуемые значения: 0.1 (резкие) - 5.0 (максимальные).")]
+    [Range(0.1f, 5.0f)]
     [SerializeField]
-    private float edgeSoftness = 0.2f; // Увеличили значение по умолчанию
+    private float edgeSoftness = 3.0f; // Увеличено для более мягких краев
 
     [Tooltip("Ссылка на AR Camera Manager для получения данных об освещении.")]
     [SerializeField]
@@ -41,6 +41,65 @@ public class ARWallPresenter : MonoBehaviour
     [SerializeField]
     private bool invertMask = true;
 
+    [Tooltip("Режим смешивания: 0 = Luminance (сохраняет освещение), 1 = Overlay (более яркий эффект).")]
+    [Range(0.0f, 1.0f)]
+    [SerializeField]
+    private float blendMode = 1.0f; // По умолчанию Overlay
+
+    [Header("🧪 Быстрые тесты Edge Softness")]
+    [Tooltip("Быстро установить резкие края (0.1)")]
+    [SerializeField]
+    private bool applySharpEdges = false;
+    
+    [Tooltip("Быстро установить умеренные края (1.0)")]
+    [SerializeField]
+    private bool applySoftEdges = false;
+    
+    [Tooltip("Быстро установить мягкие края (2.5)")]
+    [SerializeField]
+    private bool applyMediumBlur = false;
+    
+    [Tooltip("Быстро установить максимальное размытие (5.0)")]
+    [SerializeField]
+    private bool applyMaxBlur = false;
+
+    [Header("🎨 Быстрые тесты Blend Mode")]
+    [Tooltip("Быстро установить Luminance режим (сохраняет освещение)")]
+    [SerializeField]
+    private bool applyLuminanceMode = false;
+    
+    [Tooltip("Быстро установить Overlay режим (яркий эффект)")]
+    [SerializeField]
+    private bool applyOverlayMode = false;
+    
+    [Tooltip("Быстро установить гибридный режим (50/50)")]
+    [SerializeField]
+    private bool applyHybridMode = false;
+
+    [Header("⚡ Оптимизация производительности")]
+    [Tooltip("Использовать оптимизированный шейдер с half precision")]
+    [SerializeField]
+    private bool useOptimizedShader = false;
+    
+    [Tooltip("Ссылка на оптимизированный материал")]
+    [SerializeField]
+    private Material optimizedMaterial;
+    
+    [Tooltip("Ссылка на стандартный материал")]
+    [SerializeField]
+    private Material standardMaterial;
+
+    [Header("🌟 Продвинутое освещение")]
+    [Tooltip("Использовать фотореалистичный шейдер с продвинутым освещением")]
+    [SerializeField]
+    private bool usePhotorealisticShader = false;
+    
+    [Tooltip("Ссылка на фотореалистичный материал")]
+    [SerializeField]
+    private Material photorealisticMaterial;
+    
+
+
     private Renderer _renderer;
     private MaterialPropertyBlock _propertyBlock;
 
@@ -53,6 +112,8 @@ public class ARWallPresenter : MonoBehaviour
     private static readonly int FlipHorizontallyId = Shader.PropertyToID("_FlipHorizontally");
     private static readonly int FlipVerticallyId = Shader.PropertyToID("_FlipVertically");
     private static readonly int InvertMaskId = Shader.PropertyToID("_InvertMask");
+    private static readonly int BlendModeId = Shader.PropertyToID("_BlendMode");
+    private static readonly int LitPaintColorId = Shader.PropertyToID("_LitPaintColor");
 
     void Awake()
     {
@@ -76,6 +137,7 @@ public class ARWallPresenter : MonoBehaviour
         _propertyBlock.SetFloat(FlipHorizontallyId, flipHorizontally ? 1.0f : 0.0f);
         _propertyBlock.SetFloat(FlipVerticallyId, flipVertically ? 1.0f : 0.0f);
         _propertyBlock.SetFloat(InvertMaskId, invertMask ? 1.0f : 0.0f);
+        _propertyBlock.SetFloat(BlendModeId, blendMode);
         _renderer.SetPropertyBlock(_propertyBlock);
     }
 
@@ -102,6 +164,11 @@ public class ARWallPresenter : MonoBehaviour
             segmentationManager.ShowOnlyWalls();
             Debug.Log("🧱 ARWallPresenter принудительно активировал режим только стен");
         }
+        
+        // 🚨 ПРИНУДИТЕЛЬНО применяем максимальное сглаживание краев
+        edgeSoftness = 5.0f; // Максимальное значение
+        SetEdgeSoftness(edgeSoftness);
+        Debug.Log($"🎯 ПРИНУДИТЕЛЬНО установлено максимальное сглаживание краев: {edgeSoftness}");
     }
 
     void OnDisable()
@@ -109,6 +176,82 @@ public class ARWallPresenter : MonoBehaviour
         if (arCameraManager != null)
         {
             arCameraManager.frameReceived -= OnFrameReceived;
+        }
+    }
+
+    void Update()
+    {
+        // Обработка быстрых тестов Edge Softness
+        if (applySharpEdges)
+        {
+            applySharpEdges = false;
+            SetEdgeSoftness(0.1f);
+            // Debug.Log("🔧 Установлены резкие края: 0.1");
+        }
+        
+        if (applySoftEdges)
+        {
+            applySoftEdges = false;
+            SetEdgeSoftness(1.0f);
+            // Debug.Log("🔧 Установлены умеренные края: 1.0");
+        }
+        
+        if (applyMediumBlur)
+        {
+            applyMediumBlur = false;
+            SetEdgeSoftness(2.5f);
+            // Debug.Log("🔧 Установлены мягкие края: 2.5");
+        }
+        
+        if (applyMaxBlur)
+        {
+            applyMaxBlur = false;
+            SetEdgeSoftness(5.0f);
+            // Debug.Log("🔧 Установлено максимальное размытие: 5.0");
+        }
+
+        // Обработка быстрых тестов Blend Mode
+        if (applyLuminanceMode)
+        {
+            applyLuminanceMode = false;
+            SetBlendMode(0.0f);
+            // Debug.Log("🎨 Установлен режим смешивания: Luminance (сохраняет текстуру и освещение)");
+        }
+        
+        if (applyOverlayMode)
+        {
+            applyOverlayMode = false;
+            SetBlendMode(1.0f);
+            // Debug.Log("🎨 Установлен режим смешивания: Overlay (яркий эффект)");
+        }
+        
+        if (applyHybridMode)
+        {
+            applyHybridMode = false;
+            SetBlendMode(0.5f);
+            // Debug.Log("🎨 Установлен режим смешивания: Гибридный (50% Luminance + 50% Overlay)");
+        }
+
+        // Обработка переключения шейдеров (по приоритету)
+        Material targetMaterial = null;
+        
+        if (usePhotorealisticShader && photorealisticMaterial != null)
+        {
+            targetMaterial = photorealisticMaterial;
+        }
+        else if (useOptimizedShader && optimizedMaterial != null)
+        {
+            targetMaterial = optimizedMaterial;
+        }
+        else if (standardMaterial != null)
+        {
+            targetMaterial = standardMaterial;
+        }
+        
+        if (targetMaterial != null && _renderer.material != targetMaterial)
+        {
+            _renderer.material = targetMaterial;
+            // Лог только при реальном изменении материала
         }
     }
 
@@ -136,6 +279,7 @@ public class ARWallPresenter : MonoBehaviour
     {
         // Используем GetPropertyBlock, чтобы не создавать мусор (GC) каждый кадр
         _renderer.GetPropertyBlock(_propertyBlock);
+        bool needsUpdate = false;
 
         if (eventArgs.lightEstimation.averageBrightness.HasValue)
         {
@@ -144,6 +288,7 @@ public class ARWallPresenter : MonoBehaviour
             if (brightness > 0.01f) 
             {
                 _propertyBlock.SetFloat(GlobalBrightnessId, brightness);
+                needsUpdate = true;
             }
         }
         
@@ -151,9 +296,36 @@ public class ARWallPresenter : MonoBehaviour
         {
             Color colorCorrection = eventArgs.lightEstimation.colorCorrection.Value;
             _propertyBlock.SetColor(RealWorldLightColorId, colorCorrection);
+            needsUpdate = true;
         }
 
-        _renderer.SetPropertyBlock(_propertyBlock);
+        // OPTIMIZATION: Предвычисляем lit paint color на CPU
+        if (needsUpdate)
+        {
+            UpdatePrecomputedLitPaintColor();
+            _renderer.SetPropertyBlock(_propertyBlock);
+        }
+    }
+
+    /// <summary>
+    /// OPTIMIZATION: Предвычисление освещенного цвета краски на CPU для снижения нагрузки на GPU
+    /// </summary>
+    private void UpdatePrecomputedLitPaintColor()
+    {
+        // Получаем текущие значения
+        float globalBrightness = _propertyBlock.GetFloat(GlobalBrightnessId);
+        Color realWorldLightColor = _propertyBlock.GetColor(RealWorldLightColorId);
+        
+        // Предвычисляем итоговый цвет на CPU
+        Color litPaintColor = new Color(
+            paintColor.r * realWorldLightColor.r * globalBrightness,
+            paintColor.g * realWorldLightColor.g * globalBrightness,
+            paintColor.b * realWorldLightColor.b * globalBrightness,
+            paintColor.a
+        );
+        
+        // Передаем предвычисленный результат в шейдер
+        _propertyBlock.SetColor(LitPaintColorId, litPaintColor);
     }
     
     // Этот метод можно использовать для смены цвета из UI
@@ -173,6 +345,20 @@ public class ARWallPresenter : MonoBehaviour
         if (_propertyBlock != null)
         {
             _propertyBlock.SetFloat(EdgeSoftnessId, edgeSoftness);
+            _renderer.SetPropertyBlock(_propertyBlock);
+        }
+    }
+
+    /// <summary>
+    /// Устанавливает режим смешивания цветов
+    /// </summary>
+    /// <param name="newBlendMode">Новый режим смешивания (0 = Luminance, 1 = Overlay)</param>
+    public void SetBlendMode(float newBlendMode)
+    {
+        blendMode = Mathf.Clamp01(newBlendMode);
+        if (_propertyBlock != null)
+        {
+            _propertyBlock.SetFloat(BlendModeId, blendMode);
             _renderer.SetPropertyBlock(_propertyBlock);
         }
     }
@@ -218,36 +404,7 @@ public class ARWallPresenter : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Тестирует разные значения EdgeSoftness для удобства настройки
-    /// </summary>
-    [ContextMenu("Тест EdgeSoftness: Мягкие края (0.3)")]
-    public void TestSoftEdges()
-    {
-        SetEdgeSoftness(0.3f);
-        Debug.Log("🔧 Установлена мягкость краев: 0.3");
-    }
 
-    [ContextMenu("Тест EdgeSoftness: Резкие края (0.05)")]
-    public void TestSharpEdges()
-    {
-        SetEdgeSoftness(0.05f);
-        Debug.Log("🔧 Установлена мягкость краев: 0.05");
-    }
-
-    [ContextMenu("Тест EdgeSoftness: Максимальное размытие (1.0)")]
-    public void TestMaxBlur()
-    {
-        SetEdgeSoftness(1.0f);
-        Debug.Log("🔧 Установлена мягкость краев: 1.0 (максимум)");
-    }
-
-    [ContextMenu("Тест EdgeSoftness: Без размытия (0.0)")]
-    public void TestNoBlur()
-    {
-        SetEdgeSoftness(0.0f);
-        Debug.Log("🔧 Установлена мягкость краев: 0.0 (без размытия)");
-    }
 
     /// <summary>
     /// Переключает инверсию маски
@@ -262,6 +419,33 @@ public class ARWallPresenter : MonoBehaviour
             _renderer.SetPropertyBlock(_propertyBlock);
             Debug.Log($"🔄 Инверсия маски: {(invertMask ? "Включена" : "Выключена")}");
         }
+    }
+
+    /// <summary>
+    /// Тестирует разные уровни качества рендеринга
+    /// </summary>
+    [ContextMenu("Переключить на фотореалистичный шейдер")]
+    public void SwitchToPhotorealisticShader()
+    {
+        usePhotorealisticShader = true;
+        useOptimizedShader = false;
+        Debug.Log("🌟 Переключен на фотореалистичный шейдер с продвинутым освещением");
+    }
+
+    [ContextMenu("Переключить на оптимизированный шейдер")]
+    public void SwitchToOptimizedShader()
+    {
+        usePhotorealisticShader = false;
+        useOptimizedShader = true;
+        Debug.Log("⚡ Переключен на оптимизированный шейдер");
+    }
+
+    [ContextMenu("Переключить на стандартный шейдер")]
+    public void SwitchToStandardShader()
+    {
+        usePhotorealisticShader = false;
+        useOptimizedShader = false;
+        Debug.Log("🔧 Переключен на стандартный шейдер");
     }
 
     /// <summary>
