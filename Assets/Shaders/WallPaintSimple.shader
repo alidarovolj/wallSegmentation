@@ -81,6 +81,10 @@ Shader "Custom/WallPaintPhotorealistic"
             {
                 // Apply flip transformations to UV coordinates
                 float2 flippedUV = input.uv;
+                
+                // Swap X and Y coordinates and invert Y to fix portrait orientation mapping
+                flippedUV = float2(flippedUV.y, 1.0 - flippedUV.x);
+                
                 if (_FlipHorizontally > 0.5)
                     flippedUV.x = 1.0 - flippedUV.x;
                 if (_FlipVertically > 0.5)

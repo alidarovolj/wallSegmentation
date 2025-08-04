@@ -102,6 +102,10 @@ Shader "Custom/WallPaintOptimized"
                 
                 // Optimize UV flipping using step and lerp
                 half2 flippedUV = input.uv;
+                
+                // Swap X and Y coordinates and invert Y to fix portrait orientation mapping
+                flippedUV = half2(flippedUV.y, 1.0h - flippedUV.x);
+                
                 flippedUV.x = lerp(flippedUV.x, 1.0h - flippedUV.x, step(0.5h, _FlipHorizontally));
                 flippedUV.y = lerp(flippedUV.y, 1.0h - flippedUV.y, step(0.5h, _FlipVertically));
                 

@@ -69,26 +69,11 @@ Shader "Unlit/VisualizeMask"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
-                // Применяем трансформации UV для соответствия камере
+                // НЕ ДЕЛАЕМ НИКАКИХ ТРАНСФОРМАЦИЙ - всё уже сделано при конвертации камеры
                 float2 uv = v.uv;
                 
-                // Базовые трансформации
-                uv.y = 1.0 - uv.y; // Инверсия Y для RawImage
-                
-                // Для реального устройства в портретном режиме нужна дополнительная логика
-                if (_IsRealDevice > 0.5 && _IsPortrait > 0.5)
-                {
-                    // На реальном устройстве в портретном режиме поворачиваем на 90°
-                    float2 rotatedUV;
-                    rotatedUV.x = uv.y;           // X становится Y
-                    rotatedUV.y = 1.0 - uv.x;     // Y становится инвертированным X
-                    uv = rotatedUV;
-                }
-                else
-                {
-                    // В редакторе или ландшафтном режиме просто отражаем по X
-                    uv.x = 1.0 - uv.x;
-                }
+                // Используем UV координаты как есть - MirrorY уже применен в ConvertCpuImageToTexture
+                // НИКАКИХ дополнительных инвертирований!
                 
                 o.uv = uv;
                 
@@ -107,16 +92,14 @@ Shader "Unlit/VisualizeMask"
 
                 if (_SelectedClass >= 0)
                 {
-                    // Показываем ТОЛЬКО выбранный класс
-                    if (class_index == _SelectedClass)
+                    // ИСПРАВЛЕНО: Показываем ТОЛЬКО выбранный класс
+                    if (class_index != _SelectedClass)
                     {
-                        return fixed4(_PaintColor.rgb, _Opacity);
-                    }
-                    else
-                    {
-                        // Все остальные классы полностью прозрачны
+                        // Если НЕ выбранный класс - делаем прозрачным
                         return fixed4(0, 0, 0, 0);
                     }
+                    // Если это выбранный класс - красим
+                    return fixed4(_PaintColor.rgb, _Opacity);
                 }
                 
                 // Показываем все классы разными цветами

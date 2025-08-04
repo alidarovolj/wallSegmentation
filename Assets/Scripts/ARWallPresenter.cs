@@ -31,15 +31,15 @@ public class ARWallPresenter : MonoBehaviour
     [Header("Исправление ориентации")]
     [Tooltip("Отразить изображение по горизонтали (если эффект сдвинут влево/вправо)")]
     [SerializeField]
-    private bool flipHorizontally = false;
+    private bool flipHorizontally = false; // Отключено - координаты исправлены в шейдере
 
     [Tooltip("Отразить изображение по вертикали (если эффект перевернут вверх ногами)")]
     [SerializeField]
-    private bool flipVertically = false;
+    private bool flipVertically = false; // Отключено - координаты исправлены в шейдере
 
     [Tooltip("Инвертировать маску (если красится всё кроме стен, включите эту опцию)")]
     [SerializeField]
-    private bool invertMask = true;
+    private bool invertMask = false; // ОТКЛЮЧЕНО - теперь VisualizeMask.shader правильно показывает только стены
 
     [Tooltip("Режим смешивания: 0 = Luminance (сохраняет освещение), 1 = Overlay (более яркий эффект).")]
     [Range(0.0f, 1.0f)]
@@ -50,15 +50,15 @@ public class ARWallPresenter : MonoBehaviour
     [Tooltip("Быстро установить резкие края (0.1)")]
     [SerializeField]
     private bool applySharpEdges = false;
-    
+
     [Tooltip("Быстро установить умеренные края (1.0)")]
     [SerializeField]
     private bool applySoftEdges = false;
-    
+
     [Tooltip("Быстро установить мягкие края (2.5)")]
     [SerializeField]
     private bool applyMediumBlur = false;
-    
+
     [Tooltip("Быстро установить максимальное размытие (5.0)")]
     [SerializeField]
     private bool applyMaxBlur = false;
@@ -67,11 +67,11 @@ public class ARWallPresenter : MonoBehaviour
     [Tooltip("Быстро установить Luminance режим (сохраняет освещение)")]
     [SerializeField]
     private bool applyLuminanceMode = false;
-    
+
     [Tooltip("Быстро установить Overlay режим (яркий эффект)")]
     [SerializeField]
     private bool applyOverlayMode = false;
-    
+
     [Tooltip("Быстро установить гибридный режим (50/50)")]
     [SerializeField]
     private bool applyHybridMode = false;
@@ -80,11 +80,11 @@ public class ARWallPresenter : MonoBehaviour
     [Tooltip("Использовать оптимизированный шейдер с half precision")]
     [SerializeField]
     private bool useOptimizedShader = false;
-    
+
     [Tooltip("Ссылка на оптимизированный материал")]
     [SerializeField]
     private Material optimizedMaterial;
-    
+
     [Tooltip("Ссылка на стандартный материал")]
     [SerializeField]
     private Material standardMaterial;
@@ -93,11 +93,11 @@ public class ARWallPresenter : MonoBehaviour
     [Tooltip("Использовать фотореалистичный шейдер с продвинутым освещением")]
     [SerializeField]
     private bool usePhotorealisticShader = false;
-    
+
     [Tooltip("Ссылка на фотореалистичный материал")]
     [SerializeField]
     private Material photorealisticMaterial;
-    
+
 
 
     private Renderer _renderer;
@@ -130,7 +130,7 @@ public class ARWallPresenter : MonoBehaviour
             Debug.LogError("Материал для окраски стен (wallPaintMaterial) не назначен!");
             this.enabled = false;
         }
-        
+
         // Устанавливаем начальный цвет и мягкость краев
         _propertyBlock.SetColor(PaintColorId, paintColor);
         _propertyBlock.SetFloat(EdgeSoftnessId, edgeSoftness);
@@ -149,14 +149,14 @@ public class ARWallPresenter : MonoBehaviour
         }
         else
         {
-             Debug.LogError("ARCameraManager не назначен! Данные об освещении не будут обновляться.");
+            Debug.LogError("ARCameraManager не назначен! Данные об освещении не будут обновляться.");
         }
     }
 
     void Start()
     {
         FitToScreen(); // Растягиваем на весь экран один раз при старте
-        
+
         // Принудительно убеждаемся, что AsyncSegmentationManager показывает только стены
         var segmentationManager = FindObjectOfType<AsyncSegmentationManager>();
         if (segmentationManager != null)
@@ -164,7 +164,7 @@ public class ARWallPresenter : MonoBehaviour
             segmentationManager.ShowOnlyWalls();
             Debug.Log("🧱 ARWallPresenter принудительно активировал режим только стен");
         }
-        
+
         // 🚨 ПРИНУДИТЕЛЬНО применяем максимальное сглаживание краев
         edgeSoftness = 5.0f; // Максимальное значение
         SetEdgeSoftness(edgeSoftness);
@@ -188,21 +188,21 @@ public class ARWallPresenter : MonoBehaviour
             SetEdgeSoftness(0.1f);
             // Debug.Log("🔧 Установлены резкие края: 0.1");
         }
-        
+
         if (applySoftEdges)
         {
             applySoftEdges = false;
             SetEdgeSoftness(1.0f);
             // Debug.Log("🔧 Установлены умеренные края: 1.0");
         }
-        
+
         if (applyMediumBlur)
         {
             applyMediumBlur = false;
             SetEdgeSoftness(2.5f);
             // Debug.Log("🔧 Установлены мягкие края: 2.5");
         }
-        
+
         if (applyMaxBlur)
         {
             applyMaxBlur = false;
@@ -217,14 +217,14 @@ public class ARWallPresenter : MonoBehaviour
             SetBlendMode(0.0f);
             // Debug.Log("🎨 Установлен режим смешивания: Luminance (сохраняет текстуру и освещение)");
         }
-        
+
         if (applyOverlayMode)
         {
             applyOverlayMode = false;
             SetBlendMode(1.0f);
             // Debug.Log("🎨 Установлен режим смешивания: Overlay (яркий эффект)");
         }
-        
+
         if (applyHybridMode)
         {
             applyHybridMode = false;
@@ -234,7 +234,7 @@ public class ARWallPresenter : MonoBehaviour
 
         // Обработка переключения шейдеров (по приоритету)
         Material targetMaterial = null;
-        
+
         if (usePhotorealisticShader && photorealisticMaterial != null)
         {
             targetMaterial = photorealisticMaterial;
@@ -247,7 +247,7 @@ public class ARWallPresenter : MonoBehaviour
         {
             targetMaterial = standardMaterial;
         }
-        
+
         if (targetMaterial != null && _renderer.material != targetMaterial)
         {
             _renderer.material = targetMaterial;
@@ -265,7 +265,7 @@ public class ARWallPresenter : MonoBehaviour
         if (maskTexture == null)
         {
             // Иногда может приходить пустая маска, игнорируем ее
-            return; 
+            return;
         }
 
         if (_propertyBlock != null)
@@ -285,13 +285,13 @@ public class ARWallPresenter : MonoBehaviour
         {
             float brightness = eventArgs.lightEstimation.averageBrightness.Value;
             // Применяем яркость, только если она больше нуля, чтобы избежать черных вспышек
-            if (brightness > 0.01f) 
+            if (brightness > 0.01f)
             {
                 _propertyBlock.SetFloat(GlobalBrightnessId, brightness);
                 needsUpdate = true;
             }
         }
-        
+
         if (eventArgs.lightEstimation.colorCorrection.HasValue)
         {
             Color colorCorrection = eventArgs.lightEstimation.colorCorrection.Value;
@@ -315,7 +315,7 @@ public class ARWallPresenter : MonoBehaviour
         // Получаем текущие значения
         float globalBrightness = _propertyBlock.GetFloat(GlobalBrightnessId);
         Color realWorldLightColor = _propertyBlock.GetColor(RealWorldLightColorId);
-        
+
         // Предвычисляем итоговый цвет на CPU
         Color litPaintColor = new Color(
             paintColor.r * realWorldLightColor.r * globalBrightness,
@@ -323,11 +323,11 @@ public class ARWallPresenter : MonoBehaviour
             paintColor.b * realWorldLightColor.b * globalBrightness,
             paintColor.a
         );
-        
+
         // Передаем предвычисленный результат в шейдер
         _propertyBlock.SetColor(LitPaintColorId, litPaintColor);
     }
-    
+
     // Этот метод можно использовать для смены цвета из UI
     public void SetPaintColor(Color newColor)
     {
@@ -471,13 +471,13 @@ public class ARWallPresenter : MonoBehaviour
         transform.SetParent(arCameraManager.transform, false);
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
-        
+
         // Расстояние от камеры (достаточно далеко для покрытия всей сцены)
-        // Используем расстояние ~3 метра для хорошего покрытия AR сцены
-        float distance = 3.0f;
-        
+        // Используем большее расстояние для максимального покрытия AR сцены
+        float distance = 10.0f;
+
         float planeWidth, planeHeight;
-        
+
         if (arCamera.orthographic)
         {
             // Для ортографической камеры
@@ -490,11 +490,15 @@ public class ARWallPresenter : MonoBehaviour
             float halfFOV = arCamera.fieldOfView * 0.5f * Mathf.Deg2Rad;
             planeHeight = 2.0f * distance * Mathf.Tan(halfFOV);
             planeWidth = planeHeight * arCamera.aspect;
+
+            // Увеличиваем размер плоскости на 20% для гарантированного покрытия
+            planeWidth *= 1.2f;
+            planeHeight *= 1.2f;
         }
 
         transform.localPosition = new Vector3(0, 0, distance);
         transform.localScale = new Vector3(planeWidth, planeHeight, 1);
-        
+
         Debug.Log($"🖼️ ARWallPresenter размеры: Width={planeWidth:F2}, Height={planeHeight:F2}, Distance={distance:F2}");
         Debug.Log($"📷 Камера: FOV={arCamera.fieldOfView:F1}°, Aspect={arCamera.aspect:F2}, Orthographic={arCamera.orthographic}");
     }

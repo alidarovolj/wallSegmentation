@@ -300,29 +300,30 @@ public class AsyncSegmentationManager : MonoBehaviour
         showWalls = true;            // Показывать стены
         showFloors = false;          // НЕ показывать полы
         showCeilings = false;        // НЕ показывать потолки
-        
+
         Debug.Log("🧱 ПРИНУДИТЕЛЬНО активирован режим: ТОЛЬКО СТЕНЫ (класс 0)");
-        
+        Debug.Log("✅ ИСПРАВЛЕНИЯ: убрано двойное UV инвертирование, исправлена логика отображения, добавлена билинейная фильтрация");
+
         // 🚨 ПРИНУДИТЕЛЬНО включаем максимальное сглаживание
         enableMaskSmoothing = true;
         maskSmoothingIterations = 8; // Увеличиваем еще больше
         Debug.Log($"🎯 ПРИНУДИТЕЛЬНО включено сглаживание: {maskSmoothingIterations} итераций");
-        
+
         // Обновляем материал с новыми настройками
         UpdateMaterialParameters();
     }
 
     private void SetupCorrectAspectRatio()
     {
-        // Убираем AspectRatioFitter - он создает искажения
+        // ТЕСТ: УБИРАЕМ AspectRatioFitter - пусть маска растягивается на весь экран
         var fitter = segmentationDisplay.GetComponent<AspectRatioFitter>();
         if (fitter != null)
         {
             DestroyImmediate(fitter);
-            Debug.Log("🗑️ AspectRatioFitter удален для предотвращения искажений");
+            Debug.Log("🗑️ AspectRatioFitter удален - маска растягивается на весь экран");
         }
 
-        // Настройка для точного растягивания на весь экран без искажений
+        // Настройка для центрирования
         var rectTransform = segmentationDisplay.rectTransform;
         rectTransform.anchorMin = Vector2.zero;
         rectTransform.anchorMax = Vector2.one;
@@ -332,7 +333,34 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Масштаб остается 1:1 - отражение только в шейдере
         rectTransform.localScale = Vector3.one;
 
+        // Принудительно устанавливаем позицию в центр
+        rectTransform.anchoredPosition = Vector2.zero;
+
+        // Убеждаемся что Canvas Scaler настроен правильно
+        var canvas = segmentationDisplay.GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+            var canvasScaler = canvas.GetComponent<CanvasScaler>();
+            if (canvasScaler != null)
+            {
+                canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
+                canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+                Debug.Log($"🎯 CanvasScaler настроен: {Screen.width}x{Screen.height}, режим Expand");
+            }
+        }
+
         Debug.Log($"✅ RawImage настроен на точное покрытие экрана {Screen.width}x{Screen.height} без AspectRatioFitter");
+
+        // Диагностика соответствия размеров
+        Debug.Log($"🔍 ДИАГНОСТИКА РАЗМЕРОВ:");
+        Debug.Log($"   📱 Экран: {Screen.width}x{Screen.height} (соотношение {(float)Screen.width / Screen.height:F2})");
+        Debug.Log($"   🎯 RawImage: {rectTransform.rect.width:F0}x{rectTransform.rect.height:F0}");
+
+        if (segmentationMaskTexture != null)
+        {
+            Debug.Log($"   🧱 Маска: {segmentationMaskTexture.width}x{segmentationMaskTexture.height} (соотношение {(float)segmentationMaskTexture.width / segmentationMaskTexture.height:F2})");
+        }
     }
 
     private System.Collections.IEnumerator ForceMaterialUpdate()
@@ -398,8 +426,9 @@ public class AsyncSegmentationManager : MonoBehaviour
         imageNormalizerShader.SetTexture(kernel, "InputTexture", cameraInputTexture);
         imageNormalizerShader.SetTexture(kernel, "OutputTexture", normalizedTexture);
 
-        int threadGroupsX = Mathf.CeilToInt(processingResolution.x / 8.0f);
-        int threadGroupsY = Mathf.CeilToInt(processingResolution.y / 8.0f);
+        // Используем квадратные размеры текстуры
+        int threadGroupsX = Mathf.CeilToInt(cameraInputTexture.width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(cameraInputTexture.height / 8.0f);
         imageNormalizerShader.Dispatch(kernel, threadGroupsX, threadGroupsY, 1);
     }
 
@@ -533,37 +562,27 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Используем пропорции экрана для определения ориентации - это надежнее, чем Screen.orientation в редакторе.
         bool isScreenPortrait = Screen.height > Screen.width;
 
-        var transformation = XRCpuImage.Transformation.MirrorY;
+        // НИКАКИХ ТРАНСФОРМАЦИЙ! Пусть изображение остаётся как есть
+        var transformation = XRCpuImage.Transformation.None;
 
-        // На реальном устройстве в портретном режиме нужен поворот на 90°
-        if (isScreenPortrait && !Application.isEditor)
-        {
-            transformation = XRCpuImage.Transformation.MirrorY | XRCpuImage.Transformation.MirrorX;
-            Debug.Log($"📱 Реальное устройство в портретном режиме ({Screen.width}x{Screen.height}). Трансформация: {transformation}");
-        }
-        else if (isScreenPortrait && Application.isEditor)
-        {
-            // В редакторе портретный режим обрабатывается по-другому
-            transformation = XRCpuImage.Transformation.MirrorY;
-            // Debug.Log($"📱 Редактор в портретном режиме ({Screen.width}x{Screen.height}). Трансформация: {transformation}"); // Убран частый лог
-        }
-        else
-        {
-            // Debug.Log($"📱 Ландшафтный режим ({Screen.width}x{Screen.height}). Трансформация: {transformation}"); // Убран частый лог
-        }
+        Debug.Log($"📱 Режим {(isScreenPortrait ? "портрет" : "ландшафт")} ({Screen.width}x{Screen.height}). Трансформация: {transformation} (без изменений)");
 
-        // Вычисляем максимальное разрешение, которое не превышает входное изображение
-        int maxDimension = Mathf.Min(cpuImage.width, cpuImage.height);
-        int targetResolution = Mathf.Min(processingResolution.x, maxDimension);
+        // ТЕСТ: Используем ВСЮ КАМЕРУ, а не центральную область, и растягиваем до квадрата
+        // Это может исправить смещение координат
+        float cameraAspectRatio = (float)cpuImage.width / cpuImage.height;
 
-        // Используем полное изображение без обрезки. Оно будет сжато до квадратного разрешения.
+        int targetResolution = Mathf.Min(processingResolution.x, Mathf.Min(cpuImage.width, cpuImage.height));
+
+        // Берём ВСЮЮ камеру и растягиваем до квадрата (как было изначально)
         conversionParams = new XRCpuImage.ConversionParams
         {
-            inputRect = new RectInt(0, 0, cpuImage.width, cpuImage.height),
-            outputDimensions = new Vector2Int(targetResolution, targetResolution),
+            inputRect = new RectInt(0, 0, cpuImage.width, cpuImage.height), // ВСЯ камера
+            outputDimensions = new Vector2Int(targetResolution, targetResolution), // Квадратный выход
             outputFormat = TextureFormat.RGBA32,
             transformation = transformation
         };
+
+        Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height} (AR: {cameraAspectRatio:F2}), растяжение ВСЕЙ камеры до: {targetResolution}x{targetResolution}");
 
         // Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height}, сжатие до {targetResolution}x{targetResolution}"); // Убран частый лог
 
@@ -576,7 +595,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             cameraInputTexture = CreateRenderTexture(targetResolution, targetResolution, RenderTextureFormat.ARGB32);
             normalizedTexture = CreateRenderTexture(targetResolution, targetResolution, RenderTextureFormat.ARGBFloat);
 
-            Debug.Log($"🔄 Пересоздали текстуры для разрешения {targetResolution}x{targetResolution}");
+            Debug.Log($"🔄 Пересоздали текстуры для разрешения {targetResolution}x{targetResolution} (квадратные для модели)");
         }
 
         var conversionRequest = cpuImage.ConvertAsync(conversionParams);
@@ -618,7 +637,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         var rt = new RenderTexture(width, height, 0, format)
         {
             enableRandomWrite = true,
-            filterMode = FilterMode.Point
+            filterMode = FilterMode.Bilinear, // Изменено с Point на Bilinear для сглаживания
+            wrapMode = TextureWrapMode.Clamp
         };
         rt.Create();
         return rt;
@@ -652,14 +672,14 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         var data = request.GetData<float>();
 
-        // Преобразуем экранные координаты в координаты текстуры
+        // УПРОЩЕНО: прямые координаты экрана без всяких квадратных областей
         Vector2 screenUV = new Vector2(screenPos.x / Screen.width, screenPos.y / Screen.height);
 
-        // Применяем те же преобразования, что и в шейдере
-        float uv_x = 1.0f - screenUV.x; // Горизонтальное отражение (как в шейдере)
-        float uv_y = 1.0f - screenUV.y; // Вертикальное отражение
+        // НЕ ПРИМЕНЯЕМ НИКАКИХ ИНВЕРТИРОВАНИЙ - используем координаты как есть
+        float uv_x = screenUV.x; // Прямые координаты
+        float uv_y = screenUV.y; // Прямые координаты
 
-        Debug.Log($"🎯 Клик: экран={screenPos}, screenUV=({screenUV.x:F3}, {screenUV.y:F3}), finalUV=({uv_x:F3}, {uv_y:F3})");
+        Debug.Log($"🎯 Клик: экран={screenPos}, screenUV=({screenUV.x:F3}, {screenUV.y:F3}), finalUV=({uv_x:F3}, {uv_y:F3}) [ПРЯМЫЕ координаты, БЕЗ трансформаций]");
 
         int textureX = (int)(uv_x * segmentationMaskTexture.width);
         int textureY = (int)(uv_y * segmentationMaskTexture.height);
@@ -787,6 +807,13 @@ public class AsyncSegmentationManager : MonoBehaviour
             int currentClass = displayMaterialInstance.GetInt("_SelectedClass");
             Debug.Log($"🔍 Проверка: _SelectedClass в материале = {currentClass}");
         }
+    }
+
+    [ContextMenu("Обновить покрытие экрана")]
+    public void RefreshScreenCoverage()
+    {
+        SetupCorrectAspectRatio();
+        Debug.Log("🔄 Покрытие экрана принудительно обновлено");
     }
 
     /// <summary>
