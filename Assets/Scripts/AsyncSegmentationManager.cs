@@ -1,8 +1,8 @@
 using System;
-using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Unity.Collections;
 using Unity.Sentis;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -12,467 +12,835 @@ using UnityEngine.XR.ARSubsystems;
 
 public class AsyncSegmentationManager : MonoBehaviour
 {
-      [Header("AR Components")]
-      [SerializeField] private ARCameraManager arCameraManager;
-      [SerializeField] private RawImage segmentationDisplay;
+    [Header("Dependencies")]
+    [SerializeField]
+    private ARCameraManager arCameraManager;
+    [SerializeField]
+    private RawImage segmentationDisplay;
+    [SerializeField]
+    private ModelAsset modelAsset;
+    [SerializeField]
+    private ComputeShader argmaxShader;
+    [SerializeField]
+    private ComputeShader imageNormalizerShader; // Шейдер для нормализации
+    [SerializeField]
+    private ComputeShader maskPostProcessingShader; // Шейдер для сглаживания маски
+    [SerializeField]
+    private Material visualizationMaterial; // Материал для визуализации маски
+    [SerializeField]
+    private ARWallPresenter arWallPresenter; // Ссылка на презентер для фотореалистичной окраски
 
-      [Header("Sentis Model")]
-      [SerializeField] private ModelAsset modelAsset;
-      private Model runtimeModel;
-      private Worker worker;
+    private Model runtimeModel;
+    private Worker worker;
 
-      [Header("Processing Shaders")]
-      [SerializeField] private ComputeShader preprocessingShader;
-      [SerializeField] private ComputeShader argmaxShader; // Для GPU-обработки
-      [SerializeField] private ComputeShader temporalSmoothingShader;
+    [Header("Processing & Visualization")]
+    [SerializeField]
+    private Vector2Int processingResolution = new Vector2Int(512, 512);
+    [Tooltip("Enable median filter to smooth the mask")]
+    [SerializeField]
+    private bool enableMaskSmoothing = true;
+    [Tooltip("Number of smoothing passes to apply.")]
+    [SerializeField, Range(1, 10)]
+    private int maskSmoothingIterations = 5; // Увеличено для лучшего сглаживания
 
-      [Header("Performance Settings")]
-      [SerializeField] private Vector2Int overrideResolution = new Vector2Int(960, 720);
-      [SerializeField, Range(0.01f, 1.0f)] private float smoothingFactor = 0.2f;
-      [SerializeField] private bool useCpuArgmax = true; // Переключаемся на CPU для лучшей производительности
-      [SerializeField, Range(1, 10)] public int frameSkipRate = 2; // Обрабатывать каждый N-й кадр
-      [SerializeField, Range(0.016f, 0.1f)] public float minFrameInterval = 0.033f; // ~30 FPS максимум
+    [Header("Class Visualization")]
+    [Tooltip("Selected class to display (-1 for all classes)")]
+    [SerializeField]
+    private int selectedClass = 0; // Только стены (класс 0)
+    [Tooltip("Opacity of the segmentation overlay")]
+    [SerializeField, Range(0f, 1f)]
+    private float visualizationOpacity = 0.5f;
+    [Tooltip("The color to use for painting the selected class")]
+    public Color paintColor = Color.red;
+    [Tooltip("Show all classes with different colors")]
+    public bool showAllClasses = false; // ОТКЛЮЧЕНО - только стены
+    [Tooltip("Show only walls (class 0)")]
+    public bool showWalls = true; // ВКЛЮЧЕНО - только стены
+    [Tooltip("Show only floors (class 3)")]
+    public bool showFloors = false; // ОТКЛЮЧЕНО
+    [Tooltip("Show only ceilings (class 5)")]
+    public bool showCeilings = false; // ОТКЛЮЧЕНО
 
-      // Internal textures and buffers
-      private Texture2D cameraTexture;
-      private Texture2D cpuSegmentationTexture; // For CPU path
-      private RenderTexture preprocessedTexture;
-      private RenderTexture neuralNetworkOutputTexture; // Raw output from neural network
-      private RenderTexture segmentationTexture;
-      private RenderTexture smoothedSegmentationTexture;
-      private RenderTexture previousFrameTexture;
+    // Fields for PerformanceControlUI compatibility
+    [Tooltip("The number of frames to skip between processing.")]
+    public int frameSkipRate = 1;
+    [Tooltip("This property is obsolete but kept for UI compatibility.")]
+    public float minFrameInterval { get; set; }
+    [Tooltip("This property is obsolete but kept for UI compatibility.")]
+    public bool UseCpuArgmax { get; set; }
 
-      // GPU processing
-      private ComputeBuffer tensorBuffer;
-      private int argmaxKernel;
+    // GPU Textures & Buffers
+    private RenderTexture cameraInputTexture;
+    private RenderTexture normalizedTexture; // Текстура для нормализованного изображения
+    private RenderTexture segmentationMaskTexture; // RFloat texture with class indices
+    private RenderTexture smoothedMaskTexture; // RFloat texture for the smoothed mask
+    private RenderTexture pingPongMaskTexture; // Temporary texture for multi-pass smoothing
+    private Material displayMaterialInstance;
 
-      private CancellationTokenSource cancellationTokenSource;
-      private bool isProcessingFrame = false;
-      private int frameCounter = 0;
-      private float lastProcessTime = 0f;
-      private float lastUpdateTime = 0f; // Добавляем для измерения времени между кадрами
+    // Sentis Tensors
+    private Tensor<float> inputTensor;
 
-      private int preprocessKernel;
-      private int temporalSmoothingKernel;
+    private CancellationTokenSource cancellationTokenSource;
+    private bool isProcessing = false;
+    private int frameCount = 0;
 
-      private XRCpuImage.ConversionParams conversionParamsCache;
+    // Для кэширования, чтобы избежать аллокаций
+    private XRCpuImage.ConversionParams conversionParams;
 
-      // Публичные свойства для управления производительностью
-      public bool UseCpuArgmax
-      {
-            get => useCpuArgmax;
-            set => useCpuArgmax = value;
-      }
+    private const int NUM_CLASSES = 150;
 
-      public Vector2Int CurrentResolution => overrideResolution;
+    private static readonly Dictionary<int, string> classNames = new Dictionary<int, string>
+    {
+        {0, "wall"}, {1, "building"}, {2, "sky"}, {3, "floor"}, {4, "tree"},
+        {5, "ceiling"}, {6, "road"}, {7, "bed "}, {8, "windowpane"}, {9, "grass"},
+        {10, "cabinet"}, {11, "sidewalk"}, {12, "person"}, {13, "earth"}, {14, "door"},
+        {15, "table"}, {16, "mountain"}, {17, "plant"}, {18, "curtain"}, {19, "chair"},
+        {20, "car"}, {21, "water"}, {22, "painting"}, {23, "sofa"}, {24, "shelf"},
+        {25, "house"}, {26, "sea"}, {27, "mirror"}, {28, "rug"}, {29, "field"},
+        {30, "armchair"}, {31, "seat"}, {32, "fence"}, {33, "desk"}, {34, "rock"},
+        {35, "wardrobe"}, {36, "lamp"}, {37, "bathtub"}, {38, "railing"}, {39, "cushion"},
+        {40, "base"}, {41, "box"}, {42, "column"}, {43, "signboard"}, {44, "chest of drawers"},
+        {45, "counter"}, {46, "sand"}, {47, "sink"}, {48, "skyscraper"}, {49, "fireplace"},
+        {50, "refrigerator"}, {51, "grandstand"}, {52, "path"}, {53, "stairs"}, {54, "runway"},
+        {55, "case"}, {56, "pool table"}, {57, "pillow"}, {58, "screen door"}, {59, "stairway"},
+        {60, "river"}, {61, "bridge"}, {62, "bookcase"}, {63, "blind"}, {64, "coffee table"},
+        {65, "toilet"}, {66, "flower"}, {67, "book"}, {68, "hill"}, {69, "bench"},
+        {70, "countertop"}, {71, "stove"}, {72, "palm"}, {73, "kitchen island"}, {74, "computer"},
+        {75, "swivel chair"}, {76, "boat"}, {77, "bar"}, {78, "arcade machine"}, {79, "hovel"},
+        {80, "bus"}, {81, "towel"}, {82, "light"}, {83, "truck"}, {84, "tower"},
+        {85, "chandelier"}, {86, "awning"}, {87, "streetlight"}, {88, "booth"}, {89, "television receiver"},
+        {90, "airplane"}, {91, "dirt track"}, {92, "apparel"}, {93, "pole"}, {94, "land"},
+        {95, "bannister"}, {96, "escalator"}, {97, "ottoman"}, {98, "bottle"}, {99, "buffet"},
+        {100, "poster"}, {101, "stage"}, {102, "van"}, {103, "ship"}, {104, "fountain"},
+        {105, "conveyer belt"}, {106, "canopy"}, {107, "washer"}, {108, "plaything"}, {109, "swimming pool"},
+        {110, "stool"}, {111, "barrel"}, {112, "basket"}, {113, "waterfall"}, {114, "tent"},
+        {115, "bag"}, {116, "minibike"}, {117, "cradle"}, {118, "oven"}, {119, "ball"},
+        {120, "food"}, {121, "step"}, {122, "tank"}, {123, "trade name"}, {124, "microwave"},
+        {125, "pot"}, {126, "animal"}, {127, "bicycle"}, {128, "lake"}, {129, "dishwasher"},
+        {130, "screen"}, {131, "blanket"}, {132, "sculpture"}, {133, "hood"}, {134, "sconce"},
+        {135, "vase"}, {136, "traffic light"}, {137, "tray"}, {138, "ashcan"}, {139, "fan"},
+        {140, "pier"}, {141, "crt screen"}, {142, "plate"}, {143, "monitor"}, {144, "bulletin board"},
+        {145, "shower"}, {146, "radiator"}, {147, "glass"}, {148, "clock"}, {149, "flag"}
+    };
 
-      void OnEnable()
-      {
-            cancellationTokenSource = new CancellationTokenSource();
-            lastUpdateTime = Time.realtimeSinceStartup;
-            InitializeAsync(cancellationTokenSource.Token);
-      }
+    // Поля для отслеживания изменений в настройках отображения
+    private int lastSelectedClass = 0; // Стены по умолчанию
+    private float lastOpacity = -1f;
+    private bool lastShowAll = true;
 
-      void OnDisable()
-      {
-            Debug.Log("AsyncSegmentationManager is being disabled.");
-            cancellationTokenSource?.Cancel();
-            cancellationTokenSource?.Dispose();
-            cancellationTokenSource = null;
+    void OnEnable()
+    {
+        // Принудительно устанавливаем начальное состояние, чтобы избежать сохраненных в инспекторе значений
+        selectedClass = -2;
+        showAllClasses = false;
+        showWalls = false;
+        showFloors = false;
+        showCeilings = false;
 
-            worker?.Dispose();
-            tensorBuffer?.Dispose();
+        cancellationTokenSource = new CancellationTokenSource();
+        InitializeSystem();
+    }
 
-            Destroy(cameraTexture);
-            Destroy(cpuSegmentationTexture);
-            ReleaseRenderTexture(preprocessedTexture);
-            ReleaseRenderTexture(neuralNetworkOutputTexture);
-            ReleaseRenderTexture(segmentationTexture);
-            ReleaseRenderTexture(smoothedSegmentationTexture);
-            ReleaseRenderTexture(previousFrameTexture);
-      }
+    void OnDisable()
+    {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource?.Dispose();
 
-      void Update()
-      {
-            // Оптимизированная проверка с пропуском кадров
-            if (ARSession.state == ARSessionState.SessionTracking &&
-                arCameraManager != null &&
-                !isProcessingFrame &&
-                CanProcessNextFrame())
+        worker?.Dispose();
+        inputTensor?.Dispose();
+
+        ReleaseRenderTexture(cameraInputTexture);
+        ReleaseRenderTexture(normalizedTexture);
+        ReleaseRenderTexture(segmentationMaskTexture);
+        ReleaseRenderTexture(smoothedMaskTexture);
+        ReleaseRenderTexture(pingPongMaskTexture);
+    }
+
+    void Update()
+    {
+        // Обновляем параметр ориентации в шейдере
+        if (displayMaterialInstance != null)
+        {
+            // Используем пропорции для определения ориентации, чтобы было согласовано с ConvertCpuImageToTexture
+            bool isPortrait = Screen.height > Screen.width;
+            bool isRealDevice = !Application.isEditor;
+
+            // Передаем информацию о портретном режиме и типе устройства в шейдер
+            displayMaterialInstance.SetFloat("_IsPortrait", isPortrait ? 1.0f : 0.0f);
+            displayMaterialInstance.SetFloat("_IsRealDevice", isRealDevice ? 1.0f : 0.0f);
+        }
+
+        // Отладка: определяем класс по клику
+        if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+        {
+            StartCoroutine(GetClassAtScreenPositionCoroutine(Input.mousePosition));
+        }
+
+        // Проверяем изменения в настройках отображения
+        if (selectedClass != lastSelectedClass ||
+            Mathf.Abs(visualizationOpacity - lastOpacity) > 0.01f ||
+            showAllClasses != lastShowAll)
+        {
+            UpdateMaterialParameters();
+            lastSelectedClass = selectedClass;
+            lastOpacity = visualizationOpacity;
+            lastShowAll = showAllClasses;
+        }
+
+        if (ARSession.state < ARSessionState.SessionTracking || worker == null || isProcessing)
+        {
+            return;
+        }
+
+        if (frameCount % (frameSkipRate + 1) == 0)
+        {
+            if (arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
             {
-                if (arCameraManager.TryAcquireLatestCpuImage(out var image))
-                {
-                    var timeSinceLastFrame = (Time.realtimeSinceStartup - lastUpdateTime) * 1000f;
-                    Debug.Log($"⏱️ Frame interval: {timeSinceLastFrame:F1}ms");
-                    lastUpdateTime = Time.realtimeSinceStartup;
-                    
-                    isProcessingFrame = true;
-                    // Передаем владение XRCpuImage в асинхронный метод
-                    ProcessImageAsync(image, cancellationTokenSource.Token);
-                }
+                ProcessFrameAsync(cpuImage);
             }
-      }
+        }
+        frameCount++;
+    }
 
-      private bool CanProcessNextFrame()
-      {
-            frameCounter++;
-
-            // Пропуск кадров по частоте
-            if (frameCounter % frameSkipRate != 0)
-                  return false;
-
-            // Ограничение по времени
-            float currentTime = Time.unscaledTime;
-            if (currentTime - lastProcessTime < minFrameInterval)
-                  return false;
-
-            lastProcessTime = currentTime;
-            return true;
-      }
-
-      async void InitializeAsync(CancellationToken cancellationToken)
-      {
-            try
+    private void InitializeSystem()
+    {
+        arCameraManager = FindObjectOfType<ARCameraManager>();
+        if (segmentationDisplay == null)
+        {
+            // Попробуем найти RawImage, если не присвоен в инспекторе
+            var canvas = FindObjectOfType<Canvas>();
+            if (canvas != null)
             {
-                  Debug.Log("Init Step 1: Loading model...");
-                  runtimeModel = ModelLoader.Load(modelAsset);
-                  if (cancellationToken.IsCancellationRequested) return;
-
-                  Debug.Log("Init Step 2: Creating worker...");
-                  worker = new Worker(runtimeModel, BackendType.GPUCompute);
-                  if (cancellationToken.IsCancellationRequested) return;
-
-                  Debug.Log("Init Step 3: Initializing shaders...");
-                  InitializeComputeShaders();
-                  if (cancellationToken.IsCancellationRequested) return;
-
-                  Debug.Log("Init Step 4: Initializing textures...");
-                  InitializeTextures();
-                  if (cancellationToken.IsCancellationRequested) return;
-
-                  Debug.Log("Init Step 5: Yielding to next frame...");
-                  await Task.Yield();
-
-                  Debug.Log("Initialization complete.");
-            }
-            catch (Exception e)
-            {
-                  Debug.LogError($"CRITICAL FAILURE during InitializeAsync: {e}");
-            }
-      }
-
-      void InitializeComputeShaders()
-      {
-            preprocessKernel = preprocessingShader.FindKernel("Preprocess");
-            temporalSmoothingKernel = temporalSmoothingShader.FindKernel("TemporalSmoothing");
-            argmaxKernel = argmaxShader.FindKernel("Argmax");
-      }
-
-      void InitializeTextures()
-      {
-            cameraTexture = new Texture2D(overrideResolution.x, overrideResolution.y, TextureFormat.RGB24, false);
-            cpuSegmentationTexture = new Texture2D(overrideResolution.x, overrideResolution.y, TextureFormat.RFloat, false);
-            preprocessedTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.ARGB32);
-            neuralNetworkOutputTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.ARGB32);
-            segmentationTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.ARGB32);
-            smoothedSegmentationTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.RFloat);
-            previousFrameTexture = CreateRenderTexture(overrideResolution.x, overrideResolution.y, RenderTextureFormat.RFloat);
-
-            if (segmentationDisplay != null)
-            {
-                  segmentationDisplay.texture = segmentationTexture;
-            }
-      }
-
-      async void ProcessImageAsync(XRCpuImage image, CancellationToken token)
-      {
-            var frameStartTime = Time.realtimeSinceStartup;
-            try
-            {
-                if (token.IsCancellationRequested) return;
-
-                var conversionParams = GetConversionParameters(image);
-
-                Debug.Log("Starting async conversion...");
-                var conversionStartTime = Time.realtimeSinceStartup;
-                var convertTask = image.ConvertAsync(conversionParams);
-
-                while (!convertTask.status.IsDone())
-                {
-                    if (token.IsCancellationRequested)
-                    {
-                        convertTask.Dispose();
-                        return;
-                    }
-                    await Task.Yield();
-                }
-                var conversionTime = (Time.realtimeSinceStartup - conversionStartTime) * 1000f;
-                Debug.Log($"Conversion completed in {conversionTime:F1}ms");
-
-                if (convertTask.status != XRCpuImage.AsyncConversionStatus.Ready)
-                {
-                    Debug.LogError($"Conversion failed with status: {convertTask.status}");
-                    return;
-                }
-
-                var textureStartTime = Time.realtimeSinceStartup;
-                var data = convertTask.GetData<byte>();
-
-                if (cameraTexture.width != conversionParams.outputDimensions.x || cameraTexture.height != conversionParams.outputDimensions.y)
-                {
-                    cameraTexture.Reinitialize(conversionParams.outputDimensions.x, conversionParams.outputDimensions.y);
-                }
-                cameraTexture.LoadRawTextureData(data);
-                cameraTexture.Apply();
-                convertTask.Dispose();
-
-                Graphics.Blit(cameraTexture, preprocessedTexture);
-                var textureTime = (Time.realtimeSinceStartup - textureStartTime) * 1000f;
-                Debug.Log($"Texture updated from camera image in {textureTime:F1}ms");
-
-                var inferenceStartTime = Time.realtimeSinceStartup;
-                var inputTensor = TextureConverter.ToTensor(preprocessedTexture);
-
-                Debug.Log("Scheduling inference...");
-                worker.Schedule(inputTensor);
-                await Task.Yield();
-                if (token.IsCancellationRequested) return;
-                inputTensor.Dispose();
-
-                Tensor outputTensor = null;
-                while (outputTensor == null)
-                {
-                    if (token.IsCancellationRequested) return;
-                    outputTensor = worker.PeekOutput();
-                    if (outputTensor == null)
-                        await Task.Yield();
-                }
-                var inferenceTime = (Time.realtimeSinceStartup - inferenceStartTime) * 1000f;
-                Debug.Log($"Inference complete in {inferenceTime:F1}ms, output tensor received.");
-
-                if (token.IsCancellationRequested)
-                {
-                    outputTensor.Dispose();
-                    return;
-                }
-
-                var processingStartTime = Time.realtimeSinceStartup;
-                if (!useCpuArgmax && argmaxShader != null)
-                {
-                    await ProcessSegmentationTensorWithGPU(outputTensor as Tensor<float>, token);
-                    var processingTime = (Time.realtimeSinceStartup - processingStartTime) * 1000f;
-                    Debug.Log($"GPU processing complete in {processingTime:F1}ms");
-                }
-                else
-                {
-                    var readbackTensor = (outputTensor as Tensor<float>).ReadbackAndClone();
-                    outputTensor.Dispose();
-
-                    float[] segmentationData = await Task.Run(() => ProcessSegmentationTensorWithCPU(readbackTensor), token);
-                    var processingTime = (Time.realtimeSinceStartup - processingStartTime) * 1000f;
-                    Debug.Log($"CPU processing complete in {processingTime:F1}ms");
-
-                    if (token.IsCancellationRequested) return;
-
-                    if (segmentationData != null)
-                    {
-                        UpdateSegmentationTexture(segmentationData, readbackTensor.shape);
-                    }
-                }
-
+                segmentationDisplay = canvas.GetComponentInChildren<RawImage>();
                 if (segmentationDisplay != null)
                 {
-                    segmentationDisplay.texture = segmentationTexture;
-                    var totalTime = (Time.realtimeSinceStartup - frameStartTime) * 1000f;
-                    Debug.Log($"🎯 TOTAL FRAME TIME: {totalTime:F1}ms (Conv: {conversionTime:F1}ms, Tex: {textureTime:F1}ms, Inf: {inferenceTime:F1}ms, Proc: {(Time.realtimeSinceStartup - processingStartTime) * 1000f:F1}ms)");
+                    Debug.Log("✅ RawImage для отображения найден автоматически.");
                 }
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error in ProcessImageAsync: {e}");
-            }
-            finally
-            {
-                image.Dispose(); // Гарантированное освобождение ресурса
-                isProcessingFrame = false;
-            }
-      }
+        }
 
-      XRCpuImage.ConversionParams GetConversionParameters(XRCpuImage image)
-      {
-            float targetAspectRatio = (float)overrideResolution.x / overrideResolution.y;
-            float imageAspectRatio = (float)image.width / image.height;
-            int cropWidth = image.width;
-            int cropHeight = image.height;
-            int cropX = 0;
-            int cropY = 0;
+        Debug.Log("🚀 AsyncSegmentationManager: Начинаем инициализацию...");
 
-            if (imageAspectRatio > targetAspectRatio)
+        if (modelAsset == null)
+        {
+            Debug.LogError("❌ Model Asset не назначен в AsyncSegmentationManager!");
+            return;
+        }
+
+        if (argmaxShader == null)
+        {
+            Debug.LogError("❌ Argmax Shader не назначен в AsyncSegmentationManager!");
+            return;
+        }
+
+        if (segmentationDisplay == null)
+        {
+            Debug.LogError("❌ Segmentation Display не назначен в AsyncSegmentationManager!");
+            return;
+        }
+
+        try
+        {
+            runtimeModel = ModelLoader.Load(modelAsset);
+            Debug.Log($"✅ Модель загружена: {modelAsset.name}");
+
+            if (processingResolution.x <= 0 || processingResolution.y <= 0)
             {
-                  cropWidth = (int)(image.height * targetAspectRatio);
-                  cropX = (image.width - cropWidth) / 2;
+                Debug.LogError("🚨 'processingResolution' в инспекторе имеет значение 0! Установите корректное значение (например, 512x512).");
+                return;
+            }
+            Debug.Log($"✅ Используется разрешение входа из инспектора: {processingResolution.x}x{processingResolution.y}");
+
+            worker = new Worker(runtimeModel, BackendType.GPUCompute);
+            Debug.Log("✅ Worker создан с GPUCompute backend");
+
+            // Создаем текстуры с максимальным разрешением (будем изменять размер динамически)
+            int maxRes = processingResolution.x;
+            cameraInputTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGB32);
+            normalizedTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGBFloat);
+
+            if (segmentationDisplay != null && visualizationMaterial != null)
+            {
+                displayMaterialInstance = new Material(visualizationMaterial);
+                segmentationDisplay.material = displayMaterialInstance;
+                UpdateMaterialParameters();
+                Debug.Log("✅ Материал для отображения настроен");
+
+                // Настраиваем правильное соотношение сторон для телефона
+                SetupCorrectAspectRatio();
             }
             else
             {
-                  cropHeight = (int)(image.width / targetAspectRatio);
-                  cropY = (image.height - cropHeight) / 2;
+                Debug.LogWarning("⚠️ Visualization Material не назначен!");
             }
 
-            conversionParamsCache = new XRCpuImage.ConversionParams
-            {
-                  inputRect = new RectInt(cropX, cropY, cropWidth, cropHeight),
-                  // Конвертируем 1-в-1, без масштабирования на этом шаге
-                  outputDimensions = new Vector2Int(cropWidth, cropHeight),
-                  outputFormat = TextureFormat.RGB24,
-                  transformation = XRCpuImage.Transformation.MirrorY
-            };
-            return conversionParamsCache;
-      }
+            Debug.Log("🎉 AsyncSegmentationManager инициализация завершена успешно!");
 
-      /// <summary>
-      /// Обрабатывает выходной тензор сегментации на CPU для поиска класса с максимальным значением (argmax).
-      /// Этот метод предназначен для запуска в фоновом потоке и возвращает массив данных для текстуры.
-      /// </summary>
-      private float[] ProcessSegmentationTensorWithCPU(Tensor<float> tensor)
-      {
-            var shape = tensor.shape;
-            int h = shape[2];
-            int w = shape[3];
-            int numClasses = shape[1];
-            
-            Debug.Log($"CPU processing tensor: {w}x{h}x{numClasses} classes");
-            
-            // Получаем данные как массив для совместимости с Parallel.For
-            float[] data = tensor.AsReadOnlySpan().ToArray();
-            float[] result = new float[w * h];
-            
-            // Параллельная обработка пикселей для улучшения производительности
-            System.Threading.Tasks.Parallel.For(0, h, y =>
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    int pixelIndex = y * w + x;
-                    float maxValue = float.MinValue;
-                    int maxClass = 0;
-                    
-                    // Optimized argmax: найти класс с максимальным значением
-                    for (int c = 0; c < numClasses; c++)
-                    {
-                        // Индекс в тензоре: [batch=0, class=c, height=y, width=x]
-                        int tensorIndex = c * h * w + pixelIndex;
-                        float value = data[tensorIndex];
-                        
-                        if (value > maxValue)
-                        {
-                            maxValue = value;
-                            maxClass = c;
-                        }
-                    }
-                    
-                    // Нормализуем класс в диапазон [0, 1] для текстуры
-                    result[pixelIndex] = (float)maxClass / (numClasses - 1);
-                }
-            });
-            
-            return result;
-      }
+            // Автоматически показываем только стены для удобства тестирования
+            Invoke(nameof(ShowOnlyWalls), 1f);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"❌ Ошибка инициализации AsyncSegmentationManager: {e.Message}\n{e.StackTrace}");
+        }
 
-      private async Task ProcessSegmentationTensorWithGPU(Tensor<float> outputTensor, CancellationToken token)
-      {
-            if (token.IsCancellationRequested)
+        // 🚨 ПРИНУДИТЕЛЬНО устанавливаем режим "только стены"
+        ForceWallOnlyMode();
+
+        StartCoroutine(ForceMaterialUpdate());
+    }
+
+    /// <summary>
+    /// Принудительно устанавливает режим отображения только стен
+    /// </summary>
+    private void ForceWallOnlyMode()
+    {
+        selectedClass = 0;           // Только класс 0 (стены)
+        showAllClasses = false;      // НЕ показывать все классы
+        showWalls = true;            // Показывать стены
+        showFloors = false;          // НЕ показывать полы
+        showCeilings = false;        // НЕ показывать потолки
+
+        Debug.Log("🧱 ПРИНУДИТЕЛЬНО активирован режим: ТОЛЬКО СТЕНЫ (класс 0)");
+        Debug.Log("✅ ИСПРАВЛЕНИЯ: убрано двойное UV инвертирование, исправлена логика отображения, добавлена билинейная фильтрация");
+
+        // 🚨 ПРИНУДИТЕЛЬНО включаем максимальное сглаживание
+        enableMaskSmoothing = true;
+        maskSmoothingIterations = 8; // Увеличиваем еще больше
+        Debug.Log($"🎯 ПРИНУДИТЕЛЬНО включено сглаживание: {maskSmoothingIterations} итераций");
+
+        // Обновляем материал с новыми настройками
+        UpdateMaterialParameters();
+    }
+
+    private void SetupCorrectAspectRatio()
+    {
+        // ТЕСТ: УБИРАЕМ AspectRatioFitter - пусть маска растягивается на весь экран
+        var fitter = segmentationDisplay.GetComponent<AspectRatioFitter>();
+        if (fitter != null)
+        {
+            DestroyImmediate(fitter);
+            Debug.Log("🗑️ AspectRatioFitter удален - маска растягивается на весь экран");
+        }
+
+        // Настройка для центрирования
+        var rectTransform = segmentationDisplay.rectTransform;
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
+        // Масштаб остается 1:1 - отражение только в шейдере
+        rectTransform.localScale = Vector3.one;
+
+        // Принудительно устанавливаем позицию в центр
+        rectTransform.anchoredPosition = Vector2.zero;
+
+        // Убеждаемся что Canvas Scaler настроен правильно
+        var canvas = segmentationDisplay.GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+            var canvasScaler = canvas.GetComponent<CanvasScaler>();
+            if (canvasScaler != null)
             {
-                outputTensor.Dispose();
+                canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
+                canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+                Debug.Log($"🎯 CanvasScaler настроен: {Screen.width}x{Screen.height}, режим Expand");
+            }
+        }
+
+        Debug.Log($"✅ RawImage настроен на точное покрытие экрана {Screen.width}x{Screen.height} без AspectRatioFitter");
+
+        // Диагностика соответствия размеров
+        Debug.Log($"🔍 ДИАГНОСТИКА РАЗМЕРОВ:");
+        Debug.Log($"   📱 Экран: {Screen.width}x{Screen.height} (соотношение {(float)Screen.width / Screen.height:F2})");
+        Debug.Log($"   🎯 RawImage: {rectTransform.rect.width:F0}x{rectTransform.rect.height:F0}");
+
+        if (segmentationMaskTexture != null)
+        {
+            Debug.Log($"   🧱 Маска: {segmentationMaskTexture.width}x{segmentationMaskTexture.height} (соотношение {(float)segmentationMaskTexture.width / segmentationMaskTexture.height:F2})");
+        }
+    }
+
+    private System.Collections.IEnumerator ForceMaterialUpdate()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1f);
+            if (segmentationDisplay != null && segmentationDisplay.material != null &&
+                segmentationDisplay.material.shader.name != "Unlit/VisualizeMask")
+            {
+                Debug.LogWarning("⚠️ Обнаружен неверный материал! Принудительно устанавливаем правильный материал.");
+                var displayMaterial = new Material(visualizationMaterial);
+                displayMaterial.SetTexture("_MaskTex", segmentationMaskTexture);
+                segmentationDisplay.material = displayMaterial;
+            }
+        }
+    }
+
+    private async void ProcessFrameAsync(XRCpuImage cpuImage)
+    {
+        isProcessing = true;
+
+        try
+        {
+            var convertTask = ConvertCpuImageToTexture(cpuImage);
+            await convertTask;
+            if (cancellationTokenSource.IsCancellationRequested || !convertTask.IsCompletedSuccessfully) return;
+
+            NormalizeImage();
+
+            inputTensor?.Dispose();
+            // Используем размеры текстуры, а не processingResolution
+            inputTensor = TextureConverter.ToTensor(normalizedTexture, normalizedTexture.width, normalizedTexture.height, 3);
+
+            worker.Schedule(inputTensor);
+
+            ProcessOutputWithArgmaxShader();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"❌ Frame processing failed: {e.Message}\n{e.StackTrace}");
+        }
+        finally
+        {
+            cpuImage.Dispose();
+            isProcessing = false;
+        }
+    }
+
+    private void NormalizeImage()
+    {
+        if (imageNormalizerShader == null)
+        {
+            Debug.LogError("Image Normalizer Shader не назначен!");
+            return;
+        }
+
+        int kernel = imageNormalizerShader.FindKernel("Normalize");
+
+        imageNormalizerShader.SetVector("image_mean", new Vector4(0.485f, 0.456f, 0.406f, 0));
+        imageNormalizerShader.SetVector("image_std", new Vector4(0.229f, 0.224f, 0.225f, 0));
+
+        imageNormalizerShader.SetTexture(kernel, "InputTexture", cameraInputTexture);
+        imageNormalizerShader.SetTexture(kernel, "OutputTexture", normalizedTexture);
+
+        // Используем квадратные размеры текстуры
+        int threadGroupsX = Mathf.CeilToInt(cameraInputTexture.width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(cameraInputTexture.height / 8.0f);
+        imageNormalizerShader.Dispatch(kernel, threadGroupsX, threadGroupsY, 1);
+    }
+
+    private void ProcessOutputWithArgmaxShader()
+    {
+        var outputTensor = worker.PeekOutput() as Tensor<float>;
+        if (outputTensor == null)
+        {
+            Debug.LogError("❌ Выходной тензор равен null!");
+            return;
+        }
+
+        var shape = outputTensor.shape;
+        // Используем размеры из тензора
+        int batchSize = shape[0];
+        int numClasses = shape[1];
+        int height = shape[2];
+        int width = shape[3];
+
+        // Debug.Log($"🔍 Размеры тензора: batch={batchSize}, classes={numClasses}, height={height}, width={width}"); // Убран частый лог
+        // Debug.Log($"📏 Входная текстура: {cameraInputTexture.width}x{cameraInputTexture.height}"); // Убран частый лог
+
+        // Проверяем соответствие размеров
+        if (width != height)
+        {
+            Debug.LogError($"❌ Тензор не квадратный: {width}x{height}!");
+            return;
+        }
+
+        if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
+        {
+            ReleaseRenderTexture(segmentationMaskTexture);
+            segmentationMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
+            ReleaseRenderTexture(smoothedMaskTexture);
+            smoothedMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+            ReleaseRenderTexture(pingPongMaskTexture);
+            pingPongMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
+            if (displayMaterialInstance != null)
+            {
+                displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+                UpdateMaterialParameters();
+                // Debug.Log($"✅ Текстура маски создана/изменена на {width}x{height} и привязана к материалу"); // Убран частый лог
+            }
+        }
+
+        var tensorData = outputTensor.DownloadToArray();
+
+        var cmd = new CommandBuffer { name = "SegmentationPostProcessing" };
+
+        var tensorDataBuffer = new ComputeBuffer(tensorData.Length, sizeof(float));
+        tensorDataBuffer.SetData(tensorData);
+
+        int kernel = argmaxShader.FindKernel("Argmax");
+        cmd.SetComputeIntParam(argmaxShader, "width", width);
+        cmd.SetComputeIntParam(argmaxShader, "height", height);
+        cmd.SetComputeIntParam(argmaxShader, "num_classes", numClasses);
+
+        cmd.SetComputeBufferParam(argmaxShader, kernel, "InputTensor", tensorDataBuffer);
+        cmd.SetComputeTextureParam(argmaxShader, kernel, "Result", segmentationMaskTexture);
+
+        int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
+        cmd.DispatchCompute(argmaxShader, kernel, threadGroupsX, threadGroupsY, 1);
+
+        RenderTexture finalMask = segmentationMaskTexture; // По умолчанию используем исходную маску
+
+        if (enableMaskSmoothing && maskPostProcessingShader != null && maskSmoothingIterations > 0)
+        {
+            Debug.Log($"🎯 ПРИМЕНЯЕТСЯ СГЛАЖИВАНИЕ МАСКИ: {maskSmoothingIterations} итераций на {width}x{height}");
+            int postProcessingKernel = maskPostProcessingShader.FindKernel("MedianFilter");
+            cmd.SetComputeIntParam(maskPostProcessingShader, "width", width);
+            cmd.SetComputeIntParam(maskPostProcessingShader, "height", height);
+
+            RenderTexture source = segmentationMaskTexture;
+            RenderTexture destination = smoothedMaskTexture;
+
+            for (int i = 0; i < maskSmoothingIterations; i++)
+            {
+                cmd.SetComputeTextureParam(maskPostProcessingShader, postProcessingKernel, "InputMask", source);
+                cmd.SetComputeTextureParam(maskPostProcessingShader, postProcessingKernel, "ResultMask", destination);
+                cmd.DispatchCompute(maskPostProcessingShader, postProcessingKernel, threadGroupsX, threadGroupsY, 1);
+
+                RenderTexture temp = source;
+                source = destination;
+
+                destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
+            }
+            displayMaterialInstance.SetTexture("_MaskTex", source);
+            finalMask = source; // Запоминаем финальную сглаженную маску
+        }
+        else
+        {
+            displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+        }
+
+        Graphics.ExecuteCommandBuffer(cmd);
+        cmd.Dispose();
+
+        // Передаем маску в ARWallPresenter для фотореалистичной окраски
+        if (arWallPresenter != null)
+        {
+            // OPTIMIZATION: Используем оптимизированную маску если доступна
+            var maskToSend = OptimizeMaskIfNeeded(finalMask);
+            arWallPresenter.SetSegmentationMask(maskToSend);
+            // Debug.Log("🎨 Маска передана в ARWallPresenter"); // Убран частый лог
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ ARWallPresenter не назначен в AsyncSegmentationManager!");
+        }
+
+        tensorDataBuffer.Dispose();
+        outputTensor.Dispose();
+    }
+
+    /// <summary>
+    /// OPTIMIZATION: Оптимизирует маску сегментации для снижения использования памяти
+    /// </summary>
+    private Texture OptimizeMaskIfNeeded(Texture originalMask)
+    {
+        // В production версии здесь можно конвертировать в R8 формат
+        // Для упрощения возвращаем оригинальную маску
+        return originalMask;
+    }
+
+    private async Task ConvertCpuImageToTexture(XRCpuImage cpuImage)
+    {
+        // Определяем правильную трансформацию в зависимости от ориентации
+        // Используем пропорции экрана для определения ориентации - это надежнее, чем Screen.orientation в редакторе.
+        bool isScreenPortrait = Screen.height > Screen.width;
+
+        // НИКАКИХ ТРАНСФОРМАЦИЙ! Пусть изображение остаётся как есть
+        var transformation = XRCpuImage.Transformation.None;
+
+        Debug.Log($"📱 Режим {(isScreenPortrait ? "портрет" : "ландшафт")} ({Screen.width}x{Screen.height}). Трансформация: {transformation} (без изменений)");
+
+        // ТЕСТ: Используем ВСЮ КАМЕРУ, а не центральную область, и растягиваем до квадрата
+        // Это может исправить смещение координат
+        float cameraAspectRatio = (float)cpuImage.width / cpuImage.height;
+
+        int targetResolution = Mathf.Min(processingResolution.x, Mathf.Min(cpuImage.width, cpuImage.height));
+
+        // Берём ВСЮЮ камеру и растягиваем до квадрата (как было изначально)
+        conversionParams = new XRCpuImage.ConversionParams
+        {
+            inputRect = new RectInt(0, 0, cpuImage.width, cpuImage.height), // ВСЯ камера
+            outputDimensions = new Vector2Int(targetResolution, targetResolution), // Квадратный выход
+            outputFormat = TextureFormat.RGBA32,
+            transformation = transformation
+        };
+
+        Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height} (AR: {cameraAspectRatio:F2}), растяжение ВСЕЙ камеры до: {targetResolution}x{targetResolution}");
+
+        // Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height}, сжатие до {targetResolution}x{targetResolution}"); // Убран частый лог
+
+        // Пересоздаем текстуры, если размер изменился
+        if (cameraInputTexture.width != targetResolution || cameraInputTexture.height != targetResolution)
+        {
+            ReleaseRenderTexture(cameraInputTexture);
+            ReleaseRenderTexture(normalizedTexture);
+
+            cameraInputTexture = CreateRenderTexture(targetResolution, targetResolution, RenderTextureFormat.ARGB32);
+            normalizedTexture = CreateRenderTexture(targetResolution, targetResolution, RenderTextureFormat.ARGBFloat);
+
+            Debug.Log($"🔄 Пересоздали текстуры для разрешения {targetResolution}x{targetResolution} (квадратные для модели)");
+        }
+
+        var conversionRequest = cpuImage.ConvertAsync(conversionParams);
+
+        while (!conversionRequest.status.IsDone())
+        {
+            if (cancellationTokenSource.IsCancellationRequested)
+            {
+                conversionRequest.Dispose();
                 return;
             }
-
-            var shape = outputTensor.shape;
-            int h = shape[2];
-            int w = shape[3];
-            int numClasses = shape[1];
-
-            Debug.Log($"Tensor shape: {w}x{h}x{numClasses}, Processing with optimized argmax shader");
-
-            // Создаем буфер для всех данных тензора
-            int totalElements = w * h * numClasses;
-            if (tensorBuffer == null || tensorBuffer.count != totalElements)
-            {
-                tensorBuffer?.Dispose();
-                tensorBuffer = new ComputeBuffer(totalElements, sizeof(float));
-            }
-
-            // Эффективно копируем данные из тензора
-            var readbackTensor = outputTensor.ReadbackAndClone();
-            var tensorData = readbackTensor.AsReadOnlySpan().ToArray();
-            tensorBuffer.SetData(tensorData);
-            readbackTensor.Dispose();
-
-            // Настраиваем compute shader для обработки всех классов
-            argmaxShader.SetBuffer(argmaxKernel, "_InputTensor", tensorBuffer);
-            argmaxShader.SetTexture(argmaxKernel, "_OutputTexture", segmentationTexture);
-            argmaxShader.SetInt("_TensorWidth", w);
-            argmaxShader.SetInt("_TensorHeight", h);
-            argmaxShader.SetInt("_NumClasses", numClasses);
-
-            // Вычисляем оптимальные группы потоков для блоков 16x16
-            int groupsX = (w + 15) / 16;
-            int groupsY = (h + 15) / 16;
-
-            Debug.Log($"Dispatching optimized argmax shader with groups: {groupsX}x{groupsY}, classes: {numClasses}");
-
-            // Запускаем shader
-            argmaxShader.Dispatch(argmaxKernel, groupsX, groupsY, 1);
-
-            // Ждем завершения на GPU
             await Task.Yield();
+        }
 
-            outputTensor.Dispose();
-      }
+        if (conversionRequest.status == XRCpuImage.AsyncConversionStatus.Ready)
+        {
+            var tempTexture = new Texture2D(
+                conversionRequest.conversionParams.outputDimensions.x,
+                conversionRequest.conversionParams.outputDimensions.y,
+                conversionRequest.conversionParams.outputFormat,
+                false);
 
-      private void UpdateSegmentationTexture(float[] segmentationData, TensorShape shape)
-      {
-            int h = shape[2];
-            int w = shape[3];
+            tempTexture.LoadRawTextureData(conversionRequest.GetData<byte>());
+            tempTexture.Apply();
 
-            // Переиспользуем текстуру для данных CPU, избегая создания новой каждый кадр
-            if (cpuSegmentationTexture == null || cpuSegmentationTexture.width != w || cpuSegmentationTexture.height != h)
-            {
-                if(cpuSegmentationTexture != null) Destroy(cpuSegmentationTexture);
-                cpuSegmentationTexture = new Texture2D(w, h, TextureFormat.RFloat, false);
-            }
+            Graphics.Blit(tempTexture, cameraInputTexture);
 
-            cpuSegmentationTexture.SetPixelData(segmentationData, 0);
-            cpuSegmentationTexture.Apply();
+            Destroy(tempTexture);
+        }
+        else
+        {
+            Debug.LogError($"CPU Image conversion failed with status: {conversionRequest.status}");
+        }
+        conversionRequest.Dispose();
+    }
 
-            Graphics.Blit(cpuSegmentationTexture, segmentationTexture);
-      }
+    private RenderTexture CreateRenderTexture(int width, int height, RenderTextureFormat format)
+    {
+        var rt = new RenderTexture(width, height, 0, format)
+        {
+            enableRandomWrite = true,
+            filterMode = FilterMode.Bilinear, // Изменено с Point на Bilinear для сглаживания
+            wrapMode = TextureWrapMode.Clamp
+        };
+        rt.Create();
+        return rt;
+    }
 
-      void ApplyTemporalSmoothing()
-      {
-            temporalSmoothingShader.SetTexture(temporalSmoothingKernel, "_CurrentFrame", segmentationTexture);
-            temporalSmoothingShader.SetTexture(temporalSmoothingKernel, "_PreviousFrame", previousFrameTexture);
-            temporalSmoothingShader.SetTexture(temporalSmoothingKernel, "_SmoothedFrame", smoothedSegmentationTexture);
-            temporalSmoothingShader.SetFloat("_SmoothingFactor", smoothingFactor);
-            temporalSmoothingShader.Dispatch(temporalSmoothingKernel, overrideResolution.x / 8, overrideResolution.y / 8, 1);
+    private void ReleaseRenderTexture(RenderTexture rt)
+    {
+        if (rt != null)
+        {
+            rt.Release();
+            Destroy(rt);
+        }
+    }
 
-            Graphics.CopyTexture(smoothedSegmentationTexture, previousFrameTexture);
-      }
+    private IEnumerator GetClassAtScreenPositionCoroutine(Vector2 screenPos)
+    {
+        if (segmentationMaskTexture == null)
+        {
+            Debug.LogWarning("Отладочный тап: Текстура маски недоступна.");
+            yield break;
+        }
 
-      RenderTexture CreateRenderTexture(int width, int height, RenderTextureFormat format)
-      {
-            var rt = new RenderTexture(width, height, 0, format)
-            {
-                  enableRandomWrite = true
-            };
-            rt.Create();
-            return rt;
-      }
+        var request = AsyncGPUReadback.Request(segmentationMaskTexture);
+        yield return new WaitUntil(() => request.done);
 
-      void ReleaseRenderTexture(RenderTexture rt)
-      {
-            if (rt != null)
-            {
-                  rt.Release();
-                  Destroy(rt);
-            }
-      }
+        if (request.hasError)
+        {
+            Debug.LogError("Отладочный тап: Ошибка чтения GPU.");
+            yield break;
+        }
+
+        var data = request.GetData<float>();
+
+        // УПРОЩЕНО: прямые координаты экрана без всяких квадратных областей
+        Vector2 screenUV = new Vector2(screenPos.x / Screen.width, screenPos.y / Screen.height);
+
+        // НЕ ПРИМЕНЯЕМ НИКАКИХ ИНВЕРТИРОВАНИЙ - используем координаты как есть
+        float uv_x = screenUV.x; // Прямые координаты
+        float uv_y = screenUV.y; // Прямые координаты
+
+        Debug.Log($"🎯 Клик: экран={screenPos}, screenUV=({screenUV.x:F3}, {screenUV.y:F3}), finalUV=({uv_x:F3}, {uv_y:F3}) [ПРЯМЫЕ координаты, БЕЗ трансформаций]");
+
+        int textureX = (int)(uv_x * segmentationMaskTexture.width);
+        int textureY = (int)(uv_y * segmentationMaskTexture.height);
+
+        int index = textureY * segmentationMaskTexture.width + textureX;
+
+        if (index >= 0 && index < data.Length)
+        {
+            float classIndexFloat = data[index];
+            int classIndex = Mathf.RoundToInt(classIndexFloat);
+            string className = classNames.ContainsKey(classIndex) ? classNames[classIndex] : "Unknown";
+            Debug.Log($"👇 Класс в точке клика: {className} (ID: {classIndex})");
+
+            selectedClass = classIndex;
+            showAllClasses = false;
+            showWalls = false;
+            showFloors = false;
+            showCeilings = false;
+        }
+    }
+
+    /// <summary>
+    /// Обновляет параметры материала для отображения классов
+    /// </summary>
+    private void UpdateMaterialParameters()
+    {
+        if (displayMaterialInstance == null)
+        {
+            Debug.LogWarning("⚠️ displayMaterialInstance is null в UpdateMaterialParameters!");
+            return;
+        }
+
+        int classToShow = selectedClass;
+
+        // 🚨 ЖЕСТКАЯ ЛОГИКА: ТОЛЬКО СТЕНЫ (класс 0)
+        if (showAllClasses)
+        {
+            classToShow = -1;
+            Debug.Log("🌈 Режим: ВСЕ КЛАССЫ");
+        }
+        else if (showWalls)
+        {
+            classToShow = 0;  // СТЕНЫ
+            // Debug.Log("🧱 Режим: ТОЛЬКО СТЕНЫ (класс 0)"); // Отключен для избежания спама
+        }
+        else if (showFloors)
+        {
+            classToShow = 3;  // ПОЛЫ
+            Debug.Log("🏠 Режим: ТОЛЬКО ПОЛЫ (класс 3)");
+        }
+        else if (showCeilings)
+        {
+            classToShow = 5;  // ПОТОЛКИ
+            Debug.Log("🏠 Режим: ТОЛЬКО ПОТОЛКИ (класс 5)");
+        }
+        else
+        {
+            // Принудительно стены, если ничего не выбрано
+            classToShow = 0;
+            Debug.Log("⚠️ Режим неопределен - принудительно СТЕНЫ (класс 0)");
+        }
+
+        displayMaterialInstance.SetInt("_SelectedClass", classToShow);
+        displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
+        displayMaterialInstance.SetColor("_PaintColor", paintColor);
+
+        // Debug.Log($"✅ МАТЕРИАЛ ОБНОВЛЕН: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}"); // Отключен для избежания спама
+    }
+
+    public void SetPaintColor(Color color)
+    {
+        paintColor = color;
+        if (selectedClass >= 0)
+        {
+            UpdateMaterialParameters();
+        }
+    }
+
+    public void SetSelectedClass(int classId)
+    {
+        selectedClass = classId;
+        showAllClasses = (classId == -1);
+        showWalls = (classId == 0);
+        showFloors = (classId == 3);
+        showCeilings = (classId == 5);
+        UpdateMaterialParameters();
+    }
+
+    public void SetVisualizationOpacity(float opacity)
+    {
+        visualizationOpacity = Mathf.Clamp01(opacity);
+        UpdateMaterialParameters();
+    }
+
+    public void ToggleShowAllClasses()
+    {
+        showAllClasses = !showAllClasses;
+        if (showAllClasses)
+        {
+            showWalls = showFloors = showCeilings = false;
+            selectedClass = -1;
+        }
+        UpdateMaterialParameters();
+    }
+
+    /// <summary>
+    /// Показывает только стены (класс 0)
+    /// </summary>
+    public void ShowOnlyWalls()
+    {
+        selectedClass = 0;
+        showAllClasses = false;
+        showWalls = true;
+        showFloors = false;
+        showCeilings = false;
+
+        // Принудительно обновляем параметры материала
+        UpdateMaterialParameters();
+
+        Debug.Log("🧱 Показываем только стены (класс 0)");
+
+        // Дополнительная проверка, что параметры установлены правильно
+        if (displayMaterialInstance != null)
+        {
+            int currentClass = displayMaterialInstance.GetInt("_SelectedClass");
+            Debug.Log($"🔍 Проверка: _SelectedClass в материале = {currentClass}");
+        }
+    }
+
+    [ContextMenu("Обновить покрытие экрана")]
+    public void RefreshScreenCoverage()
+    {
+        SetupCorrectAspectRatio();
+        Debug.Log("🔄 Покрытие экрана принудительно обновлено");
+    }
+
+    /// <summary>
+    /// Скрывает всю сегментацию
+    /// </summary>
+    public void HideAllClasses()
+    {
+        selectedClass = -2;
+        showAllClasses = false;
+        showWalls = false;
+        showFloors = false;
+        showCeilings = false;
+        UpdateMaterialParameters();
+        Debug.Log("👻 Скрываем всю сегментацию");
+    }
+
+    /// <summary>
+    /// Показывает все классы разными цветами
+    /// </summary>
+    public void ShowAllClassesColored()
+    {
+        selectedClass = -1;
+        showAllClasses = true;
+        showWalls = false;
+        showFloors = false;
+        showCeilings = false;
+        UpdateMaterialParameters();
+        Debug.Log("🌈 Показываем все классы разными цветами");
+    }
 }

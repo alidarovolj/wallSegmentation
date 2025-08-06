@@ -80,3 +80,8 @@ crashlytics-build.properties
 .Trashes
 ehthumbs.db
 Thumbs.db 
+# iOS Build Files
+iOS/
+/iOS/
+Builds/iOS/
+*.a
