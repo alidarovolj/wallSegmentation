@@ -457,7 +457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debugMode: 1
   segmentationManager: {fileID: 1430626604}
-  colorPaletteManager: {fileID: 309017008}
+  arWallPresenter: {fileID: 941417365}
 --- !u!4 &608830358
 Transform:
   m_ObjectHideFlags: 0
@@ -564,26 +564,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b681d298004d81e468fc25b149aca4d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallPaintMaterial: {fileID: 2100000, guid: 49000288a3bfefa46a05a4539c3d44af, type: 2}
-  paintColor: {r: 0, g: 0, b: 1, a: 1}
-  edgeSoftness: 1
-  arCameraManager: {fileID: 1070768330}
-  flipHorizontally: 1
-  flipVertically: 1
-  invertMask: 1
-  blendMode: 1
-  applySharpEdges: 0
-  applySoftEdges: 1
-  applyMediumBlur: 1
-  applyMaxBlur: 1
-  applyLuminanceMode: 1
-  applyOverlayMode: 1
-  applyHybridMode: 1
-  useOptimizedShader: 1
-  optimizedMaterial: {fileID: 2100000, guid: 17716fcad76287a48b6fdffa3a064dd2, type: 2}
-  standardMaterial: {fileID: 2100000, guid: 49000288a3bfefa46a05a4539c3d44af, type: 2}
-  usePhotorealisticShader: 0
-  photorealisticMaterial: {fileID: 0}
+  arCameraManager: {fileID: 0}
+  visualizationMaterial: {fileID: 2100000, guid: 14d565b5b3f0d9c4bbde8f5628f16cde, type: 2}
+  showAllClasses: 1
+  singleClassId: 0
+  singleClassColor: {r: 0, g: 0, b: 1, a: 1}
+  opacity: 0.7
+  isRealDevice: 1
 --- !u!33 &941417366
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -961,7 +948,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
   segmentationDisplay: {fileID: 76938650}
-  modelAsset: {fileID: 5022602860645237092, guid: ba6e34ed17eff6245af242118402b7c4, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: 37cd09fbcd27344fe8b8294f637cbf9f, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
   imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
   maskPostProcessingShader: {fileID: 7200000, guid: 1e8afd4d3de754dccbd0bff91ac31929, type: 3}
@@ -974,7 +961,7 @@ MonoBehaviour:
   visualizationOpacity: 0.202
   paintColor: {r: 1, g: 0, b: 0, a: 1}
   showAllClasses: 0
-  showWalls: 1
+  showWalls: 0
   showFloors: 0
   showCeilings: 0
   frameSkipRate: 1

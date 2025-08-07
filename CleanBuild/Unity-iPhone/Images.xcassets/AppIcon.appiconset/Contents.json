@@ -1,0 +1,29 @@
+{
+	"images" : [
+		{
+			"filename" : "Icon-iPhone-120.png",
+			"idiom" : "iphone",
+			"scale" : "2x",
+			"size" : "60x60"
+		},
+		{
+			"filename" : "Icon-iPhone-180.png",
+			"idiom" : "iphone",
+			"scale" : "3x",
+			"size" : "60x60"
+		},
+		{
+			"filename" : "Icon-Store-1024.png",
+			"idiom" : "ios-marketing",
+			"scale" : "1x",
+			"size" : "1024x1024"
+		}
+	],
+	"info" : {
+		"author" : "xcode",
+		"version" : 1
+	},
+	"properties" : {
+		"pre-rendered" : false
+	}
+}
