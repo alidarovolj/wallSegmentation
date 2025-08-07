@@ -50,6 +50,9 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Tooltip("Opacity of the segmentation overlay")]
     [SerializeField, Range(0f, 1f)]
     private float visualizationOpacity = 0.5f; // Нормальное значение
+    [Tooltip("Enable legacy RawImage display (disable for new projection system)")]
+    [SerializeField]
+    private bool enableLegacyDisplay = true;
     [Tooltip("The color to use for painting the selected class")]
     public Color paintColor = Color.red;
     [Tooltip("Show all classes with different colors")]
@@ -60,6 +63,20 @@ public class AsyncSegmentationManager : MonoBehaviour
     public bool showFloors = false;
     [Tooltip("Show only ceilings (class 5)")]
     public bool showCeilings = false;
+
+    [Header("Интерактивные цвета")]
+    [Tooltip("Массив цветов для смены цветов классов по клику")]
+    [SerializeField]
+    private Color[] interactiveColors = new Color[]
+    {
+        Color.red, Color.green, Color.blue, Color.yellow, Color.magenta,
+        Color.cyan, new Color(1f, 0.5f, 0f), new Color(0.5f, 0f, 1f),
+        new Color(1f, 0.8f, 0.2f), new Color(0.2f, 0.8f, 1f)
+    };
+
+    // Словарь пользовательских цветов для классов
+    private Dictionary<int, Color> customClassColors = new Dictionary<int, Color>();
+    private int currentColorIndex = 0;
 
     // Fields for PerformanceControlUI compatibility
     [Tooltip("The number of frames to skip between processing.")]
@@ -259,7 +276,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             cameraInputTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGB32);
             normalizedTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGBFloat);
 
-            if (segmentationDisplay != null && visualizationMaterial != null)
+            if (enableLegacyDisplay && segmentationDisplay != null && visualizationMaterial != null)
             {
                 displayMaterialInstance = new Material(visualizationMaterial);
                 segmentationDisplay.material = displayMaterialInstance;
@@ -269,6 +286,15 @@ public class AsyncSegmentationManager : MonoBehaviour
                 // Настраиваем правильное соотношение сторон для телефона
                 SetupCorrectAspectRatio();
             }
+            else if (!enableLegacyDisplay)
+            {
+                // Отключаем старую систему отображения
+                if (segmentationDisplay != null)
+                {
+                    segmentationDisplay.gameObject.SetActive(false);
+                    Debug.Log("🚫 Старая система отображения отключена - используется новая проекционная система");
+                }
+            }
             else
             {
                 Debug.LogWarning("⚠️ Visualization Material не назначен!");
@@ -276,8 +302,8 @@ public class AsyncSegmentationManager : MonoBehaviour
 
             Debug.Log("🎉 AsyncSegmentationManager инициализация завершена успешно!");
 
-            // НЕ принудительно устанавливаем режим - используем настройки из инспектора
-            // Invoke(nameof(ShowOnlyWalls), 1f); // ОТКЛЮЧЕНО
+            // Отправляем Flutter уведомление о готовности Unity
+            Invoke(nameof(NotifyFlutterReady), 2f);
         }
         catch (System.Exception e)
         {
@@ -518,14 +544,20 @@ public class AsyncSegmentationManager : MonoBehaviour
 
                 destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
             }
-            displayMaterialInstance.SetTexture("_MaskTex", source);
-            Debug.Log($"🎯 Текстура _MaskTex установлена СО СГЛАЖИВАНИЕМ: {maskSmoothingIterations} итераций");
+            if (enableLegacyDisplay && displayMaterialInstance != null)
+            {
+                displayMaterialInstance.SetTexture("_MaskTex", source);
+                Debug.Log($"🎯 Текстура _MaskTex установлена СО СГЛАЖИВАНИЕМ: {maskSmoothingIterations} итераций");
+            }
             finalMask = source; // Запоминаем финальную сглаженную маску
         }
         else
         {
-            displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
-            // Debug.Log("🎯 Текстура _MaskTex установлена без сглаживания");
+            if (enableLegacyDisplay && displayMaterialInstance != null)
+            {
+                displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+                // Debug.Log("🎯 Текстура _MaskTex установлена без сглаживания");
+            }
         }
 
         Graphics.ExecuteCommandBuffer(cmd);
@@ -573,17 +605,17 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         // Debug.Log($"📱 Режим {(isScreenPortrait ? "портрет" : "ландшафт")} ({Screen.width}x{Screen.height}). Трансформация: {transformation} (без изменений)");
 
-        // ТЕСТ: Используем ВСЮ КАМЕРУ, а не центральную область, и растягиваем до квадрата
-        // Это может исправить смещение координат
-        float cameraAspectRatio = (float)cpuImage.width / cpuImage.height;
+        // Вычисляем квадратный регион в центре изображения с камеры
+        int size = Mathf.Min(cpuImage.width, cpuImage.height);
+        int offsetX = (cpuImage.width - size) / 2;
+        int offsetY = (cpuImage.height - size) / 2;
 
-        int targetResolution = Mathf.Min(processingResolution.x, Mathf.Min(cpuImage.width, cpuImage.height));
+        int targetResolution = Mathf.Min(processingResolution.x, size);
 
-        // Берём ВСЮЮ камеру и растягиваем до квадрата (как было изначально)
         conversionParams = new XRCpuImage.ConversionParams
         {
-            inputRect = new RectInt(0, 0, cpuImage.width, cpuImage.height), // ВСЯ камера
-            outputDimensions = new Vector2Int(targetResolution, targetResolution), // Квадратный выход
+            inputRect = new RectInt(offsetX, offsetY, size, size), // Используем центральный квадрат
+            outputDimensions = new Vector2Int(targetResolution, targetResolution), // Сжимаем до целевого разрешения
             outputFormat = TextureFormat.RGBA32,
             transformation = transformation
         };
@@ -713,13 +745,301 @@ public class AsyncSegmentationManager : MonoBehaviour
             string className = classNames.ContainsKey(classIndex) ? classNames[classIndex] : "Unknown";
             Debug.Log($"👇 Класс в точке клика: {className} (ID: {classIndex})");
 
-            selectedClass = classIndex;
-            showAllClasses = false;
-            showWalls = false;
-            showFloors = false;
-            showCeilings = false;
+            // Отправляем информацию о кликнутом классе во Flutter
+            var clickData = new FlutterClassInfo
+            {
+                classId = classIndex,
+                className = className,
+                currentColor = customClassColors.ContainsKey(classIndex) ?
+                    ColorToHex(customClassColors[classIndex]) : "#808080"
+            };
+
+            string jsonData = JsonUtility.ToJson(clickData);
+            SendMessageToFlutter("onClassClicked", jsonData);
+
+            Debug.Log($"📱→👆 Flutter: Отправлена информация о клике по классу {className}");
         }
     }
+
+    /// <summary>
+    /// Получает следующий цвет из массива интерактивных цветов
+    /// </summary>
+    private Color GetNextInteractiveColor()
+    {
+        if (interactiveColors == null || interactiveColors.Length == 0)
+        {
+            return Color.white;
+        }
+
+        Color color = interactiveColors[currentColorIndex];
+        currentColorIndex = (currentColorIndex + 1) % interactiveColors.Length;
+        return color;
+    }
+
+    /// <summary>
+    /// Конвертирует цвет в hex строку для красивого логирования
+    /// </summary>
+    private string ColorToHex(Color color)
+    {
+        return $"#{(int)(color.r * 255):X2}{(int)(color.g * 255):X2}{(int)(color.b * 255):X2}";
+    }
+
+    /// <summary>
+    /// Получает цвет для класса (с учетом пользовательских изменений)
+    /// </summary>
+    public Color GetClassColor(int classId)
+    {
+        if (customClassColors.ContainsKey(classId))
+        {
+            return customClassColors[classId];
+        }
+
+        // Возвращаем стандартный цвет (можно добавить логику для стандартных цветов)
+        return paintColor;
+    }
+
+    /// <summary>
+    /// Сброс всех пользовательских цветов
+    /// </summary>
+    [ContextMenu("Сбросить пользовательские цвета")]
+    public void ResetCustomColors()
+    {
+        customClassColors.Clear();
+        currentColorIndex = 0;
+        Debug.Log("🔄 Все пользовательские цвета сброшены");
+    }
+
+    /// <summary>
+    /// Вернуться к режиму отображения всех классов
+    /// </summary>
+    [ContextMenu("Показать все классы")]
+    public void ShowAllClasses()
+    {
+        showAllClasses = true;
+        showWalls = false;
+        showFloors = false;
+        showCeilings = false;
+
+        Debug.Log("🌈 Включен режим отображения всех классов");
+    }
+
+    #region Flutter Integration - Методы для приема команд от Flutter
+
+    /// <summary>
+    /// [FLUTTER] Устанавливает цвет для конкретного класса по команде от Flutter
+    /// </summary>
+    /// <param name="message">JSON строка: {"classId": 0, "color": "#FF0000"}</param>
+    public void SetClassColorFromFlutter(string message)
+    {
+        try
+        {
+            var data = JsonUtility.FromJson<FlutterColorCommand>(message);
+            Color color = HexToColor(data.color);
+
+            customClassColors[data.classId] = color;
+
+            string className = classNames.ContainsKey(data.classId) ? classNames[data.classId] : "Unknown";
+            Debug.Log($"📱→🎨 Flutter: Установлен цвет {data.color} для класса {className} (ID: {data.classId})");
+
+            // Обновляем ARWallPresenter
+            if (arWallPresenter != null)
+            {
+                arWallPresenter.SetClassColor(data.classId, color);
+            }
+
+            // Переключаемся в режим отображения выбранного класса
+            showAllClasses = false;
+            selectedClass = data.classId;
+            paintColor = color;
+
+            // Отправляем подтверждение обратно во Flutter
+            SendMessageToFlutter("onColorChanged", $"{{\"classId\": {data.classId}, \"color\": \"{data.color}\", \"className\": \"{className}\"}}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"❌ Ошибка обработки команды цвета от Flutter: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// [FLUTTER] Получает список доступных классов в текущей сцене
+    /// </summary>
+    public void GetAvailableClassesFromFlutter(string message = "")
+    {
+        try
+        {
+            // Собираем все обнаруженные классы
+            var availableClasses = new System.Collections.Generic.List<FlutterClassInfo>();
+
+            // Проверяем последнюю обработанную маску
+            if (segmentationMaskTexture != null)
+            {
+                var detectedClasses = GetDetectedClassesInCurrentFrame();
+                foreach (var classId in detectedClasses)
+                {
+                    string className = classNames.ContainsKey(classId) ? classNames[classId] : "Unknown";
+                    string currentColor = customClassColors.ContainsKey(classId) ?
+                        ColorToHex(customClassColors[classId]) : "#808080"; // серый по умолчанию
+
+                    availableClasses.Add(new FlutterClassInfo
+                    {
+                        classId = classId,
+                        className = className,
+                        currentColor = currentColor
+                    });
+                }
+            }
+
+            var response = new FlutterClassListResponse { classes = availableClasses.ToArray() };
+            string jsonResponse = JsonUtility.ToJson(response);
+
+            Debug.Log($"📱→📋 Отправляем Flutter список классов: {availableClasses.Count} классов");
+            SendMessageToFlutter("onAvailableClasses", jsonResponse);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"❌ Ошибка получения списка классов для Flutter: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// [FLUTTER] Сброс всех пользовательских цветов по команде от Flutter
+    /// </summary>
+    public void ResetColorsFromFlutter(string message = "")
+    {
+        ResetCustomColors();
+        showAllClasses = true;
+
+        Debug.Log("📱→🔄 Flutter: Все цвета сброшены, включен режим всех классов");
+        SendMessageToFlutter("onColorsReset", "{\"status\": \"success\"}");
+    }
+
+    /// <summary>
+    /// [FLUTTER] Переключение в режим отображения всех классов
+    /// </summary>
+    public void ShowAllClassesFromFlutter(string message = "")
+    {
+        ShowAllClasses();
+        SendMessageToFlutter("onModeChanged", "{\"mode\": \"all_classes\"}");
+    }
+
+    #endregion
+
+    #region Helper Methods для Flutter интеграции
+
+    /// <summary>
+    /// Отправляет сообщение во Flutter через FlutterUnityManager
+    /// </summary>
+    private void SendMessageToFlutter(string method, string data)
+    {
+        var flutterManager = FindObjectOfType<FlutterUnityManager>();
+        if (flutterManager != null)
+        {
+            flutterManager.SendMessage(method, data);
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ FlutterUnityManager не найден для отправки сообщения во Flutter");
+        }
+    }
+
+    /// <summary>
+    /// Конвертирует hex строку в Unity Color
+    /// </summary>
+    private Color HexToColor(string hex)
+    {
+        if (hex.StartsWith("#"))
+            hex = hex.Substring(1);
+
+        if (hex.Length == 6)
+        {
+            byte r = System.Convert.ToByte(hex.Substring(0, 2), 16);
+            byte g = System.Convert.ToByte(hex.Substring(2, 2), 16);
+            byte b = System.Convert.ToByte(hex.Substring(4, 2), 16);
+            return new Color32(r, g, b, 255);
+        }
+
+        Debug.LogWarning($"⚠️ Неверный формат цвета: {hex}");
+        return Color.white;
+    }
+
+    /// <summary>
+    /// Получает список классов, обнаруженных в текущем кадре
+    /// </summary>
+    private System.Collections.Generic.HashSet<int> GetDetectedClassesInCurrentFrame()
+    {
+        var detectedClasses = new System.Collections.Generic.HashSet<int>();
+
+        if (segmentationMaskTexture == null) return detectedClasses;
+
+        // Читаем данные из текстуры маски (упрощенная версия)
+        RenderTexture.active = segmentationMaskTexture;
+        Texture2D tempTexture = new Texture2D(segmentationMaskTexture.width, segmentationMaskTexture.height, TextureFormat.RFloat, false);
+        tempTexture.ReadPixels(new Rect(0, 0, segmentationMaskTexture.width, segmentationMaskTexture.height), 0, 0);
+        tempTexture.Apply();
+
+        Color[] pixels = tempTexture.GetPixels();
+        for (int i = 0; i < pixels.Length; i += 100) // Проверяем каждый 100-й пиксель для оптимизации
+        {
+            int classId = Mathf.RoundToInt(pixels[i].r * 255);
+            if (classId > 0 && classId < 150) // Только валидные классы ADE20K
+            {
+                detectedClasses.Add(classId);
+            }
+        }
+
+        DestroyImmediate(tempTexture);
+        RenderTexture.active = null;
+
+        return detectedClasses;
+    }
+
+    /// <summary>
+    /// Уведомляет Flutter о готовности Unity и отправляет начальный список классов
+    /// </summary>
+    private void NotifyFlutterReady()
+    {
+        Debug.Log("📱→✅ Уведомляем Flutter о готовности Unity");
+        SendMessageToFlutter("onUnityReady", "{\"status\": \"ready\"}");
+
+        // Через секунду отправляем список доступных классов
+        Invoke(nameof(SendInitialClassList), 1f);
+    }
+
+    /// <summary>
+    /// Отправляет первоначальный список классов во Flutter
+    /// </summary>
+    private void SendInitialClassList()
+    {
+        GetAvailableClassesFromFlutter();
+    }
+
+    #endregion
+
+    #region JSON Data Classes для Flutter интеграции
+
+    [System.Serializable]
+    public class FlutterColorCommand
+    {
+        public int classId;
+        public string color; // Hex формат, например "#FF0000"
+    }
+
+    [System.Serializable]
+    public class FlutterClassInfo
+    {
+        public int classId;
+        public string className;
+        public string currentColor; // Текущий цвет в hex формате
+    }
+
+    [System.Serializable]
+    public class FlutterClassListResponse
+    {
+        public FlutterClassInfo[] classes;
+    }
+
+    #endregion
 
     /// <summary>
     /// Обновляет параметры материала для отображения классов
@@ -919,5 +1239,35 @@ public class AsyncSegmentationManager : MonoBehaviour
         {
             DestroyImmediate(debugTexture);
         }
+    }
+
+    /// <summary>
+    /// Получить текущую текстуру маски сегментации для использования в других компонентах
+    /// </summary>
+    /// <returns>RenderTexture с результатом сегментации или null, если не готова</returns>
+    public RenderTexture GetCurrentSegmentationMask()
+    {
+        // Возвращаем сглаженную маску, если доступна
+        if (smoothedMaskTexture != null && smoothedMaskTexture.IsCreated())
+        {
+            return smoothedMaskTexture;
+        }
+
+        // Если сглаживание отключено, возвращаем обычную маску
+        if (segmentationMaskTexture != null && segmentationMaskTexture.IsCreated())
+        {
+            return segmentationMaskTexture;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Проверить, доступна ли текстура сегментации
+    /// </summary>
+    /// <returns>true, если маска готова к использованию</returns>
+    public bool IsSegmentationMaskReady()
+    {
+        return GetCurrentSegmentationMask() != null;
     }
 }

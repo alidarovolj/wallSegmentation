@@ -53,6 +53,9 @@ public class ARWallPresenter : MonoBehaviour
     private static readonly int IsPortraitId = Shader.PropertyToID("_IsPortrait");
     private static readonly int IsRealDeviceId = Shader.PropertyToID("_IsRealDevice");
 
+    // Ссылка на сегментационный менеджер для получения пользовательских цветов
+    private AsyncSegmentationManager segmentationManager;
+
 
     void Awake()
     {
@@ -72,6 +75,9 @@ public class ARWallPresenter : MonoBehaviour
 
     void Start()
     {
+        // Находим AsyncSegmentationManager для получения пользовательских цветов
+        segmentationManager = FindObjectOfType<AsyncSegmentationManager>();
+
         FitToScreen();
         ApplyShaderProperties();
     }
@@ -138,6 +144,22 @@ public class ARWallPresenter : MonoBehaviour
         _propertyBlock.SetFloat(IsRealDeviceId, isRealDevice ? 1.0f : 0.0f);
 
         _renderer.SetPropertyBlock(_propertyBlock);
+    }
+
+    /// <summary>
+    /// Устанавливает цвет для конкретного класса
+    /// </summary>
+    public void SetClassColor(int classId, Color color)
+    {
+        if (!showAllClasses)
+        {
+            // Если показываем один класс, обновляем его цвет
+            singleClassId = classId;
+            singleClassColor = color;
+            ApplyShaderProperties();
+
+            Debug.Log($"🎨 ARWallPresenter: Установлен цвет {ColorUtility.ToHtmlStringRGB(color)} для класса {classId}");
+        }
     }
 
     [ContextMenu("Обновить размер плоскости")]
