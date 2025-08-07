@@ -49,13 +49,43 @@ Shader "Unlit/VisualizeMask"
             
             float3 getClassColor(int classId)
             {
-                // Используем простые числа для лучшего распределения
+                // Первые 30 классов ADE20K цветовой карты (основные для интерьеров)
+                if (classId == 0) return float3(120/255.0, 120/255.0, 120/255.0); // wall (серый)
+                if (classId == 1) return float3(180/255.0, 120/255.0, 120/255.0); // building
+                if (classId == 2) return float3(6/255.0, 230/255.0, 230/255.0);   // sky (голубой)
+                if (classId == 3) return float3(80/255.0, 50/255.0, 50/255.0);    // floor (темно-коричневый)
+                if (classId == 4) return float3(4/255.0, 200/255.0, 3/255.0);     // tree (зеленый)
+                if (classId == 5) return float3(120/255.0, 120/255.0, 80/255.0);  // ceiling (желто-серый)
+                if (classId == 6) return float3(140/255.0, 140/255.0, 140/255.0); // road
+                if (classId == 7) return float3(204/255.0, 5/255.0, 255/255.0);   // bed (фиолетовый)
+                if (classId == 8) return float3(230/255.0, 230/255.0, 230/255.0); // windowpane
+                if (classId == 9) return float3(10/255.0, 255/255.0, 71/255.0);   // grass
+                if (classId == 10) return float3(255/255.0, 20/255.0, 147/255.0); // cabinet (розовый)
+                if (classId == 11) return float3(20/255.0, 255/255.0, 20/255.0);  // sidewalk
+                if (classId == 12) return float3(255/255.0, 0/255.0, 0/255.0);    // person (красный)
+                if (classId == 13) return float3(255/255.0, 235/255.0, 205/255.0); // earth
+                if (classId == 14) return float3(120/255.0, 120/255.0, 70/255.0); // door (оливковый)
+                if (classId == 15) return float3(255/255.0, 165/255.0, 0/255.0);  // table (оранжевый)
+                if (classId == 16) return float3(112/255.0, 128/255.0, 144/255.0); // mountain
+                if (classId == 17) return float3(34/255.0, 139/255.0, 34/255.0);  // plant
+                if (classId == 18) return float3(222/255.0, 184/255.0, 135/255.0); // curtain
+                if (classId == 19) return float3(255/255.0, 105/255.0, 180/255.0); // chair (розовый)
+                if (classId == 20) return float3(0/255.0, 0/255.0, 128/255.0);    // car (темно-синий)
+                if (classId == 21) return float3(0/255.0, 0/255.0, 255/255.0);    // water (синий)
+                if (classId == 22) return float3(255/255.0, 215/255.0, 0/255.0);  // painting (золотой)
+                if (classId == 23) return float3(138/255.0, 43/255.0, 226/255.0); // sofa (фиолетовый)
+                if (classId == 24) return float3(245/255.0, 222/255.0, 179/255.0); // shelf (бежевый)
+                if (classId == 25) return float3(210/255.0, 105/255.0, 30/255.0); // house (коричневый)
+                if (classId == 26) return float3(0/255.0, 191/255.0, 255/255.0);  // sea (светло-синий)
+                if (classId == 27) return float3(192/255.0, 192/255.0, 192/255.0); // mirror (серебро)
+                if (classId == 28) return float3(165/255.0, 42/255.0, 42/255.0);  // rug (темно-красный)
+                if (classId == 29) return float3(240/255.0, 230/255.0, 140/255.0); // field (хаки)
+
+                // Для остальных классов используем HSV генерацию
                 float hue = frac((float)classId * 0.37f); 
-                // Добавляем вариативность в насыщенность и яркость
-                float saturation = 0.75f + frac((float)classId * 0.21f) * 0.25f; // Диапазон [0.75, 1.0]
-                float value = 0.8f + frac((float)classId * 0.13f) * 0.2f;      // Диапазон [0.8, 1.0]
+                float saturation = 0.75f + frac((float)classId * 0.21f) * 0.25f;
+                float value = 0.8f + frac((float)classId * 0.13f) * 0.2f;
                 
-                // Стандартное преобразование HSV в RGB
                 float h = hue * 6.0f;
                 float c = value * saturation;
                 float x = c * (1.0f - abs(fmod(h, 2.0f) - 1.0f));
@@ -82,7 +112,11 @@ Shader "Unlit/VisualizeMask"
             
             fixed4 frag (v2f i) : SV_Target
             {
-                float class_index_float = tex2D(_MaskTex, i.uv).r;
+                // ИСПРАВЛЯЕМ ТОЛЬКО ВЕРТИКАЛЬНУЮ ИНВЕРСИЮ
+                float2 correctedUV = i.uv;
+                correctedUV.y = 1.0 - correctedUV.y;
+                
+                float class_index_float = tex2D(_MaskTex, correctedUV).r;
                 int class_index = (int)round(class_index_float);
                 
                 // DEBUG: Показываем raw значения как градации серого
