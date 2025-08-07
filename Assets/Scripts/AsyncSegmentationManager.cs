@@ -38,7 +38,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     private Vector2Int processingResolution = new Vector2Int(512, 512);
     [Tooltip("Enable median filter to smooth the mask")]
     [SerializeField]
-    private bool enableMaskSmoothing = true;
+    private bool enableMaskSmoothing = true; // Сглаживание включено по умолчанию
     [Tooltip("Number of smoothing passes to apply.")]
     [SerializeField, Range(1, 10)]
     private int maskSmoothingIterations = 5; // Увеличено для лучшего сглаживания
@@ -46,20 +46,20 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Header("Class Visualization")]
     [Tooltip("Selected class to display (-1 for all classes)")]
     [SerializeField]
-    private int selectedClass = 0; // Только стены (класс 0)
+    private int selectedClass = -1; // Все классы по умолчанию
     [Tooltip("Opacity of the segmentation overlay")]
     [SerializeField, Range(0f, 1f)]
-    private float visualizationOpacity = 0.5f;
+    private float visualizationOpacity = 0.5f; // Нормальное значение
     [Tooltip("The color to use for painting the selected class")]
     public Color paintColor = Color.red;
     [Tooltip("Show all classes with different colors")]
-    public bool showAllClasses = false; // ОТКЛЮЧЕНО - только стены
+    public bool showAllClasses = true; // ВКЛЮЧЕНО - показываем все классы разными цветами
     [Tooltip("Show only walls (class 0)")]
-    public bool showWalls = true; // ВКЛЮЧЕНО - только стены
+    public bool showWalls = false;
     [Tooltip("Show only floors (class 3)")]
-    public bool showFloors = false; // ОТКЛЮЧЕНО
+    public bool showFloors = false;
     [Tooltip("Show only ceilings (class 5)")]
-    public bool showCeilings = false; // ОТКЛЮЧЕНО
+    public bool showCeilings = false;
 
     // Fields for PerformanceControlUI compatibility
     [Tooltip("The number of frames to skip between processing.")]
@@ -264,7 +264,7 @@ public class AsyncSegmentationManager : MonoBehaviour
                 displayMaterialInstance = new Material(visualizationMaterial);
                 segmentationDisplay.material = displayMaterialInstance;
                 UpdateMaterialParameters();
-                Debug.Log("✅ Материал для отображения настроен");
+                Debug.Log($"✅ Материал для отображения настроен: {displayMaterialInstance.shader.name}");
 
                 // Настраиваем правильное соотношение сторон для телефона
                 SetupCorrectAspectRatio();
@@ -276,16 +276,16 @@ public class AsyncSegmentationManager : MonoBehaviour
 
             Debug.Log("🎉 AsyncSegmentationManager инициализация завершена успешно!");
 
-            // Автоматически показываем только стены для удобства тестирования
-            Invoke(nameof(ShowOnlyWalls), 1f);
+            // НЕ принудительно устанавливаем режим - используем настройки из инспектора
+            // Invoke(nameof(ShowOnlyWalls), 1f); // ОТКЛЮЧЕНО
         }
         catch (System.Exception e)
         {
             Debug.LogError($"❌ Ошибка инициализации AsyncSegmentationManager: {e.Message}\n{e.StackTrace}");
         }
 
-        // 🚨 ПРИНУДИТЕЛЬНО устанавливаем режим "только стены"
-        ForceWallOnlyMode();
+        // Используем настройки из инспектора вместо принудительного режима
+        // ForceWallOnlyMode(); // ОТКЛЮЧЕНО
 
         StartCoroutine(ForceMaterialUpdate());
     }
@@ -519,15 +519,20 @@ public class AsyncSegmentationManager : MonoBehaviour
                 destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
             }
             displayMaterialInstance.SetTexture("_MaskTex", source);
+            Debug.Log($"🎯 Текстура _MaskTex установлена СО СГЛАЖИВАНИЕМ: {maskSmoothingIterations} итераций");
             finalMask = source; // Запоминаем финальную сглаженную маску
         }
         else
         {
             displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+            // Debug.Log("🎯 Текстура _MaskTex установлена без сглаживания");
         }
 
         Graphics.ExecuteCommandBuffer(cmd);
         cmd.Dispose();
+
+        // DEBUG: Анализируем выходные данные модели для диагностики
+        StartCoroutine(DebugModelOutput(segmentationMaskTexture));
 
         // Передаем маску в ARWallPresenter для фотореалистичной окраски
         if (arWallPresenter != null)
@@ -539,7 +544,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("⚠️ ARWallPresenter не назначен в AsyncSegmentationManager!");
+            // Этот лог может спамить, поэтому включаем его только при необходимости
+            // Debug.LogWarning("⚠️ ARWallPresenter не назначен в AsyncSegmentationManager!");
         }
 
         tensorDataBuffer.Dispose();
@@ -565,7 +571,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         // НИКАКИХ ТРАНСФОРМАЦИЙ! Пусть изображение остаётся как есть
         var transformation = XRCpuImage.Transformation.None;
 
-        Debug.Log($"📱 Режим {(isScreenPortrait ? "портрет" : "ландшафт")} ({Screen.width}x{Screen.height}). Трансформация: {transformation} (без изменений)");
+        // Debug.Log($"📱 Режим {(isScreenPortrait ? "портрет" : "ландшафт")} ({Screen.width}x{Screen.height}). Трансформация: {transformation} (без изменений)");
 
         // ТЕСТ: Используем ВСЮ КАМЕРУ, а не центральную область, и растягиваем до квадрата
         // Это может исправить смещение координат
@@ -582,7 +588,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             transformation = transformation
         };
 
-        Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height} (AR: {cameraAspectRatio:F2}), растяжение ВСЕЙ камеры до: {targetResolution}x{targetResolution}");
+        // Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height} (AR: {cameraAspectRatio:F2}), растяжение ВСЕЙ камеры до: {targetResolution}x{targetResolution}");
 
         // Debug.Log($"📐 Камера: {cpuImage.width}x{cpuImage.height}, сжатие до {targetResolution}x{targetResolution}"); // Убран частый лог
 
@@ -623,7 +629,14 @@ public class AsyncSegmentationManager : MonoBehaviour
 
             Graphics.Blit(tempTexture, cameraInputTexture);
 
-            Destroy(tempTexture);
+            if (Application.isPlaying)
+            {
+                Destroy(tempTexture);
+            }
+            else
+            {
+                DestroyImmediate(tempTexture);
+            }
         }
         else
         {
@@ -649,7 +662,14 @@ public class AsyncSegmentationManager : MonoBehaviour
         if (rt != null)
         {
             rt.Release();
-            Destroy(rt);
+            if (Application.isPlaying)
+            {
+                Destroy(rt);
+            }
+            else
+            {
+                DestroyImmediate(rt);
+            }
         }
     }
 
@@ -714,16 +734,16 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         int classToShow = selectedClass;
 
-        // 🚨 ЖЕСТКАЯ ЛОГИКА: ТОЛЬКО СТЕНЫ (класс 0)
+        // Приоритет настройкам showAllClasses
         if (showAllClasses)
         {
             classToShow = -1;
-            Debug.Log("🌈 Режим: ВСЕ КЛАССЫ");
+            Debug.Log($"🌈 Режим: ВСЕ КЛАССЫ (showAllClasses={showAllClasses}, showWalls={showWalls})");
         }
         else if (showWalls)
         {
             classToShow = 0;  // СТЕНЫ
-            // Debug.Log("🧱 Режим: ТОЛЬКО СТЕНЫ (класс 0)"); // Отключен для избежания спама
+            Debug.Log("🧱 Режим: ТОЛЬКО СТЕНЫ (класс 0)");
         }
         else if (showFloors)
         {
@@ -737,16 +757,17 @@ public class AsyncSegmentationManager : MonoBehaviour
         }
         else
         {
-            // Принудительно стены, если ничего не выбрано
-            classToShow = 0;
-            Debug.Log("⚠️ Режим неопределен - принудительно СТЕНЫ (класс 0)");
+            // По умолчанию показываем все классы
+            classToShow = -1;
+            showAllClasses = true;
+            Debug.Log("🌈 Режим по умолчанию: ВСЕ КЛАССЫ");
         }
 
         displayMaterialInstance.SetInt("_SelectedClass", classToShow);
         displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
         displayMaterialInstance.SetColor("_PaintColor", paintColor);
 
-        // Debug.Log($"✅ МАТЕРИАЛ ОБНОВЛЕН: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}"); // Отключен для избежания спама
+        Debug.Log($"✅ МАТЕРИАЛ ОБНОВЛЕН: _SelectedClass={classToShow}, _Opacity={visualizationOpacity}");
     }
 
     public void SetPaintColor(Color color)
@@ -842,5 +863,61 @@ public class AsyncSegmentationManager : MonoBehaviour
         showCeilings = false;
         UpdateMaterialParameters();
         Debug.Log("🌈 Показываем все классы разными цветами");
+    }
+
+    /// <summary>
+    /// Диагностический метод для анализа выходных данных модели
+    /// </summary>
+    private System.Collections.IEnumerator DebugModelOutput(RenderTexture maskTexture)
+    {
+        // Подождем кадр для завершения GPU операций
+        yield return new WaitForEndOfFrame();
+
+        // Читаем пиксели из текстуры маски для анализа
+        RenderTexture.active = maskTexture;
+        Texture2D debugTexture = new Texture2D(maskTexture.width, maskTexture.height, TextureFormat.RFloat, false);
+        debugTexture.ReadPixels(new Rect(0, 0, maskTexture.width, maskTexture.height), 0, 0);
+        debugTexture.Apply();
+        RenderTexture.active = null;
+
+        // Анализируем центральную область 64x64 пикселя
+        int centerX = maskTexture.width / 2;
+        int centerY = maskTexture.height / 2;
+        int samples = 0;
+        System.Collections.Generic.Dictionary<int, int> classCount = new System.Collections.Generic.Dictionary<int, int>();
+
+        for (int y = centerY - 32; y < centerY + 32; y++)
+        {
+            for (int x = centerX - 32; x < centerX + 32; x++)
+            {
+                if (x >= 0 && x < maskTexture.width && y >= 0 && y < maskTexture.height)
+                {
+                    Color pixel = debugTexture.GetPixel(x, y);
+                    // ИСПРАВЛЕНИЕ: RFloat текстура содержит индекс класса напрямую, без умножения на 255
+                    int classIndex = Mathf.RoundToInt(pixel.r);
+
+                    if (!classCount.ContainsKey(classIndex))
+                        classCount[classIndex] = 0;
+                    classCount[classIndex]++;
+                    samples++;
+                }
+            }
+        }
+
+        // Выводим статистику
+        foreach (var kvp in classCount)
+        {
+            float percentage = (kvp.Value / (float)samples) * 100f;
+        }
+
+        // Освобождаем память
+        if (Application.isPlaying)
+        {
+            Destroy(debugTexture);
+        }
+        else
+        {
+            DestroyImmediate(debugTexture);
+        }
     }
 }
