@@ -580,7 +580,7 @@ MonoBehaviour:
   showAllClasses: 0
   singleClassId: 0
   singleClassColor: {r: 0, g: 0, b: 1, a: 1}
-  opacity: 0.364
+  opacity: 0.7
   isRealDevice: 1
 --- !u!33 &941417366
 MeshFilter:
@@ -693,6 +693,7 @@ MonoBehaviour:
   showPerformanceStats: 0
   enableProjection: 1
   testMode: 0
+  forceFullscreen: 1
 --- !u!1 &1075000274
 GameObject:
   m_ObjectHideFlags: 0

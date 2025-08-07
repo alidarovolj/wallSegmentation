@@ -183,8 +183,7 @@ Shader "Custom/ProjectiveMask"
                 
                 float2 maskUV = originalUV;
                 
-                // ИСПРАВЛЯЕМ ТОЛЬКО ВЕРТИКАЛЬНУЮ ИНВЕРСИЮ
-                maskUV.y = 1.0 - maskUV.y;
+                // БЕЗ ИНВЕРСИИ - как в palette ветке
                 
                 // Применяем коррекцию аспекта
                 maskUV = correctAspectUV(maskUV);
@@ -213,8 +212,7 @@ Shader "Custom/ProjectiveMask"
                 if (_DebugMode == 3)
                 {
                     float2 uv = saturate(i.screenPos.xy / i.screenPos.w);
-                    // ИСПРАВЛЯЕМ ТОЛЬКО ВЕРТИКАЛЬНУЮ ИНВЕРСИЮ
-                    uv.y = 1.0 - uv.y;
+                    // БЕЗ ИНВЕРСИИ КООРДИНАТ - как в рабочей palette ветке
                     // Применяем коррекцию аспекта в тестовом режиме тоже
                     uv = correctAspectUV(uv);
                     // Преобразуем идентификатор класса в цвет

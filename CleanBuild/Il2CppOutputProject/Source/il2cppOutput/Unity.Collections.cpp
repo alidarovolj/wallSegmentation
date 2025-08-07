@@ -229,7 +229,7 @@ struct ValueType_t6D9B272BD21782F0A9A14F2E41F85A50E97A986F_marshaled_pinvoke
 struct ValueType_t6D9B272BD21782F0A9A14F2E41F85A50E97A986F_marshaled_com
 {
 };
-struct __JobReflectionRegistrationOutput__4080552783_t41F45346CD25A808B2316EEB84DB487D766A15D3  : public RuntimeObject
+struct __JobReflectionRegistrationOutput__2442699279_t935C58E005F98F450B95232906DB394BB2F1DFB2  : public RuntimeObject
 {
 };
 struct xxHash3_t1B0090718977D51798C540A03964F9CB74D52462  : public RuntimeObject
@@ -8312,7 +8312,7 @@ inline void IJobExtensions_EarlyJobInit_TisConstructJob_t55C543914D2A5CE4D61B4BB
 	((  void (*) (const RuntimeMethod*))IJobExtensions_EarlyJobInit_TisIl2CppFullySharedGenericStruct_mE94EF6A2653FA245FC0DC74F3DC48D7DF0B66BC6_gshared)(method);
 }
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void EarlyInitHelpers_JobReflectionDataCreationFailed_mD6AB08D5BB411CCE38A87793C3C7062EC91FD1EC (Exception_t* ___0_ex, const RuntimeMethod* method) ;
-IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__4080552783_CreateJobReflectionData_mC1BA4175A7033C69364B7FADD294D15A72B0F50A (const RuntimeMethod* method) ;
+IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__2442699279_CreateJobReflectionData_mC2AA4431D524F2D3535E57E9E2B2B7B87A07429C (const RuntimeMethod* method) ;
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void AllocatorManager_InitializeU24StackAllocator_Try_000000A7U24BurstDirectCall_m7075C698AD2EEB5677CDEE101AAA342C0F75F95A (const RuntimeMethod* method) ;
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void AllocatorManager_InitializeU24SlabAllocator_Try_000000B5U24BurstDirectCall_m0F04E653C96D95F99BD81994C4F27990CA598004 (const RuntimeMethod* method) ;
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void Try_000000DFU24BurstDirectCall_Initialize_mA0FB0EAA8B949E9CAE5202B62791FC0548A725F1 (const RuntimeMethod* method) ;
@@ -16587,7 +16587,7 @@ IL2CPP_EXTERN_C  String_t* UnsafeText_ToString_m02C6D467CDF758100B8CCC3199168304
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wunused-variable"
 #endif
-IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__4080552783_CreateJobReflectionData_mC1BA4175A7033C69364B7FADD294D15A72B0F50A (const RuntimeMethod* method) 
+IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__2442699279_CreateJobReflectionData_mC2AA4431D524F2D3535E57E9E2B2B7B87A07429C (const RuntimeMethod* method) 
 {
 	static bool s_Il2CppMethodInitialized;
 	if (!s_Il2CppMethodInitialized)
@@ -16659,10 +16659,10 @@ IL_006b:
 		return;
 	}
 }
-IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__4080552783_EarlyInit_mDC4025B157C34772F580C86877DCC10B080B12F6 (const RuntimeMethod* method) 
+IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__2442699279_EarlyInit_m3C1B515EC74E01890600B27E641AB76D6EB0F4B4 (const RuntimeMethod* method) 
 {
 	{
-		__JobReflectionRegistrationOutput__4080552783_CreateJobReflectionData_mC1BA4175A7033C69364B7FADD294D15A72B0F50A(NULL);
+		__JobReflectionRegistrationOutput__2442699279_CreateJobReflectionData_mC2AA4431D524F2D3535E57E9E2B2B7B87A07429C(NULL);
 		return;
 	}
 }

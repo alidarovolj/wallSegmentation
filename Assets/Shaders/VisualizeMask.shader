@@ -112,17 +112,13 @@ Shader "Unlit/VisualizeMask"
             
             fixed4 frag (v2f i) : SV_Target
             {
-                // ИСПРАВЛЯЕМ ТОЛЬКО ВЕРТИКАЛЬНУЮ ИНВЕРСИЮ
-                float2 correctedUV = i.uv;
-                correctedUV.y = 1.0 - correctedUV.y;
-                
-                float class_index_float = tex2D(_MaskTex, correctedUV).r;
+                // Используем UV как есть, без коррекций
+                float class_index_float = tex2D(_MaskTex, i.uv).r;
                 int class_index = (int)round(class_index_float);
                 
                 // DEBUG: Показываем raw значения как градации серого
                 if (_ShowRawValues > 0.5)
                 {
-                    // Нормализуем для лучшей видимост
                     return fixed4(frac(class_index_float / 20.0), frac(class_index_float / 20.0), frac(class_index_float / 20.0), _Opacity);
                 }
 
@@ -149,8 +145,7 @@ Shader "Unlit/VisualizeMask"
                     return fixed4(color, _Opacity);
                 }
 
-                // Во всех остальных случаях (например, если мы в режиме "один класс",
-                // но текущий пиксель не принадлежит ему) - делаем пиксель прозрачным.
+                // Во всех остальных случаях - делаем пиксель прозрачным.
                 return fixed4(0, 0, 0, 0);
             }
             ENDCG

@@ -1243,7 +1243,7 @@ struct ValueType_t6D9B272BD21782F0A9A14F2E41F85A50E97A986F_marshaled_com
 struct XRInputReaderUtility_t372C4C79F014F0DAA5549769FCD4A52B343A399A  : public RuntimeObject
 {
 };
-struct __JobReflectionRegistrationOutput__481480836_t5AE9C8A7C89E1751EF9EF35AF45F0A1C7D3639C5  : public RuntimeObject
+struct __JobReflectionRegistrationOutput__1086631264_tFC878C2FC18B797E148CC6AC113D11D4EEB036CA  : public RuntimeObject
 {
 };
 struct Enumerator_t716F0837DF37D1535D6DF4BFA81ED8605B776CA6 
@@ -6918,7 +6918,7 @@ inline void IJobExtensions_EarlyJobInit_TisFloat4TweenJob_t9D63A32AC58F3FA5F68BF
 	((  void (*) (const RuntimeMethod*))IJobExtensions_EarlyJobInit_TisIl2CppFullySharedGenericStruct_mE94EF6A2653FA245FC0DC74F3DC48D7DF0B66BC6_gshared)(method);
 }
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void EarlyInitHelpers_JobReflectionDataCreationFailed_mD6AB08D5BB411CCE38A87793C3C7062EC91FD1EC (Exception_t* ___0_ex, const RuntimeMethod* method) ;
-IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__481480836_CreateJobReflectionData_m2F19101CF9EEF426347F7BF101FB7CD52C6682F6 (const RuntimeMethod* method) ;
+IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__1086631264_CreateJobReflectionData_mB537385023B59519950B851CFCB561B61E454B2B (const RuntimeMethod* method) ;
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void SortingHelpers_InitializeU24SquareDistanceAttachPointEvaluator_SqDistanceToInteractable_00000354U24BurstDirectCall_m6E19E09BDE592CEB3E3B291F9A0A9A274F618D41 (const RuntimeMethod* method) ;
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void BezierLerp_0000036FU24BurstDirectCall_Initialize_m0F1FD820CC9B2AE0DF1C51E1BC94A1F64FF85BE2 (const RuntimeMethod* method) ;
 IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void BezierLerp_00000370U24BurstDirectCall_Initialize_mDD295E164DA977058AC878139A63D290627E463A (const RuntimeMethod* method) ;
@@ -24215,7 +24215,7 @@ IL2CPP_EXTERN_C  bool Float4TweenJob_IsNearlyEqual_m1B0B7A5E9E16C58242607439DE34
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wunused-variable"
 #endif
-IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__481480836_CreateJobReflectionData_m2F19101CF9EEF426347F7BF101FB7CD52C6682F6 (const RuntimeMethod* method) 
+IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__1086631264_CreateJobReflectionData_mB537385023B59519950B851CFCB561B61E454B2B (const RuntimeMethod* method) 
 {
 	static bool s_Il2CppMethodInitialized;
 	if (!s_Il2CppMethodInitialized)
@@ -24261,10 +24261,10 @@ IL_002a:
 		return;
 	}
 }
-IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__481480836_EarlyInit_mDE95B6B9083D2BFEA1600D50A9A165173BEA4420 (const RuntimeMethod* method) 
+IL2CPP_EXTERN_C IL2CPP_METHOD_ATTR void __JobReflectionRegistrationOutput__1086631264_EarlyInit_m19526BE9B0D4699DEB0A0B4B8E4683527E5F534A (const RuntimeMethod* method) 
 {
 	{
-		__JobReflectionRegistrationOutput__481480836_CreateJobReflectionData_m2F19101CF9EEF426347F7BF101FB7CD52C6682F6(NULL);
+		__JobReflectionRegistrationOutput__1086631264_CreateJobReflectionData_mB537385023B59519950B851CFCB561B61E454B2B(NULL);
 		return;
 	}
 }
