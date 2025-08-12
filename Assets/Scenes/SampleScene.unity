@@ -333,7 +333,7 @@ PrefabInstance:
       addedObject: {fileID: 1070768337}
     - targetCorrespondingSourceObject: {fileID: 2512387469002778309, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1070768338}
+      addedObject: {fileID: 1070768345}
   m_SourcePrefab: {fileID: 100100000, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
 --- !u!1 &393184430
 GameObject:
@@ -555,6 +555,8 @@ GameObject:
   - component: {fileID: 941417368}
   - component: {fileID: 941417367}
   - component: {fileID: 941417366}
+  - component: {fileID: 941417371}
+  - component: {fileID: 941417370}
   - component: {fileID: 941417365}
   m_Layer: 0
   m_Name: ARWallPresenter
@@ -647,6 +649,101 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &941417370
+MonoBehaviour:
+  m_ObjectHideFlags: 64
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941417364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+--- !u!20 &941417371
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941417364}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
 --- !u!114 &1070768330 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2512387469002778329, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
@@ -670,12 +767,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15f82cc229284894964d2d30806969d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_HumanSegmentationStencilMode: 0
-  m_HumanSegmentationDepthMode: 0
+  m_HumanSegmentationStencilMode: 2
+  m_HumanSegmentationDepthMode: 1
   m_EnvironmentDepthMode: 3
   m_EnvironmentDepthTemporalSmoothing: 1
   m_OcclusionPreferenceMode: 0
---- !u!114 &1070768338
+--- !u!114 &1070768345
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -995,23 +1092,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
   segmentationDisplay: {fileID: 76938650}
-  modelAsset: {fileID: 5022602860645237092, guid: 37cd09fbcd27344fe8b8294f637cbf9f, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: ba6e34ed17eff6245af242118402b7c4, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
   imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
   maskPostProcessingShader: {fileID: 7200000, guid: 1e8afd4d3de754dccbd0bff91ac31929, type: 3}
+  advancedPostProcessingShader: {fileID: 7200000, guid: 17846659cbc2b45deb24a73c44e4481c, type: 3}
+  upsampleShader: {fileID: 7200000, guid: c925091eed61f470cbbe712da0bce803, type: 3}
   visualizationMaterial: {fileID: 2100000, guid: 14d565b5b3f0d9c4bbde8f5628f16cde, type: 2}
   arWallPresenter: {fileID: 941417365}
-  processingResolution: {x: 512, y: 512}
+  processingResolution: {x: 1170, y: 1170}
   enableMaskSmoothing: 1
   maskSmoothingIterations: 2
-  selectedClass: -1
-  visualizationOpacity: 0.202
+  enableAdaptiveResolution: 1
+  edgeEnhancementFactor: 1.2
+  edgeThreshold: 0.1
+  contrastFactor: 3
+  useAdvancedPostProcessing: 1
+  enableDebugLogging: 1
+  showClassOutlines: 0
+  maxAccuracyMode: 1
+  balancedMode: 0
+  performanceMode: 0
+  maskRotationMode: 0
+  forceFullscreenMask: 1
+  useCameraAspectRatio: 1
+  selectedClass: 0
+  visualizationOpacity: 0.7
   enableLegacyDisplay: 0
   paintColor: {r: 1, g: 0, b: 0, a: 1}
   showAllClasses: 0
   showWalls: 0
   showFloors: 0
   showCeilings: 0
+  enableBlinkingEffect: 0
+  blinkingSpeed: 1
   interactiveColors:
   - {r: 1, g: 0, b: 0, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}

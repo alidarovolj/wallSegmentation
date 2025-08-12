@@ -18,7 +18,7 @@ public class SegmentationManager : MonoBehaviour
       [Header("Model Configuration")]
       [SerializeField] private ModelAsset modelAsset;
       [SerializeField] private BackendType workerType = BackendType.GPUCompute;
-      [SerializeField] private Vector2Int overrideResolution = new Vector2Int(512, 512);
+      [SerializeField] private Vector2Int overrideResolution = new Vector2Int(1024, 1024); // УВЕЛИЧЕНО для лучшего качества
 
       [Header("UI Components")]
       [SerializeField] private ARCameraManager arCameraManager;
@@ -257,12 +257,15 @@ public class SegmentationManager : MonoBehaviour
             isProcessing = true;
             // Debug.Log("🔄 Starting camera image processing..."); // Removed for performance
 
+            // УПРОЩЕНИЕ: Убираем трансформацию в коде, используем только поворот в шейдере
+            var transformation = XRCpuImage.Transformation.None;
+
             var conversionParams = new XRCpuImage.ConversionParams
             {
                   inputRect = new RectInt(0, 0, image.width, image.height),
                   outputDimensions = new Vector2Int(imageSize.x, imageSize.y),
                   outputFormat = TextureFormat.RGBA32,
-                  transformation = XRCpuImage.Transformation.MirrorY // Apply vertical flip consistently
+                  transformation = transformation
             };
 
             var texture = new Texture2D(imageSize.x, imageSize.y, conversionParams.outputFormat, false);

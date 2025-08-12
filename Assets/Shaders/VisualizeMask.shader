@@ -10,6 +10,14 @@ Shader "Unlit/VisualizeMask"
         
         [HideInInspector] _IsPortrait ("Is Portrait Mode", Float) = 0
         [HideInInspector] _IsRealDevice ("Is Real Device", Float) = 0
+        [HideInInspector] _RotationMode ("Rotation Mode (0=+90, 1=-90, 2=180, 3=none)", Int) = 0
+        [HideInInspector] _ForceFullscreen ("Force Fullscreen", Int) = 1
+        [HideInInspector] _ScreenAspect ("Screen Aspect", Float) = 1.0
+        [HideInInspector] _MaskAspect ("Mask Aspect", Float) = 1.0
+        [HideInInspector] _AspectRatio ("Aspect Ratio", Float) = 1.0
+        [HideInInspector] _CropOffsetX ("Crop Offset X", Float) = 0.0
+        [HideInInspector] _CropOffsetY ("Crop Offset Y", Float) = 0.0
+        [HideInInspector] _CropScale ("Crop Scale", Float) = 1.0
     }
     SubShader
     {
@@ -46,13 +54,21 @@ Shader "Unlit/VisualizeMask"
             float _IsPortrait;
             float _IsRealDevice;
             float _ShowRawValues;
+            int _RotationMode;
+            int _ForceFullscreen;
+            float _ScreenAspect;
+            float _MaskAspect;
+            float _AspectRatio;
+            float _CropOffsetX;
+            float _CropOffsetY;
+            float _CropScale;
             
             float3 getClassColor(int classId)
             {
-                // Первые 30 классов ADE20K цветовой карты (основные для интерьеров)
+                // ИСПРАВЛЕННАЯ цветовая карта ADE20K для точного распознавания
                 if (classId == 0) return float3(120/255.0, 120/255.0, 120/255.0); // wall (серый)
                 if (classId == 1) return float3(180/255.0, 120/255.0, 120/255.0); // building
-                if (classId == 2) return float3(6/255.0, 230/255.0, 230/255.0);   // sky (голубой)
+                if (classId == 2) return float3(6/255.0, 230/255.0, 230/255.0);   // background/sky (голубой)
                 if (classId == 3) return float3(80/255.0, 50/255.0, 50/255.0);    // floor (темно-коричневый)
                 if (classId == 4) return float3(4/255.0, 200/255.0, 3/255.0);     // tree (зеленый)
                 if (classId == 5) return float3(120/255.0, 120/255.0, 80/255.0);  // ceiling (желто-серый)
@@ -62,7 +78,7 @@ Shader "Unlit/VisualizeMask"
                 if (classId == 9) return float3(10/255.0, 255/255.0, 71/255.0);   // grass
                 if (classId == 10) return float3(255/255.0, 20/255.0, 147/255.0); // cabinet (розовый)
                 if (classId == 11) return float3(20/255.0, 255/255.0, 20/255.0);  // sidewalk
-                if (classId == 12) return float3(255/255.0, 0/255.0, 0/255.0);    // person (красный)
+                if (classId == 12) return float3(255/255.0, 0/255.0, 0/255.0);    // person (ЯРКО-КРАСНЫЙ для выделения)
                 if (classId == 13) return float3(255/255.0, 235/255.0, 205/255.0); // earth
                 if (classId == 14) return float3(120/255.0, 120/255.0, 70/255.0); // door (оливковый)
                 if (classId == 15) return float3(255/255.0, 165/255.0, 0/255.0);  // table (оранжевый)
@@ -102,11 +118,65 @@ Shader "Unlit/VisualizeMask"
                 return rgb + m;
             }
 
+            // ИСПРАВЛЕННАЯ функция для коррекции UV координат с учетом crop квадратной области
+            float2 correctAspectUV(float2 uv)
+            {
+                if (_ForceFullscreen != 1)
+                {
+                    return uv;
+                }
+                
+                float2 correctedUV = uv;
+                
+                // ИСПРАВЛЕНИЕ ГЛАВНОЙ ПРОБЛЕМЫ: Компенсируем crop, примененный к камере
+                // 1. Обратная трансформация crop: маска соответствует центральному квадрату камеры
+                correctedUV = correctedUV * _CropScale + float2(_CropOffsetX, _CropOffsetY);
+                
+                // 2. Корректируем для соответствия квадратной маски прямоугольному экрану
+                float screenAspect = _ScreenAspect;  // ширина/высота экрана
+                float maskAspect = _MaskAspect;      // аспект маски (обычно 1.0 для квадрата)
+                
+                // Вычисляем коррекцию для правильного отображения квадратной маски на прямоугольном экране
+                if (screenAspect < 1.0) // Портретный экран (выше чем шире)
+                {
+                    // Растягиваем маску по X, чтобы заполнить ширину экрана
+                    correctedUV.x = (correctedUV.x - 0.5) / screenAspect + 0.5;
+                }
+                else // Ландшафтный экран (шире чем выше)
+                {
+                    // Растягиваем маску по Y, чтобы заполнить высоту экрана  
+                    correctedUV.y = (correctedUV.y - 0.5) * screenAspect + 0.5;
+                }
+                
+                return correctedUV;
+            }
+
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv; // UV-координаты передаются без изменений
+                
+                // ИСПРАВЛЕНИЕ ПОВОРОТА: Поворачиваем UV координаты для правильной ориентации маски
+                float2 uv = v.uv;
+                
+                // Выбираем тип поворота на основе _RotationMode
+                if (_RotationMode == 0) {
+                    // +90 градусов (по часовой стрелке)
+                    uv = float2(1.0 - uv.y, uv.x);
+                } else if (_RotationMode == 1) {
+                    // -90 градусов (против часовой стрелки)
+                    uv = float2(uv.y, 1.0 - uv.x);
+                } else if (_RotationMode == 2) {
+                    // 180 градусов
+                    uv = float2(1.0 - uv.x, 1.0 - uv.y);
+                } else {
+                    // Без поворота
+                    // uv остается как есть
+                }
+                
+                // ИСПРАВЛЕНИЕ РАМОК: Применяем коррекцию аспекта после поворота
+                o.uv = correctAspectUV(uv);
+                
                 return o;
             }
             
@@ -134,6 +204,12 @@ Shader "Unlit/VisualizeMask"
                     if (class_index == _SelectedClass)
                     {
                         return fixed4(_PaintColor.rgb, _Opacity);
+                    }
+                    else
+                    {
+                        // УЛУЧШЕНИЕ: Показываем другие классы полупрозрачными для контекста
+                        float3 otherColor = getClassColor(class_index) * 0.3; // Приглушенные
+                        return fixed4(otherColor, _Opacity * 0.2);
                     }
                 }
                 
