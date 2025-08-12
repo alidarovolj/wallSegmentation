@@ -399,12 +399,22 @@ public class AsyncSegmentationManager : MonoBehaviour
             cameraInputTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGB32);
             normalizedTexture = CreateRenderTexture(maxRes, maxRes, RenderTextureFormat.ARGBFloat);
 
-            if (enableLegacyDisplay && segmentationDisplay != null && visualizationMaterial != null)
+            // ИСПРАВЛЕНИЕ: Всегда создаем displayMaterialInstance для crop параметров
+            if (visualizationMaterial != null)
             {
                 displayMaterialInstance = new Material(visualizationMaterial);
+                Debug.Log($"✅ displayMaterialInstance создан: {displayMaterialInstance.shader.name}");
+            }
+            else
+            {
+                Debug.LogError("❌ visualizationMaterial не назначен! displayMaterialInstance не может быть создан.");
+            }
+
+            if (enableLegacyDisplay && segmentationDisplay != null && displayMaterialInstance != null)
+            {
                 segmentationDisplay.material = displayMaterialInstance;
                 UpdateMaterialParameters();
-                Debug.Log($"✅ Материал для отображения настроен: {displayMaterialInstance.shader.name}");
+                Debug.Log($"✅ Legacy отображение настроено");
 
                 // Настраиваем правильное соотношение сторон для телефона
                 SetupCorrectAspectRatio();
@@ -417,10 +427,6 @@ public class AsyncSegmentationManager : MonoBehaviour
                     segmentationDisplay.gameObject.SetActive(false);
                     Debug.Log("🚫 Старая система отображения отключена - используется новая проекционная система");
                 }
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Visualization Material не назначен!");
             }
 
             Debug.Log("🎉 AsyncSegmentationManager инициализация завершена успешно!");
@@ -814,10 +820,19 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         // Debug.Log($"🔲 ПРИНУДИТЕЛЬНО устанавливаем размер входа модели: {outputWidth}x{outputHeight} (аспект камеры: {cameraAspect:F2})"); // Отключено - спам
 
-        // УМНЫЙ CROP: Обрезаем камеру до квадрата, сохраняя центральную часть
+        // ДИАГНОСТИКА: Проверяем размеры камеры
+        Debug.Log($"🔍 ДИАГНОСТИКА камеры: width={cpuImage.width}, height={cpuImage.height}");
+
+        // ИСПРАВЛЕНИЕ CROP: Принудительно центрируем квадратный crop
         int inputSize = Mathf.Min(cpuImage.width, cpuImage.height);
         int cropX = (cpuImage.width - inputSize) / 2;
         int cropY = (cpuImage.height - inputSize) / 2;
+
+        // ИСПРАВЛЕНИЕ: cropY=0 правильно для ландшафтной камеры
+        // Проблема в том, что камера 1920x1440 (ландшафт), а экран 1170x2532 (портрет)
+        Debug.Log($"🔍 КАМЕРА vs ЭКРАН: камера={cpuImage.width}x{cpuImage.height} (соотношение {(float)cpuImage.width / cpuImage.height:F2}), экран=1170x2532 (соотношение 0.46)");
+
+        Debug.Log($"🔍 CROP РАСЧЕТ: inputSize={inputSize}, cropX={cropX}, cropY={cropY}");
 
         conversionParams = new XRCpuImage.ConversionParams
         {
@@ -833,6 +848,16 @@ public class AsyncSegmentationManager : MonoBehaviour
         float cropOffsetX = (float)cropX / cpuImage.width;
         float cropOffsetY = (float)cropY / cpuImage.height;
         float cropScale = (float)inputSize / Mathf.Max(cpuImage.width, cpuImage.height);
+
+        // АГРЕССИВНАЯ КОРРЕКЦИЯ: Исправляем смещение вправо
+        float originalOffsetX = cropOffsetX;
+        float originalOffsetY = cropOffsetY;
+        // cropOffsetX += 0.05f; // ОТКЛЮЧЕНО: сдвигаем маску ВПРАВО 
+        // cropOffsetY += 0.12f; // ОТКЛЮЧЕНО: сильно опускаем маску ВНИЗ (было 0.08f)
+
+        // ПРИНУДИТЕЛЬНОЕ логирование для диагностики
+        Debug.Log($"🔧 АГРЕССИВНАЯ КОРРЕКЦИЯ crop: X {originalOffsetX:F3}→{cropOffsetX:F3}, Y {originalOffsetY:F3}→{cropOffsetY:F3}");
+        Debug.Log($"🔍 ПРОВЕРКА ПРИМЕНЕНИЯ: передаем в шейдер cropOffsetX={cropOffsetX:F3}, cropOffsetY={cropOffsetY:F3}, cropScale={cropScale:F3}");
 
         // Передаем crop параметры в материал для корректного UV mapping
         if (displayMaterialInstance != null)

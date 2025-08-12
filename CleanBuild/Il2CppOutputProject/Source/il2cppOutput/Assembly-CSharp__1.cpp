@@ -3863,6 +3863,9 @@ struct ARWallPresenter_tE1207026881F5CDC4ADF4A500D55BA90A02A7B9D_StaticFields
 	int32_t ___ScreenAspectId;
 	int32_t ___MaskAspectId;
 	int32_t ___ForceFullscreenId;
+	int32_t ___CropOffsetXId;
+	int32_t ___CropOffsetYId;
+	int32_t ___CropScaleId;
 };
 struct AsyncSegmentationManager_t8B3620B533394035F280137EB5D5E6DD05535A50_StaticFields
 {
