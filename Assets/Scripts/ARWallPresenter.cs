@@ -59,6 +59,11 @@ public class ARWallPresenter : MonoBehaviour
     private static readonly int MaskAspectId = Shader.PropertyToID("_MaskAspect");
     private static readonly int ForceFullscreenId = Shader.PropertyToID("_ForceFullscreen");
 
+    // Crop параметры для коррекции UV координат
+    private static readonly int CropOffsetXId = Shader.PropertyToID("_CropOffsetX");
+    private static readonly int CropOffsetYId = Shader.PropertyToID("_CropOffsetY");
+    private static readonly int CropScaleId = Shader.PropertyToID("_CropScale");
+
     // Ссылка на сегментационный менеджер для получения пользовательских цветов
     private AsyncSegmentationManager segmentationManager;
 
@@ -110,6 +115,7 @@ public class ARWallPresenter : MonoBehaviour
         // Отладочная информация об аспектах
         float screenAspect = (float)Screen.width / Screen.height;
         Debug.Log($"🚀 ARWallPresenter инициализирован. Screen aspect: {screenAspect:F3} ({Screen.width}x{Screen.height})");
+        Debug.Log($"📐 Aspect correction: screenAspect={screenAspect:F3}, maskAspect=1.0, режим={(screenAspect < 1.0 ? "портрет" : "ландшафт")}");
     }
 
     void OnEnable()
@@ -198,6 +204,12 @@ public class ARWallPresenter : MonoBehaviour
         _propertyBlock.SetFloat(MaskAspectId, maskAspect);
         _propertyBlock.SetInt(ForceFullscreenId, 1); // Включаем полноэкранный режим
 
+        // Логируем изредка для отладки
+        if (Time.frameCount < 5 || Time.frameCount % 300 == 0)
+        {
+            Debug.Log($"📊 ARWallPresenter передает в шейдер: screenAspect={screenAspect:F3}, maskAspect={maskAspect:F1}");
+        }
+
         // Включение принудительного полноэкранного режима и установка ротации БОЛЬШЕ НЕ НУЖНЫ
         // _propertyBlock.SetInt(ForceFullscreenId, 1);
         // if (segmentationManager != null)
@@ -235,9 +247,9 @@ public class ARWallPresenter : MonoBehaviour
             _propertyBlock = new MaterialPropertyBlock();
         }
 
-        _propertyBlock.SetFloat("_CropOffsetX", cropOffsetX);
-        _propertyBlock.SetFloat("_CropOffsetY", cropOffsetY);
-        _propertyBlock.SetFloat("_CropScale", cropScale);
+        _propertyBlock.SetFloat(CropOffsetXId, cropOffsetX);
+        _propertyBlock.SetFloat(CropOffsetYId, cropOffsetY);
+        _propertyBlock.SetFloat(CropScaleId, cropScale);
 
         if (_renderer != null)
         {
@@ -245,6 +257,7 @@ public class ARWallPresenter : MonoBehaviour
         }
 
         Debug.Log($"📐 ARWallPresenter: Crop параметры установлены - Offset({cropOffsetX:F3}, {cropOffsetY:F3}), Scale: {cropScale:F3}");
+        Debug.Log($"🔍 ARWallPresenter: PropertyBlock установлен на renderer={(_renderer != null ? "OK" : "NULL")}");
     }
 
     [ContextMenu("Обновить размер плоскости")]
@@ -276,33 +289,26 @@ public class ARWallPresenter : MonoBehaviour
         float width = height * arCamera.aspect;
 
         // Для гарантированного покрытия ВСЕГО экрана, включая статус-бар и панель навигации
+        float screenAspect = (float)Screen.width / Screen.height;
+
         if (isRealDevice)
         {
-            // Увеличиваем размер на 30% для экстремального покрытия
-            width *= 1.30f;
-            height *= 1.30f;
+            // ИСПРАВЛЕНИЕ: Увеличиваем масштабирование для полного покрытия экрана
+            width *= 1.50f;  // Было 1.10f - увеличиваем для полного покрытия
+            height *= 1.50f; // Было 1.10f - увеличиваем для полного покрытия
 
             // На реальных устройствах размещаем плоскость близко для максимального покрытия
             distance = arCamera.nearClipPlane + 0.01f;
+
+            Debug.Log($"📱 Реальное устройство: полное покрытие экрана - screenAspect={screenAspect:F3}");
         }
         else
         {
-            // В симуляторе используем сбалансированное масштабирование
-            // Для портретных экранов минимизируем искажения
-            float screenAspect = (float)Screen.width / Screen.height;
+            // В симуляторе используем минимальное масштабирование для точности
+            width *= 1.00f;  // Убираем дополнительное масштабирование
+            height *= 1.00f; // Убираем дополнительное масштабирование
 
-            if (screenAspect < 1.0f) // Портрет
-            {
-                width *= 1.08f; // Умеренное горизонтальное растяжение
-                height *= 1.12f; // Умеренное вертикальное покрытие
-            }
-            else // Ландшафт
-            {
-                width *= 1.12f;
-                height *= 1.08f;
-            }
-
-            Debug.Log($"🎮 Симулятор: сбалансированное масштабирование - screenAspect={screenAspect:F2}, width={width:F2}, height={height:F2}");
+            Debug.Log($"🎮 Симулятор: точное масштабирование без увеличения - screenAspect={screenAspect:F3}");
         }
 
         transform.localPosition = new Vector3(0, 0, distance);
