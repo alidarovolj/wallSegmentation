@@ -148,30 +148,31 @@ Shader "Custom/ProjectiveMask"
             // Функция для коррекции UV координат с учетом аспекта
             float2 correctAspectUV(float2 uv)
             {
-                float2 correctedUV = uv;
-                
-                if (_ForceFullscreen == 1)
+                if (_ForceFullscreen != 1)
                 {
-                    // Центрируем UV координаты относительно центра
-                    correctedUV = (correctedUV - 0.5);
-                    
-                    // Применяем коррекцию аспекта
-                    if (_AspectRatio > 1.0)
-                    {
-                        // Маска уже, чем экран - растягиваем по горизонтали
-                        correctedUV.x /= _AspectRatio;
-                    }
-                    else if (_AspectRatio < 1.0)
-                    {
-                        // Маска шире, чем экран - растягиваем по вертикали
-                        correctedUV.y *= _AspectRatio;
-                    }
-                    
-                    // Возвращаем в диапазон [0,1]
-                    correctedUV = correctedUV + 0.5;
+                    return uv;
                 }
+
+                float2 correctedUV = uv;
+                float maskRatio = _MaskAspect;
+                float screenRatio = _ScreenAspect;
+
+                // Используем минимум вместо максимума для растягивания на весь экран
+                // Это обеспечит, что маска покроет весь экран, даже если часть будет обрезана
+                float scale = min(screenRatio / maskRatio, maskRatio / screenRatio);
                 
-                return saturate(correctedUV);
+                if (screenRatio > maskRatio)
+                {
+                    // Экран шире маски - растягиваем по горизонтали
+                    correctedUV.x = (correctedUV.x - 0.5) * (screenRatio / maskRatio) + 0.5;
+                }
+                else
+                {
+                    // Экран выше маски - растягиваем по вертикали
+                    correctedUV.y = (correctedUV.y - 0.5) * (maskRatio / screenRatio) + 0.5;
+                }
+
+                return correctedUV;
             }
 
             // Функция для сэмплирования маски сегментации на основе 3D-позиции
@@ -183,7 +184,8 @@ Shader "Custom/ProjectiveMask"
                 
                 float2 maskUV = originalUV;
                 
-                // БЕЗ ИНВЕРСИИ - как в palette ветке
+                // ИСПРАВЛЕНИЕ ПОВОРОТА: Поворачиваем UV на +90 градусов
+                maskUV = float2(1.0 - maskUV.y, maskUV.x);
                 
                 // Применяем коррекцию аспекта
                 maskUV = correctAspectUV(maskUV);
@@ -192,7 +194,7 @@ Shader "Custom/ProjectiveMask"
                 // Чем дальше объект, тем меньше смещение UV
                 float depthFactor = saturate(length(worldPos) / 10.0); // нормализация до 10 метров
                 maskUV += (originalUV - 0.5) * depthFactor * 0.01; // небольшая коррекция перспективы
-                maskUV = saturate(maskUV); // обрезаем в пределах [0,1]
+                // maskUV = saturate(maskUV); // НЕ ОБРЕЗАЕМ! Это ломало полноэкранный режим.
                 
                 // Читаем значение из маски сегментации
                 float4 maskValue = tex2D(_SegmentationTex, maskUV);
@@ -212,7 +214,10 @@ Shader "Custom/ProjectiveMask"
                 if (_DebugMode == 3)
                 {
                     float2 uv = saturate(i.screenPos.xy / i.screenPos.w);
-                    // БЕЗ ИНВЕРСИИ КООРДИНАТ - как в рабочей palette ветке
+                    
+                    // ИСПРАВЛЕНИЕ ПОВОРОТА: Поворачиваем UV на +90 градусов для правильной ориентации
+                    uv = float2(1.0 - uv.y, uv.x);
+                    
                     // Применяем коррекцию аспекта в тестовом режиме тоже
                     uv = correctAspectUV(uv);
                     // Преобразуем идентификатор класса в цвет

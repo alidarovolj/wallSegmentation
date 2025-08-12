@@ -35,15 +35,15 @@ static Il2CppMethodPointer s_methodPointers[9] =
 };
 static const int32_t s_InvokerIndices[9] = 
 {
-	2719,
-	2409,
-	2768,
-	2768,
-	2768,
-	2311,
-	2380,
-	2768,
-	5408,
+	2725,
+	2415,
+	2774,
+	2774,
+	2774,
+	2317,
+	2386,
+	2774,
+	5418,
 };
 IL2CPP_EXTERN_C const Il2CppCodeGenModule g_Unity_XR_Interaction_Toolkit_Samples_ARStarterAssets_CodeGenModule;
 const Il2CppCodeGenModule g_Unity_XR_Interaction_Toolkit_Samples_ARStarterAssets_CodeGenModule = 

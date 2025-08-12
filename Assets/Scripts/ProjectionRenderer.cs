@@ -108,12 +108,13 @@ public class ProjectionRenderer : MonoBehaviour
             }
 
             // Отладка: проверяем доступность данных раз в секунду
-            if (enableDebugLogging && Time.time % 2.0f < 0.1f)
-            {
-                  bool segReady = segmentationManager != null && segmentationManager.IsSegmentationMaskReady();
-                  LogDebug($"🔄 Проверка данных: сегментация готова = {segReady}");
-                  LogDebug($"🔄 Камера: {arCamera != null}, Материал: {projectionMaterial != null}, Проекция включена: {enableProjection}");
-            }
+            // if (enableDebugLogging && Time.time % 2.0f < 0.1f)
+            // {
+            //       bool segReady = segmentationManager != null && segmentationManager.IsSegmentationMaskReady();
+            //       LogDebug($"🔄 Проверка данных: сегментация готова = {segReady}");
+            //       LogDebug($"🔄 Камера: {arCamera != null}, Материал: {projectionMaterial != null}, Проекция включена: {enableProjection}");
+            // }
+            // ОТКЛЮЧЕНО: слишком много спама в консоли
 
             // ТЕСТОВЫЙ РЕЖИМ: Показываем маску напрямую для диагностики (отрисовка происходит в OnRenderObject)
             // Отключаем ShowTestMask, чтобы избежать конфликта с OnRenderObject
@@ -271,6 +272,20 @@ public class ProjectionRenderer : MonoBehaviour
             {
                   float screenAspect = (float)cameraTexture.width / cameraTexture.height;
                   float maskAspect = (float)segmentationTexture.width / segmentationTexture.height;
+
+                  // Получаем режим поворота из AsyncSegmentationManager
+                  int rotationMode = 0; // По умолчанию +90°
+                  if (segmentationManager != null)
+                  {
+                        rotationMode = segmentationManager.GetMaskRotationMode();
+                  }
+
+                  // Учитываем поворот маски при вычислении аспекта
+                  if (rotationMode == 0 || rotationMode == 1) // +90° или -90°
+                  {
+                        maskAspect = 1.0f / maskAspect; // Инвертируем аспект
+                  }
+
                   float aspectRatio = screenAspect / maskAspect;
 
                   projectionMaterial.SetFloat("_ScreenAspect", screenAspect);
@@ -278,7 +293,7 @@ public class ProjectionRenderer : MonoBehaviour
                   projectionMaterial.SetFloat("_AspectRatio", aspectRatio);
                   projectionMaterial.SetInt("_ForceFullscreen", forceFullscreen ? 1 : 0);
 
-                  LogDebug($"🖥️ Аспекты: экран={screenAspect:F2}, маска={maskAspect:F2}, коррекция={aspectRatio:F2}");
+                  LogDebug($"🖥️ Аспекты: экран={screenAspect:F2}, маска={maskAspect:F2} (rotation mode: {rotationMode}), коррекция={aspectRatio:F2}");
             }
 
             // В редакторе глубина недоступна, поэтому тестируем только с сегментацией
@@ -431,6 +446,8 @@ public class ProjectionRenderer : MonoBehaviour
             // Отключено: используем OnRenderImage для стабильности
             return;
 
+            // Закомментировано для избежания предупреждений компилятора
+            /*
             if (!testMode || projectionMaterial == null || segmentationManager == null)
             {
                   return;
@@ -442,7 +459,7 @@ public class ProjectionRenderer : MonoBehaviour
                   LogDebug("🧪 OnRenderObject: mask == null");
                   return;
             }
-
+            
             LogDebug($"🧪 OnRenderObject: отрисовка маски {mask.width}x{mask.height}");
 
             // Отключаем глубину и блендинг для рендеринга поверх всего
@@ -469,6 +486,7 @@ public class ProjectionRenderer : MonoBehaviour
             GL.PopMatrix();
 
             LogDebug("🧪 OnRenderObject: тестовая маска отрисована поверх кадра");
+            */
       }
 
 

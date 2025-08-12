@@ -43,8 +43,8 @@ extern void ARKitProvider_set_requestedMaximumFaceCount_m5B38F90AC10B8B6475519F1
 extern void TransformVerticesJob_Execute_mFE8F3FE2DBA23BB4024E72E08442A01EF412CDD5 (void);
 extern void TransformUVsJob_Execute_mD9162A35AE0A0E866BC3DC772C46BAA72CC50B16 (void);
 extern void TransformIndicesJob_Execute_m2364D4FF933D69C795F64D43A8AB13D5F2D0EA00 (void);
-extern void __JobReflectionRegistrationOutput__418766184_CreateJobReflectionData_mD05D7FDDA99000BE1CC0ACDEC90AE3E9FA860F67 (void);
-extern void __JobReflectionRegistrationOutput__418766184_EarlyInit_mDE23B7829786161ABBF7995DCD5CA47C0D5DD9C9 (void);
+extern void __JobReflectionRegistrationOutput__332499000_CreateJobReflectionData_m6286B9C70AB21FEE1224C3E6D9B68C0AA56C41E6 (void);
+extern void __JobReflectionRegistrationOutput__332499000_EarlyInit_m79001521D60C10F3F358FEA0981592F021D19621 (void);
 static Il2CppMethodPointer s_methodPointers[34] = 
 {
 	ARKitFaceSubsystem_UnityARKit_FaceProvider_Initialize_m15F37E0C4AC297551E1B3EFC6FA549BF80A62F6B,
@@ -79,8 +79,8 @@ static Il2CppMethodPointer s_methodPointers[34] =
 	TransformUVsJob_Execute_mD9162A35AE0A0E866BC3DC772C46BAA72CC50B16,
 	NULL,
 	TransformIndicesJob_Execute_m2364D4FF933D69C795F64D43A8AB13D5F2D0EA00,
-	__JobReflectionRegistrationOutput__418766184_CreateJobReflectionData_mD05D7FDDA99000BE1CC0ACDEC90AE3E9FA860F67,
-	__JobReflectionRegistrationOutput__418766184_EarlyInit_mDE23B7829786161ABBF7995DCD5CA47C0D5DD9C9,
+	__JobReflectionRegistrationOutput__332499000_CreateJobReflectionData_m6286B9C70AB21FEE1224C3E6D9B68C0AA56C41E6,
+	__JobReflectionRegistrationOutput__332499000_EarlyInit_m79001521D60C10F3F358FEA0981592F021D19621,
 };
 extern void TransformVerticesJob_Execute_mFE8F3FE2DBA23BB4024E72E08442A01EF412CDD5_AdjustorThunk (void);
 extern void TransformUVsJob_Execute_mD9162A35AE0A0E866BC3DC772C46BAA72CC50B16_AdjustorThunk (void);
@@ -93,40 +93,40 @@ static Il2CppTokenAdjustorThunkPair s_adjustorThunks[3] =
 };
 static const int32_t s_InvokerIndices[34] = 
 {
-	5408,
-	5408,
-	5408,
-	5408,
-	5328,
-	5408,
-	5328,
-	2942,
-	5201,
-	3008,
-	5201,
-	5351,
-	5351,
-	5208,
-	5351,
-	5408,
-	2768,
-	5408,
-	2768,
-	2768,
-	2768,
-	2768,
-	1076,
-	1140,
-	2665,
-	2665,
-	2665,
-	2367,
-	2367,
-	2367,
+	5418,
+	5418,
+	5418,
+	5418,
+	5338,
+	5418,
+	5338,
+	2948,
+	5211,
+	3014,
+	5211,
+	5361,
+	5361,
+	5218,
+	5361,
+	5418,
+	2774,
+	5418,
+	2774,
+	2774,
+	2774,
+	2774,
+	1079,
+	1143,
+	2671,
+	2671,
+	2671,
+	2373,
+	2373,
+	2373,
 	0,
-	2367,
-	5408,
-	5408,
+	2373,
+	5418,
+	5418,
 };
 static const Il2CppTokenRangePair s_rgctxIndices[1] = 
 {
