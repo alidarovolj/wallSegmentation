@@ -128,26 +128,26 @@ Shader "Unlit/VisualizeMask"
                 
                 float2 correctedUV = uv;
                 
-                // 1. СНАЧАЛА: Компенсируем crop, примененный к камере
-                // Обратная трансформация crop: маска соответствует центральному квадрату камеры
-                correctedUV = correctedUV * _CropScale + float2(_CropOffsetX, _CropOffsetY);
+                // ИСПРАВЛЕНИЕ 1: Убираем crop offset сдвиг - он уже учтен в камере
+                // НЕ применяем crop offset, так как это уже сделано в AsyncSegmentationManager
                 
-                // ТОЧНАЯ НАСТРОЙКА: Выравниваем маску с камерой
-                correctedUV += float2(0, -0.03);
-
-                // 2. ПОТОМ: Растягиваем маску для соответствия экрану
+                // ИСПРАВЛЕНИЕ 2: Правильная коррекция для портретного экрана
                 float screenAspect = _ScreenAspect;  // 0.462 для iPhone
                 
-                if (screenAspect < 1.0) // Портретный экран
+                if (screenAspect < 1.0) // Портретный экран (высота > ширина)
                 {
-                    // ТОЧНАЯ коррекция: растягиваем UV по X для покрытия ширины
-                    float correction = 1.0 / screenAspect * 1.15; // Уменьшили до 1.15 для точности
-                    correctedUV.x = (correctedUV.x - 0.5) * correction + 0.5;
+                    // Квадратная маска на портретном экране: нужно масштабировать по Y
+                    // чтобы убрать растягивание сверху/снизу
+                    float aspectRatio = screenAspect; // 0.462
+                    correctedUV.y = (correctedUV.y - 0.5) * aspectRatio + 0.5;
+                    
+                    // Небольшая коррекция центрирования
+                    correctedUV.y += 0.05; // Сдвиг вниз для лучшего выравнивания
                 }
                 else // Ландшафтный экран
                 {
-                    // Растягиваем UV по Y для ландшафта
-                    correctedUV.y = (correctedUV.y - 0.5) * screenAspect + 0.5;
+                    // Растягиваем UV по X для ландшафта
+                    correctedUV.x = (correctedUV.x - 0.5) / screenAspect + 0.5;
                 }
                 
                 return correctedUV;
