@@ -58,7 +58,8 @@ public class AsyncSegmentationManager : MonoBehaviour
     private bool enableAdaptiveResolution = true;
     [Tooltip("Коэффициент постобработки краёв (0.1-2.0) - DEPRECATED")]
     [SerializeField, Range(0.1f, 2.0f)]
-    private float edgeEnhancementFactor = 1.2f; // TODO: Удалить в следующей версии
+    [System.Obsolete("Поле больше не используется, будет удалено в следующей версии")]
+    private float edgeEnhancementFactor = 1.2f;
     [Tooltip("Порог обнаружения краёв для адаптивного сглаживания")]
     [SerializeField, Range(0.01f, 0.5f)]
     private float edgeThreshold = 0.1f;
