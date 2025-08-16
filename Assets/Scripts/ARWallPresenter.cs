@@ -64,6 +64,9 @@ public class ARWallPresenter : MonoBehaviour
     private static readonly int CropOffsetYId = Shader.PropertyToID("_CropOffsetY");
     private static readonly int CropScaleId = Shader.PropertyToID("_CropScale");
 
+    // Параметр поворота маски
+    private static readonly int RotationModeId = Shader.PropertyToID("_RotationMode");
+
     // Ссылка на сегментационный менеджер для получения пользовательских цветов
     private AsyncSegmentationManager segmentationManager;
 
@@ -116,6 +119,7 @@ public class ARWallPresenter : MonoBehaviour
         float screenAspect = (float)Screen.width / Screen.height;
         Debug.Log($"🚀 ARWallPresenter инициализирован. Screen aspect: {screenAspect:F3} ({Screen.width}x{Screen.height})");
         Debug.Log($"📐 Aspect correction: screenAspect={screenAspect:F3}, maskAspect=1.0, режим={(screenAspect < 1.0 ? "портрет" : "ландшафт")}");
+        Debug.Log($"🔧 ARWallPresenter состояние: GameObject.active={gameObject.activeInHierarchy}, Component.enabled={enabled}, Renderer.enabled={_renderer.enabled}");
     }
 
     void OnEnable()
@@ -161,6 +165,15 @@ public class ARWallPresenter : MonoBehaviour
             // UpdateAspectParameters(maskTexture); // ОТКЛЮЧЕНО: Эта логика теперь полностью заменена DisplayMatrix в шейдере
 
             _renderer.SetPropertyBlock(_propertyBlock);
+
+            Debug.Log($"✅ ARWallPresenter: Маска сегментации получена и установлена в шейдер! Размер: {maskTexture.width}x{maskTexture.height}");
+        }
+        else
+        {
+            if (maskTexture == null)
+                Debug.LogWarning("⚠️ ARWallPresenter: Получена пустая маска сегментации!");
+            if (_propertyBlock == null)
+                Debug.LogWarning("⚠️ ARWallPresenter: PropertyBlock не инициализирован!");
         }
     }
 
@@ -196,6 +209,10 @@ public class ARWallPresenter : MonoBehaviour
         // Передаем флаг реального устройства и матрицу отображения
         _propertyBlock.SetFloat(IsRealDeviceId, isRealDevice ? 1.0f : 0.0f);
         _propertyBlock.SetMatrix(DisplayMatrixId, displayMatrix);
+
+        // Передаем режим поворота маски
+        int rotationMode = GetMaskRotationModeFromManager();
+        _propertyBlock.SetInt(RotationModeId, rotationMode);
 
         // Устанавливаем параметры аспекта для коррекции UV координат
         float screenAspect = (float)Screen.width / Screen.height;
