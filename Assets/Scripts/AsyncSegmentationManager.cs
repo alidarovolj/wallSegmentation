@@ -763,12 +763,35 @@ public class AsyncSegmentationManager : MonoBehaviour
                 float cropScale = displayMaterialInstance.GetFloat("_CropScale");
                 arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
             }
-            // Debug.Log("🎨 Маска и crop параметры переданы в ARWallPresenter"); // Убран частый лог
+            Debug.Log("🎨 Маска и crop параметры переданы в ARWallPresenter");
         }
         else
         {
-            // Этот лог может спамить, поэтому включаем его только при необходимости
-            // Debug.LogWarning("⚠️ ARWallPresenter не назначен в AsyncSegmentationManager!");
+            // АВТОПОИСК: Если не назначен, пытаемся найти автоматически
+            if (arWallPresenter == null)
+            {
+                arWallPresenter = FindObjectOfType<ARWallPresenter>();
+                if (arWallPresenter != null)
+                {
+                    Debug.Log("✅ ARWallPresenter найден автоматически!");
+                    // Повторяем передачу маски
+                    var maskToSend = OptimizeMaskIfNeeded(finalMask);
+                    arWallPresenter.SetSegmentationMask(maskToSend);
+
+                    if (displayMaterialInstance != null)
+                    {
+                        float cropOffsetX = displayMaterialInstance.GetFloat("_CropOffsetX");
+                        float cropOffsetY = displayMaterialInstance.GetFloat("_CropOffsetY");
+                        float cropScale = displayMaterialInstance.GetFloat("_CropScale");
+                        arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
+                    }
+                    Debug.Log("🎨 Маска передана в автоматически найденный ARWallPresenter");
+                }
+                else
+                {
+                    Debug.LogWarning("⚠️ ARWallPresenter не назначен и не найден в сцене! Назначьте в инспекторе AsyncSegmentationManager.");
+                }
+            }
         }
 
         tensorDataBuffer.Dispose();
