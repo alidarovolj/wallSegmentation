@@ -63,8 +63,8 @@ public static class JobReflectionForcedRegistration
             // Принудительно вызываем reflection для базовых типов Jobs
             System.Type[] jobTypes = {
                 typeof(IJob),
-                typeof(IJobParallelFor),
-                typeof(IJobParallelForTransform)
+                typeof(IJobParallelFor)
+                // IJobParallelForTransform недоступен в данной версии Unity
             };
 
             foreach (var jobType in jobTypes)
