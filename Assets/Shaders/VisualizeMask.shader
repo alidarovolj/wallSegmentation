@@ -184,15 +184,6 @@ Shader "Unlit/VisualizeMask"
             
             fixed4 frag (v2f i) : SV_Target
             {
-                // ПРОВЕРКА РАМКИ: находимся ли мы в пределах допустимых UV координат
-                bool isInsideFrame = (i.uv.x >= 0.0 && i.uv.x <= 1.0 && 
-                                    i.uv.y >= 0.0 && i.uv.y <= 1.0);
-                
-                if (!isInsideFrame) {
-                    // За пределами маски - показываем черную рамку
-                    return fixed4(0, 0, 0, 0.9); // Черный с непрозрачностью 90%
-                }
-                
                 // Используем UV как есть, без коррекций
                 float class_index_float = tex2D(_MaskTex, i.uv).r;
                 int class_index = (int)round(class_index_float);
