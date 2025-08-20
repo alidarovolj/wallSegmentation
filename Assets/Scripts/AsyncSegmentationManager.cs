@@ -22,10 +22,10 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField]
     private ARCameraManager arCameraManager;
-    [SerializeField]
-    private RawImage segmentationDisplay;
+    // [УДАЛЕНО] Legacy RawImage больше не используется - только ARWallPresenter
     [SerializeField]
     private ModelAsset modelAsset;
+
     [SerializeField]
     private ComputeShader argmaxShader;
     [SerializeField]
@@ -90,7 +90,10 @@ public class AsyncSegmentationManager : MonoBehaviour
     private bool performanceMode = false;
     [Tooltip("Режим поворота маски (0=+90°, 1=-90°, 2=180°, 3=без поворота)")]
     [SerializeField, Range(0, 3)]
-    private int maskRotationMode = 0;
+    private int maskRotationMode = 1; // ИСПРАВЛЕНИЕ: BiSeNet требует поворот на -90° для правильной ориентации
+    [Tooltip("Горизонтальное отражение маски для исправления инверсии")]
+    [SerializeField]
+    private bool flipHorizontal = true; // ИСПРАВЛЕНИЕ: BiSeNet требует горизонтальное отражение
     [Tooltip("Принудительно растягивать маску на весь экран")]
     [SerializeField]
     private bool forceFullscreenMask = true;
@@ -104,10 +107,8 @@ public class AsyncSegmentationManager : MonoBehaviour
     private int selectedClass = -1; // Все классы по умолчанию
     [Tooltip("Opacity of the segmentation overlay")]
     [SerializeField, Range(0f, 1f)]
-    private float visualizationOpacity = 0.5f; // Нормальное значение
-    [Tooltip("Enable legacy RawImage display (disable for new projection system)")]
-    [SerializeField]
-    private bool enableLegacyDisplay = true;
+    private float visualizationOpacity = 0.6f; // Умеренная прозрачность для комфортного просмотра
+    // [УДАЛЕНО] Legacy display больше не поддерживается
     [Tooltip("The color to use for painting the selected class")]
     public Color paintColor = Color.red;
     [Tooltip("Show all classes with different colors")]
@@ -141,9 +142,65 @@ public class AsyncSegmentationManager : MonoBehaviour
         new Color(1f, 0.8f, 0.2f), new Color(0.2f, 0.8f, 1f)
     };
 
+    [Header("🤖 Model Selection")]
+    [Tooltip("Use TopFormer ADE20K (150 classes) instead of BiSeNet Cityscapes (19 classes)")]
+    [SerializeField]
+    private bool useTopFormerADE20K = true;
+
+    [Tooltip("Enable temporal stabilization to reduce mask jitter during camera movement")]
+    [SerializeField]
+    private bool enableTemporalStabilization = true;
+
+    [Tooltip("Use bilinear upscaling to smooth 64x64 TopFormer output")]
+    [SerializeField]
+    private bool useBilinearUpscaling = true;
+
+    [Header("🎯 Mask Alignment Testing")]
+    [Tooltip("Test: 180° rotation + горизонтальный flip для TopFormer (исправляет полное отзеркаливание)")]
+    [SerializeField]
+    private bool testMode180NoFlip = false;
+
+    [Tooltip("Test: No rotation + horizontal flip (альтернативный режим для TopFormer)")]
+    [SerializeField]
+    private bool testModeNoRotationWithFlip = false;
+
+    [Tooltip("Test: +90° rotation (попробовать для исправления пространственного соответствия)")]
+    [SerializeField]
+    private bool testModePlus90 = true;
+
+    [Tooltip("Test: -90° rotation")]
+    [SerializeField]
+    private bool testModeMinus90 = false;
+
     // Словарь пользовательских цветов для классов
     private Dictionary<int, Color> customClassColors = new Dictionary<int, Color>();
     private int currentColorIndex = 0;
+
+    // ADE20K яркие контрастные цвета классов для лучшей видимости
+    private Dictionary<int, Color> ade20kClassColors = new Dictionary<int, Color>()
+    {
+        {0, new Color(1.00f, 0.00f, 0.00f, 1f)},   // wall - ярко-красный
+        {1, new Color(0.00f, 0.00f, 1.00f, 1f)},   // building - синий
+        {2, new Color(1.00f, 1.00f, 0.00f, 1f)},   // sky - желтый
+        {3, new Color(0.60f, 0.30f, 0.00f, 1f)},   // floor - коричневый
+        {4, new Color(0.00f, 1.00f, 0.00f, 1f)},   // tree - зеленый
+        {5, new Color(0.00f, 1.00f, 1.00f, 1f)},   // ceiling - голубой
+        {12, new Color(0.24f, 0.02f, 0.59f, 1f)},  // person - фиолетовый
+        {14, new Color(0.20f, 1.00f, 0.03f, 1f)},  // door - ярко-зеленый
+        {15, new Color(0.32f, 0.02f, 1.00f, 1f)},  // table - синий
+        {18, new Color(0.01f, 0.20f, 1.00f, 1f)},  // curtain - темно-синий
+        {19, new Color(0.01f, 0.27f, 0.80f, 1f)},  // chair - синий
+        {22, new Color(0.20f, 0.02f, 1.00f, 1f)},  // painting - пурпурный
+        {23, new Color(1.00f, 0.40f, 0.04f, 1f)},  // sofa - оранжевый
+        {24, new Color(0.28f, 0.03f, 1.00f, 1f)},  // shelf - фиолетово-синий
+        {28, new Color(0.86f, 0.86f, 0.86f, 1f)},  // mirror - светло-серый
+        {31, new Color(0.84f, 1.00f, 0.03f, 1f)},  // armchair - желто-зеленый
+        {32, new Color(0.88f, 1.00f, 0.03f, 1f)},  // seat - светло-зеленый
+        {35, new Color(0.28f, 1.00f, 0.04f, 1f)},  // desk - зеленый
+        {38, new Color(0.03f, 1.00f, 0.88f, 1f)},  // lamp - бирюзовый
+        {39, new Color(1.00f, 0.03f, 0.40f, 1f)},  // bathtub - розовый
+        {41, new Color(0.03f, 0.76f, 1.00f, 1f)},  // cushion - голубой
+    };
 
     // Fields for PerformanceControlUI compatibility
     [Tooltip("The number of frames to skip between processing.")]
@@ -220,8 +277,8 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     void OnEnable()
     {
-        // Принудительно устанавливаем режим "только стены" при запуске
-        ForceWallOnlyMode();
+        // ИСПРАВЛЕНИЕ: Принудительно устанавливаем правильные значения для BiSeNet
+        ForceModelSettings();
 
         cancellationTokenSource = new CancellationTokenSource();
         InitializeSystem();
@@ -256,18 +313,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         }
 
         // Проверяем изменение размера экрана и обновляем полноэкранный режим
-        if (forceFullscreenMask && segmentationDisplay != null)
-        {
-            var rectTransform = segmentationDisplay.rectTransform;
-            var currentSize = rectTransform.rect.size;
-            var screenSize = new Vector2(Screen.width, Screen.height);
-
-            // Если размер маски не соответствует экрану, обновляем
-            if (Mathf.Abs(currentSize.x - screenSize.x) > 10f || Mathf.Abs(currentSize.y - screenSize.y) > 10f)
-            {
-                SetupCorrectAspectRatio();
-            }
-        }
+        // [УДАЛЕНО] Legacy fullscreen код заменен ARWallPresenter.FitToScreen()
 
         // Отладка: определяем класс по клику
         if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
@@ -277,6 +323,9 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         // Применяем режимы качества
         ApplyQualityModes();
+
+        // Применяем тестовые режимы выравнивания маски
+        ApplyTestAlignmentModes();
 
         // Проверяем изменения в настройках отображения
         if (selectedClass != lastSelectedClass ||
@@ -289,6 +338,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             lastShowAll = showAllClasses;
         }
 
+        // AR режим
         if (ARSession.state < ARSessionState.SessionTracking || worker == null || isProcessing)
         {
             return;
@@ -301,25 +351,36 @@ public class AsyncSegmentationManager : MonoBehaviour
                 ProcessFrameAsync(cpuImage);
             }
         }
+
         frameCount++;
     }
+
+    /// <summary>
+    /// Обрабатывает AR режим (реальная камера)
+    /// </summary>
+    private void ProcessARMode()
+    {
+        if (ARSession.state < ARSessionState.SessionTracking || worker == null || isProcessing)
+        {
+            return;
+        }
+
+        if (frameCount % (frameSkipRate + 1) == 0)
+        {
+            if (arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
+            {
+                ProcessFrameAsync(cpuImage);
+            }
+        }
+    }
+
+
+
 
     private void InitializeSystem()
     {
         arCameraManager = FindObjectOfType<ARCameraManager>();
-        if (segmentationDisplay == null)
-        {
-            // Попробуем найти RawImage, если не присвоен в инспекторе
-            var canvas = FindObjectOfType<Canvas>();
-            if (canvas != null)
-            {
-                segmentationDisplay = canvas.GetComponentInChildren<RawImage>();
-                if (segmentationDisplay != null)
-                {
-                    Debug.Log("✅ RawImage для отображения найден автоматически.");
-                }
-            }
-        }
+        // [УДАЛЕНО] Автопоиск RawImage больше не нужен
 
         Debug.Log("🚀 AsyncSegmentationManager: Начинаем инициализацию...");
 
@@ -335,11 +396,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             return;
         }
 
-        if (segmentationDisplay == null)
-        {
-            Debug.LogError("❌ Segmentation Display не назначен в AsyncSegmentationManager!");
-            return;
-        }
+        // [УДАЛЕНО] Проверка segmentationDisplay больше не нужна
 
         try
         {
@@ -351,8 +408,8 @@ public class AsyncSegmentationManager : MonoBehaviour
                 Debug.LogError("🚨 'processingResolution' в инспекторе имеет значение 0! Установите корректное значение (например, 512x512).");
                 return;
             }
-            // Модель TopFormer-S всегда использует 512x512, независимо от настроек Inspector
-            Debug.Log($"ℹ️ Модель TopFormer-S использует фиксированное разрешение 512x512 (настройки Inspector: {processingResolution.x}x{processingResolution.y})");
+            // Модель BiSeNet использует разрешение 720x960
+            Debug.Log($"ℹ️ Модель BiSeNet использует разрешение 720x960 (настройки Inspector: {processingResolution.x}x{processingResolution.y})");
 
             worker = new Worker(runtimeModel, BackendType.GPUCompute);
             Debug.Log("✅ Worker создан с GPUCompute backend");
@@ -411,26 +468,13 @@ public class AsyncSegmentationManager : MonoBehaviour
                 Debug.LogError("❌ visualizationMaterial не назначен! displayMaterialInstance не может быть создан.");
             }
 
-            if (enableLegacyDisplay && segmentationDisplay != null && displayMaterialInstance != null)
-            {
-                segmentationDisplay.material = displayMaterialInstance;
-                UpdateMaterialParameters();
-                Debug.Log($"✅ Legacy отображение настроено");
+            // [УДАЛЕНО] Legacy display код - используется только ARWallPresenter
 
-                // Настраиваем правильное соотношение сторон для телефона
-                SetupCorrectAspectRatio();
-            }
-            else if (!enableLegacyDisplay)
-            {
-                // Отключаем старую систему отображения
-                if (segmentationDisplay != null)
-                {
-                    segmentationDisplay.gameObject.SetActive(false);
-                    Debug.Log("🚫 Старая система отображения отключена - используется новая проекционная система");
-                }
-            }
+            // ДОПОЛНИТЕЛЬНАЯ проверка: принудительно устанавливаем настройки после создания материала
+            ForceModelSettings();
 
-            Debug.Log("🎉 AsyncSegmentationManager инициализация завершена успешно!");
+            string modelName = useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes";
+            Debug.Log($"🎉 AsyncSegmentationManager инициализация завершена успешно! Модель: {modelName}, Режим поворота: {maskRotationMode} ({GetRotationModeDescription(maskRotationMode)})");
 
             // Отправляем Flutter уведомление о готовности Unity
             Invoke(nameof(NotifyFlutterReady), 2f);
@@ -443,7 +487,67 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Используем настройки из инспектора вместо принудительного режима
         // ForceWallOnlyMode(); // ОТКЛЮЧЕНО
 
-        StartCoroutine(ForceMaterialUpdate());
+        // [УДАЛЕНО] ForceMaterialUpdate корутина больше не нужна
+    }
+
+    /// <summary>
+    /// Принудительно устанавливает оптимальные настройки для выбранной модели (TopFormer или BiSeNet)
+    /// </summary>
+    private void ForceModelSettings()
+    {
+        // Основные настройки отображения - ТОЛЬКО СТЕНЫ
+        selectedClass = 0;           // Показать только класс 0 (стены)
+        showAllClasses = false;      // Возвращаемся к режиму стен с улучшенной фильтрацией
+        showWalls = true;            // ВКЛЮЧИТЬ только стены
+        showFloors = false;          // НЕ показывать полы  
+        showCeilings = false;        // НЕ показывать потолки
+
+        // Высокая видимость для четких границ
+        visualizationOpacity = 0.8f; // Полупрозрачность
+
+        // Адаптивные настройки поворота в зависимости от модели
+        if (useTopFormerADE20K)
+        {
+            // TopFormer требует и вертикальный, и горизонтальный flip
+            maskRotationMode = 2; // 180° поворот для вертикального flip
+            flipHorizontal = true; // Включаем горизонтальное отражение
+        }
+        else
+        {
+            // BiSeNet требует поворот на 180°
+            maskRotationMode = 2; // Поворот на 180°
+            flipHorizontal = false; // Отключаем дополнительное отражение
+        }
+
+        string modelName = useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes";
+        Debug.Log($"🔧 ПРИНУДИТЕЛЬНО установлены настройки {modelName}:");
+        Debug.Log($"   🧱 Режим отображения: ТОЛЬКО СТЕНЫ (класс {selectedClass})");
+        Debug.Log($"   📺 Показать все классы: {showAllClasses}");
+        Debug.Log($"   🔆 Opacity: {visualizationOpacity}");
+        Debug.Log($"   🔄 Режим поворота: {maskRotationMode} ({GetRotationModeDescription(maskRotationMode)})");
+        Debug.Log($"   🔄 Горизонтальное отражение: {flipHorizontal}");
+
+        // СИНХРОНИЗИРУЕМ с ARWallPresenter если он подключен
+        if (arWallPresenter != null)
+        {
+            if (showAllClasses)
+            {
+                arWallPresenter.SetAllClassesMode();
+                Debug.Log("🌈 ARWallPresenter синхронизирован - режим ВСЕХ классов");
+            }
+            else
+            {
+                arWallPresenter.SetSingleClassMode(selectedClass, paintColor);
+                Debug.Log("🔄 ARWallPresenter синхронизирован - режим одного класса");
+            }
+        }
+
+        // Принудительно обновляем материал, если он уже создан
+        if (displayMaterialInstance != null)
+        {
+            UpdateMaterialParameters();
+            Debug.Log("✅ Материал немедленно обновлен с новыми настройками");
+        }
     }
 
     /// <summary>
@@ -452,7 +556,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     private void ForceWallOnlyMode()
     {
         selectedClass = 0;           // Только класс 0 (стены)
-        showAllClasses = false;      // НЕ показывать все классы
+        showAllClasses = false;      // Возвращаемся к режиму стен с улучшенной фильтрацией
         showWalls = true;            // Показывать стены
         showFloors = false;          // НЕ показывать полы
         showCeilings = false;        // НЕ показывать потолки
@@ -469,56 +573,9 @@ public class AsyncSegmentationManager : MonoBehaviour
         UpdateMaterialParameters();
     }
 
-    private void SetupCorrectAspectRatio()
-    {
-        if (segmentationDisplay == null) return;
+    // [УДАЛЕНО] SetupCorrectAspectRatio - заменен ARWallPresenter.FitToScreen()
 
-        // Убираем AspectRatioFitter и принудительно растягиваем на весь экран
-        var fitter = segmentationDisplay.GetComponent<AspectRatioFitter>();
-        if (fitter != null)
-        {
-            DestroyImmediate(fitter);
-            Debug.Log("🗑️ AspectRatioFitter удален для полноэкранного отображения");
-        }
-
-        var rectTransform = segmentationDisplay.rectTransform;
-
-        // ПОЛНОЭКРАННОЕ РАСТЯГИВАНИЕ
-        rectTransform.anchorMin = Vector2.zero;      // Левый нижний угол
-        rectTransform.anchorMax = Vector2.one;       // Правый верхний угол  
-        rectTransform.offsetMin = Vector2.zero;      // Убираем отступы
-        rectTransform.offsetMax = Vector2.zero;      // Убираем отступы
-        rectTransform.localScale = Vector3.one;      // Нормальный масштаб
-        rectTransform.localPosition = Vector3.zero;  // Центрируем
-
-        // Убеждаемся что Canvas Renderer включен
-        var canvasRenderer = segmentationDisplay.GetComponent<CanvasRenderer>();
-        if (canvasRenderer != null)
-        {
-            canvasRenderer.cull = false; // Отключаем culling
-        }
-
-        // Устанавливаем RawImage на полный экран
-        segmentationDisplay.uvRect = new Rect(0, 0, 1, 1); // Полная UV область
-
-        // Debug.Log($"📱 Маска растянута на весь экран: {rectTransform.rect.width}x{rectTransform.rect.height}"); // Отключено - слишком много спама
-    }
-
-    private System.Collections.IEnumerator ForceMaterialUpdate()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(1f);
-            if (segmentationDisplay != null && segmentationDisplay.material != null &&
-                segmentationDisplay.material.shader.name != "Unlit/VisualizeMask")
-            {
-                Debug.LogWarning("⚠️ Обнаружен неверный материал! Принудительно устанавливаем правильный материал.");
-                var displayMaterial = new Material(visualizationMaterial);
-                displayMaterial.SetTexture("_MaskTex", segmentationMaskTexture);
-                segmentationDisplay.material = displayMaterial;
-            }
-        }
-    }
+    // [УДАЛЕНО] ForceMaterialUpdate - больше не нужен для ARWallPresenter
 
     private async void ProcessFrameAsync(XRCpuImage cpuImage)
     {
@@ -533,14 +590,39 @@ public class AsyncSegmentationManager : MonoBehaviour
             NormalizeImage();
 
             inputTensor?.Dispose();
-            // Используем фактические размеры текстуры с сохранением пропорций
-            inputTensor = TextureConverter.ToTensor(normalizedTexture, normalizedTexture.width, normalizedTexture.height, 3);
+
+            // Адаптивный размер тензора в зависимости от модели
+            int tensorWidth, tensorHeight;
+            if (useTopFormerADE20K)
+            {
+                // TopFormer работает с квадратными изображениями
+                // ФИКСИРОВАННЫЙ размер 512x512 - модель была обучена именно на этом
+                tensorWidth = 512;
+                tensorHeight = 512;
+            }
+            else
+            {
+                // BiSeNet требует фиксированный размер 720x960
+                tensorWidth = 960;
+                tensorHeight = 720;
+            }
+
+            inputTensor = TextureConverter.ToTensor(normalizedTexture, tensorWidth, tensorHeight, 3);
+
+            Debug.Log($"🔧 МОДЕЛЬ {(useTopFormerADE20K ? "TopFormer" : "BiSeNet")}: текстура {normalizedTexture.width}x{normalizedTexture.height} → тензор {tensorWidth}x{tensorHeight}");
 
             // Debug.Log($"🔢 Создан тензор: {normalizedTexture.width}x{normalizedTexture.height}x3 (аспект: {(float)normalizedTexture.width / normalizedTexture.height:F2})"); // Отключено - спам
 
             worker.Schedule(inputTensor);
 
-            ProcessOutputWithArgmaxShader();
+            if (useTopFormerADE20K)
+            {
+                ProcessTopFormerOutput();
+            }
+            else
+            {
+                ProcessOutputWithArgmaxShader();
+            }
         }
         catch (Exception e)
         {
@@ -595,12 +677,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Debug.Log($"🔍 Размеры тензора: batch={batchSize}, classes={numClasses}, height={height}, width={width}"); // Убран частый лог
         // Debug.Log($"📏 Входная текстура: {cameraInputTexture.width}x{cameraInputTexture.height}"); // Убран частый лог
 
-        // Проверяем соответствие размеров - модель должна выдавать квадратный результат
-        if (width != height)
-        {
-            Debug.LogError($"❌ Тензор не квадратный: {width}x{height}! Модель требует квадратные входные данные.");
-            return;
-        }
+        // Проверяем соответствие размеров для BiSeNet
+        Debug.Log($"✅ Обрабатываем тензор BiSeNet: {width}x{height}");
 
         // Debug.Log($"✅ Обрабатываем квадратный тензор: {width}x{height}"); // Отключено - спам
 
@@ -800,6 +878,181 @@ public class AsyncSegmentationManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Обрабатывает выходные данные TopFormer (уже готовые индексы классов)
+    /// </summary>
+    private void ProcessTopFormerOutput()
+    {
+        // Сначала пробуем int тензор (TopFormer-B экспортирован с argmax)
+        var intOutputTensor = worker.PeekOutput() as Tensor<int>;
+        if (intOutputTensor != null)
+        {
+            Debug.Log($"✅ TopFormer-B выход (int): форма={string.Join("x", intOutputTensor.shape)}");
+            ProcessTopFormerIntTensor(intOutputTensor);
+            return;
+        }
+
+        // Если нет int тензора, пробуем float (TopFormer-S логиты)
+        var floatOutputTensor = worker.PeekOutput() as Tensor<float>;
+        if (floatOutputTensor != null)
+        {
+            Debug.Log($"✅ TopFormer-S выход (float): форма={string.Join("x", floatOutputTensor.shape)}");
+            ProcessTopFormerFloatTensor(floatOutputTensor);
+            return;
+        }
+
+        Debug.LogError("❌ TopFormer: Выходной тензор равен null!");
+    }
+
+    private void ProcessTopFormerIntTensor(Tensor<int> intTensor)
+    {
+        var shape = intTensor.shape;
+        int shapeLength = shape.rank;
+
+        if (shapeLength != 4 || shape[0] != 1 || shape[1] != 1)
+        {
+            Debug.LogError($"❌ TopFormer-B: Неожиданная форма int тензора: [{string.Join(",", shape)}]");
+            intTensor.Dispose();
+            return;
+        }
+
+        int height = shape[2];
+        int width = shape[3];
+        Debug.Log($"🎯 TopFormer-B обработка: размер маски {width}x{height}");
+
+        // Создаем текстуры для маски
+        if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
+        {
+            ReleaseRenderTexture(segmentationMaskTexture);
+            segmentationMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
+            if (displayMaterialInstance != null)
+            {
+                displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+                UpdateMaterialParameters();
+            }
+        }
+
+        // Конвертируем int тензор в float массив
+        var intData = intTensor.DownloadToArray();
+        var floatData = new float[intData.Length];
+        for (int i = 0; i < intData.Length; i++)
+        {
+            floatData[i] = (float)intData[i];
+        }
+
+        var texture2D = new Texture2D(width, height, TextureFormat.RFloat, false);
+        texture2D.SetPixelData(floatData, 0);
+        texture2D.Apply();
+
+        // Копируем в RenderTexture
+        Graphics.CopyTexture(texture2D, segmentationMaskTexture);
+
+        // Передаем маску в ARWallPresenter
+        SetTopFormerMaskToPresenter();
+
+        // Очистка
+        Destroy(texture2D);
+        intTensor.Dispose();
+    }
+
+    private void ProcessTopFormerFloatTensor(Tensor<float> floatTensor)
+    {
+        var shape = floatTensor.shape;
+        int shapeLength = shape.rank;
+        Debug.Log($"🔍 ДИАГНОСТИКА TopFormer тензора: shape.rank={shapeLength}, размеры=[{string.Join(",", shape)}]");
+
+        int height, width;
+
+        // TopFormer может выдавать разные форматы:
+        // [batch, height, width] - прямые индексы классов
+        // [batch, classes, height, width] - логиты (как BiSeNet)
+        if (shapeLength == 3)
+        {
+            // Формат [batch, height, width] - прямые индексы
+            height = shape[1];
+            width = shape[2];
+            Debug.Log($"✅ TopFormer формат [batch, height, width]: {width}x{height}");
+        }
+        else if (shapeLength == 4)
+        {
+            // Формат [batch, classes, height, width] - логиты, нужен argmax
+            int numClasses = shape[1];
+            height = shape[2];
+            width = shape[3];
+            Debug.Log($"⚠️ TopFormer формат [batch, classes, height, width]: classes={numClasses}, size={width}x{height}");
+            Debug.Log("⚠️ TopFormer выдает логиты вместо индексов! Переключите обратно на BiSeNet обработку.");
+            Debug.Log($"🔍 АНАЛИЗ: Вход 512x512 → Выход {width}x{height} (downsample factor: {512 / width}x)");
+
+            // В этом случае используем BiSeNet обработку с тем же тензором
+            ProcessOutputWithArgmaxShader();
+            return;
+        }
+        else
+        {
+            Debug.LogError($"❌ TopFormer: Неподдерживаемая форма тензора {shapeLength}D: [{string.Join(",", shape)}]");
+            floatTensor.Dispose();
+            return;
+        }
+
+        Debug.Log($"✅ Обрабатываем тензор TopFormer: {width}x{height}");
+
+        // Создаем текстуры для маски
+        if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
+        {
+            ReleaseRenderTexture(segmentationMaskTexture);
+            segmentationMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
+            if (displayMaterialInstance != null)
+            {
+                displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+                UpdateMaterialParameters();
+            }
+        }
+
+        // Конвертируем тензор в текстуру через CPU (TopFormer уже выдает готовые индексы)
+        var tensorData = floatTensor.DownloadToArray();
+        var texture2D = new Texture2D(width, height, TextureFormat.RFloat, false);
+
+        // Копируем данные напрямую (без argmax, так как TopFormer уже выдает индексы)
+        texture2D.SetPixelData(tensorData, 0);
+        texture2D.Apply();
+
+        // Копируем в RenderTexture
+        Graphics.CopyTexture(texture2D, segmentationMaskTexture);
+
+        // Передаем маску в ARWallPresenter
+        SetTopFormerMaskToPresenter();
+
+        // Очистка
+        Destroy(texture2D);
+        floatTensor.Dispose();
+    }
+
+    private void SetTopFormerMaskToPresenter()
+    {
+        if (arWallPresenter != null)
+        {
+            arWallPresenter.SetSegmentationMask(segmentationMaskTexture);
+
+            // Стабилизированные crop параметры для TopFormer
+            float cropOffsetX = 0f;
+            float cropOffsetY = 0f;
+            float cropScale = 1f;
+
+            // Компенсируем низкое разрешение маски через crop adjustment
+            if (enableTemporalStabilization)
+            {
+                cropOffsetX = 0.0f; // Без смещения по X
+                cropOffsetY = 0.0f; // Без смещения по Y  
+                cropScale = 1.0f;   // Масштаб 1:1
+            }
+
+            arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
+            Debug.Log($"🎨 TopFormer маска передана в ARWallPresenter: crop({cropOffsetX:F2}, {cropOffsetY:F2}, {cropScale:F2}), стабилизация={enableTemporalStabilization}");
+        }
+    }
+
+    /// <summary>
     /// OPTIMIZATION: Оптимизирует маску сегментации для снижения использования памяти
     /// </summary>
     private Texture OptimizeMaskIfNeeded(Texture originalMask)
@@ -834,44 +1087,54 @@ public class AsyncSegmentationManager : MonoBehaviour
         // ИСПРАВЛЕНИЕ: Модель требует квадратные данные, но мы сохраним аспект камеры для правильного отображения
         float cameraAspect = (float)cpuImage.width / cpuImage.height;
 
-        // ИСПРАВЛЕНИЕ: TopFormer-S требует КВАДРАТНЫЕ данные - используем crop/pad подход
-        int maxResolution = 512; // Безопасное значение для GPU
-        int outputWidth = maxResolution;
-        int outputHeight = maxResolution;
+        // ИСПРАВЛЕНИЕ: Используем высокое разрешение для промежуточной текстуры
+        // TextureConverter.ToTensor() потом сделает resize до 720x960 для BiSeNet
+        int maxDimension = Mathf.Min(cpuImage.width, cpuImage.height);
+        int outputWidth = maxDimension;
+        int outputHeight = maxDimension;
+
+        // Используем максимально возможное разрешение без превышения размеров камеры
+        outputWidth = Mathf.Min(outputWidth, cpuImage.width);
+        outputHeight = Mathf.Min(outputHeight, cpuImage.height);
+
+        string modelTargetResolution = useTopFormerADE20K ? "TopFormer=512x512" : "BiSeNet=960x720";
+        Debug.Log($"🔧 ПРОМЕЖУТОЧНОЕ РАЗРЕШЕНИЕ: камера={cpuImage.width}x{cpuImage.height} → текстура={outputWidth}x{outputHeight} → {modelTargetResolution}");
 
         // Но сохраняем информацию об аспекте для корректного отображения маски
-        Debug.Log($"🔲 Принудительно квадратный вход: {outputWidth}x{outputHeight} для модели (камера: {cameraAspect:F2})");
+        string modelName = useTopFormerADE20K ? "TopFormer" : "BiSeNet";
+        Debug.Log($"🔲 {modelName} разрешение: {outputWidth}x{outputHeight} для модели (камера: {cameraAspect:F2})");
 
         // Debug.Log($"🔲 ПРИНУДИТЕЛЬНО устанавливаем размер входа модели: {outputWidth}x{outputHeight} (аспект камеры: {cameraAspect:F2})"); // Отключено - спам
 
         // ДИАГНОСТИКА: Проверяем размеры камеры
         Debug.Log($"🔍 ДИАГНОСТИКА камеры: width={cpuImage.width}, height={cpuImage.height}");
 
-        // ИСПРАВЛЕНИЕ CROP: Принудительно центрируем квадратный crop
-        int inputSize = Mathf.Min(cpuImage.width, cpuImage.height);
-        int cropX = (cpuImage.width - inputSize) / 2;
-        int cropY = (cpuImage.height - inputSize) / 2;
+        // ИСПРАВЛЕНИЕ CROP: Используем весь кадр без crop для BiSeNet
+        int cropX = 0;
+        int cropY = 0;
+        int cropWidth = cpuImage.width;
+        int cropHeight = cpuImage.height;
 
         // ИСПРАВЛЕНИЕ: cropY=0 правильно для ландшафтной камеры
         // Проблема в том, что камера 1920x1440 (ландшафт), а экран 1170x2532 (портрет)
         Debug.Log($"🔍 КАМЕРА vs ЭКРАН: камера={cpuImage.width}x{cpuImage.height} (соотношение {(float)cpuImage.width / cpuImage.height:F2}), экран=1170x2532 (соотношение 0.46)");
 
-        Debug.Log($"🔍 CROP РАСЧЕТ: inputSize={inputSize}, cropX={cropX}, cropY={cropY}");
+        Debug.Log($"🔍 CROP РАСЧЕТ: cropX={cropX}, cropY={cropY}, cropWidth={cropWidth}, cropHeight={cropHeight}");
 
         conversionParams = new XRCpuImage.ConversionParams
         {
-            inputRect = new RectInt(cropX, cropY, inputSize, inputSize), // Квадратный crop
+            inputRect = new RectInt(cropX, cropY, cropWidth, cropHeight), // Полный кадр
             outputDimensions = new Vector2Int(outputWidth, outputHeight),
             outputFormat = TextureFormat.RGBA32,
             transformation = transformation
         };
 
-        Debug.Log($"📐 Квадратный crop: {cropX},{cropY} размер {inputSize}x{inputSize} → {outputWidth}x{outputHeight}");
+        Debug.Log($"📐 Полный кадр: {cropX},{cropY} размер {cropWidth}x{cropHeight} → {outputWidth}x{outputHeight}");
 
         // ИСПРАВЛЕНИЕ: Сохраняем информацию о crop для правильного отображения
         float cropOffsetX = (float)cropX / cpuImage.width;
         float cropOffsetY = (float)cropY / cpuImage.height;
-        float cropScale = (float)inputSize / Mathf.Max(cpuImage.width, cpuImage.height);
+        float cropScale = 1.0f; // Полный кадр без crop
 
         // АГРЕССИВНАЯ КОРРЕКЦИЯ: Исправляем смещение вправо
         float originalOffsetX = cropOffsetX;
@@ -1101,8 +1364,24 @@ public class AsyncSegmentationManager : MonoBehaviour
             return customClassColors[classId];
         }
 
-        // Возвращаем стандартный цвет (можно добавить логику для стандартных цветов)
-        return paintColor;
+        // Используем ADE20K стандартные цвета
+        if (ade20kClassColors.ContainsKey(classId))
+        {
+            return ade20kClassColors[classId];
+        }
+
+        // Для неизвестных классов генерируем цвет на основе ID
+        return GenerateColorFromId(classId);
+    }
+
+    /// <summary>
+    /// Генерирует уникальный цвет на основе ID класса
+    /// </summary>
+    private Color GenerateColorFromId(int classId)
+    {
+        // Простая хеш-функция для генерации цвета
+        float hue = (classId * 137.5f) % 360f / 360f; // Golden angle для равномерного распределения
+        return Color.HSVToRGB(hue, 0.7f, 0.9f);
     }
 
     /// <summary>
@@ -1394,6 +1673,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
         displayMaterialInstance.SetColor("_PaintColor", paintColor);
         displayMaterialInstance.SetInt("_RotationMode", maskRotationMode);
+        displayMaterialInstance.SetFloat("_FlipHorizontal", flipHorizontal ? 1.0f : 0.0f);
 
         // Параметры полноэкранного отображения  
         displayMaterialInstance.SetInt("_ForceFullscreen", forceFullscreenMask && useCameraAspectRatio ? 1 : 0);
@@ -1456,6 +1736,22 @@ public class AsyncSegmentationManager : MonoBehaviour
         return maskRotationMode;
     }
 
+    /// <summary>
+    /// Возвращает текущую маску сегментации для использования в других компонентах
+    /// </summary>
+    public RenderTexture GetSegmentationMask()
+    {
+        return segmentationMaskTexture;
+    }
+
+    /// <summary>
+    /// Возвращает настройку горизонтального отражения для использования в других компонентах
+    /// </summary>
+    public bool GetFlipHorizontal()
+    {
+        return flipHorizontal;
+    }
+
     public void SetVisualizationOpacity(float opacity)
     {
         visualizationOpacity = Mathf.Clamp01(opacity);
@@ -1500,9 +1796,13 @@ public class AsyncSegmentationManager : MonoBehaviour
     [ContextMenu("Обновить покрытие экрана")]
     public void RefreshScreenCoverage()
     {
-        SetupCorrectAspectRatio();
+        // [УДАЛЕНО] Legacy метод - используйте ARWallPresenter.RefreshScreenFit()
+        if (arWallPresenter != null)
+        {
+            arWallPresenter.RefreshScreenFit();
+        }
         UpdateMaterialParameters();
-        Debug.Log("🔄 Покрытие экрана принудительно обновлено");
+        Debug.Log("🔄 Покрытие экрана принудительно обновлено через ARWallPresenter");
     }
 
     /// <summary>
@@ -1511,12 +1811,12 @@ public class AsyncSegmentationManager : MonoBehaviour
     public void SetFullscreenMode(bool enabled)
     {
         forceFullscreenMask = enabled;
-        if (enabled)
+        if (enabled && arWallPresenter != null)
         {
-            SetupCorrectAspectRatio();
+            arWallPresenter.RefreshScreenFit();
         }
         UpdateMaterialParameters();
-        Debug.Log($"📱 Полноэкранный режим маски: {(enabled ? "ВКЛЮЧЕН" : "ВЫКЛЮЧЕН")}");
+        Debug.Log($"📱 Полноэкранный режим маски: {(enabled ? "ВКЛЮЧЕН" : "ВЫКЛЮЧЕН")} - используется ARWallPresenter");
     }
 
     /// <summary>
@@ -1558,6 +1858,43 @@ public class AsyncSegmentationManager : MonoBehaviour
         Debug.Log($"🔄 Режим поворота изменен на: {maskRotationMode} ({modeNames[maskRotationMode]})");
         UpdateMaterialParameters();
     }
+
+    /// <summary>
+    /// Увеличить видимость маски для лучшего тестирования
+    /// </summary>
+    [ContextMenu("Тест: Максимальная видимость")]
+    public void SetMaxVisibility()
+    {
+        visualizationOpacity = 0.8f;
+        showAllClasses = true;
+        showWalls = showFloors = showCeilings = false;
+        selectedClass = -1;
+        UpdateMaterialParameters();
+        Debug.Log("🌈 Установлена максимальная видимость: opacity=1.0, показываем все классы");
+    }
+
+    /// <summary>
+    /// Принудительно исправить ориентацию маски BiSeNet
+    /// </summary>
+    [ContextMenu("Тест: Исправить ориентацию BiSeNet")]
+    public void FixBiSeNetOrientation()
+    {
+        ForceModelSettings();
+        Debug.Log("🔧 Принудительно исправлена ориентация и настройки BiSeNet");
+    }
+
+    /// <summary>
+    /// Переключить горизонтальное отражение маски
+    /// </summary>
+    [ContextMenu("Тест: Переключить горизонтальное отражение")]
+    public void ToggleHorizontalFlip()
+    {
+        flipHorizontal = !flipHorizontal;
+        UpdateMaterialParameters();
+        Debug.Log($"🔄 Горизонтальное отражение: {(flipHorizontal ? "ВКЛЮЧЕНО" : "ВЫКЛЮЧЕНО")}");
+    }
+
+
 
     /// <summary>
     /// Переключение режима соотношения сторон
@@ -1741,6 +2078,108 @@ public class AsyncSegmentationManager : MonoBehaviour
         if (enableDebugLogging && Time.frameCount % 300 == 0) // Логируем раз в 5 секунд только если отладка включена
         {
             Debug.Log("⚡ РЕЖИМ ПРОИЗВОДИТЕЛЬНОСТИ: быстрая обработка, разрешение 256x256");
+        }
+    }
+
+    /// <summary>
+    /// 📝 Получить описание режима поворота
+    /// </summary>
+    private string GetRotationModeDescription(int mode)
+    {
+        switch (mode)
+        {
+            case 0: return "0° (без поворота)";
+            case 1: return "90° (поворот влево)";
+            case 2: return "180° (вертикальный flip)";
+            case 3: return "270° (поворот вправо)";
+            default: return $"неизвестный режим {mode}";
+        }
+    }
+
+    /// <summary>
+    /// Применяет тестовые режимы выравнивания маски на основе флагов Inspector
+    /// </summary>
+    private void ApplyTestAlignmentModes()
+    {
+        // Убеждаемся что активен только один режим
+        int activeModes = (testMode180NoFlip ? 1 : 0) + (testModeNoRotationWithFlip ? 1 : 0) +
+                         (testModePlus90 ? 1 : 0) + (testModeMinus90 ? 1 : 0);
+
+        if (activeModes > 1)
+        {
+            // Если выбрано несколько режимов, оставляем только приоритетный
+            if (testMode180NoFlip)
+            {
+                testModeNoRotationWithFlip = false;
+                testModePlus90 = false;
+                testModeMinus90 = false;
+            }
+            else if (testModeNoRotationWithFlip)
+            {
+                testModePlus90 = false;
+                testModeMinus90 = false;
+            }
+            else if (testModePlus90)
+            {
+                testModeMinus90 = false;
+            }
+        }
+
+        // Применяем выбранный режим
+        if (testMode180NoFlip)
+        {
+            // Адаптивная логика в зависимости от модели
+            int targetRotationMode = useTopFormerADE20K ? 2 : 2; // TopFormer: 180° (вертикальный flip), BiSeNet: 180°
+            bool targetFlipHorizontal = useTopFormerADE20K ? true : false; // TopFormer: + горизонтальный flip
+
+            if (maskRotationMode != targetRotationMode || flipHorizontal != targetFlipHorizontal)
+            {
+                maskRotationMode = targetRotationMode;
+                flipHorizontal = targetFlipHorizontal;
+                UpdateMaterialParameters();
+                string modelName = useTopFormerADE20K ? "TopFormer (180° + горизонтальный flip)" : "BiSeNet (180°)";
+                Debug.Log($"🎯 ПРИМЕНЕН режим для {modelName}: rotation={targetRotationMode}, flip={targetFlipHorizontal}");
+            }
+        }
+        else if (testModeNoRotationWithFlip)
+        {
+            // Адаптивная логика для "без поворота + flip"
+            int targetRotationMode = useTopFormerADE20K ? 3 : 3; // Без поворота для обеих моделей
+            bool targetFlipHorizontal = useTopFormerADE20K ? true : true; // Flip для обеих моделей
+
+            if (maskRotationMode != targetRotationMode || flipHorizontal != targetFlipHorizontal)
+            {
+                maskRotationMode = targetRotationMode;
+                flipHorizontal = targetFlipHorizontal;
+                UpdateMaterialParameters();
+                string modelName = useTopFormerADE20K ? "TopFormer (без поворота + flip)" : "BiSeNet (без поворота + flip)";
+                Debug.Log($"🎯 ПРИМЕНЕН режим для {modelName}: rotation={targetRotationMode}, flip={targetFlipHorizontal}");
+            }
+        }
+        else if (testModePlus90)
+        {
+            // Адаптивная логика для +90° в зависимости от модели
+            int targetRotationMode = useTopFormerADE20K ? 0 : 0; // +90° для обеих моделей
+            bool targetFlipHorizontal = useTopFormerADE20K ? true : false; // TopFormer: с flip, BiSeNet: без flip
+
+            if (maskRotationMode != targetRotationMode || flipHorizontal != targetFlipHorizontal)
+            {
+                maskRotationMode = targetRotationMode;
+                flipHorizontal = targetFlipHorizontal;
+                UpdateMaterialParameters();
+                string modelName = useTopFormerADE20K ? "TopFormer (+90° + горизонтальный flip)" : "BiSeNet (+90°)";
+                Debug.Log($"🎯 ПРИМЕНЕН режим для {modelName}: rotation={targetRotationMode}, flip={targetFlipHorizontal}");
+            }
+        }
+        else if (testModeMinus90)
+        {
+            if (maskRotationMode != 1 || flipHorizontal != false)
+            {
+                maskRotationMode = 1;
+                flipHorizontal = false;
+                UpdateMaterialParameters();
+                Debug.Log("🎯 ПРИМЕНЕН режим: -90°");
+            }
         }
     }
 

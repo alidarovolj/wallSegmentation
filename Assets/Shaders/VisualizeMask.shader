@@ -18,6 +18,7 @@ Shader "Unlit/VisualizeMask"
         [HideInInspector] _CropOffsetX ("Crop Offset X", Float) = 0.0
         [HideInInspector] _CropOffsetY ("Crop Offset Y", Float) = 0.0
         [HideInInspector] _CropScale ("Crop Scale", Float) = 1.0
+        [HideInInspector] _FlipHorizontal ("Flip Horizontal", Float) = 1.0
     }
     SubShader
     {
@@ -62,6 +63,7 @@ Shader "Unlit/VisualizeMask"
             float _CropOffsetX;
             float _CropOffsetY;
             float _CropScale;
+            float _FlipHorizontal;
             
             float3 getClassColor(int classId)
             {
@@ -118,66 +120,29 @@ Shader "Unlit/VisualizeMask"
                 return rgb + m;
             }
 
-            // ИСПРАВЛЕННАЯ функция для коррекции UV координат с учетом crop квадратной области
-            float2 correctAspectUV(float2 uv)
-            {
-                if (_ForceFullscreen != 1)
-                {
-                    return uv;
-                }
-                
-                float2 correctedUV = uv;
-                
-                // ИСПРАВЛЕНИЕ 1: Убираем crop offset сдвиг - он уже учтен в камере
-                // НЕ применяем crop offset, так как это уже сделано в AsyncSegmentationManager
-                
-                // ИСПРАВЛЕНИЕ 2: Правильная коррекция для портретного экрана
-                float screenAspect = _ScreenAspect;  // 0.462 для iPhone
-                
-                if (screenAspect < 1.0) // Портретный экран (высота > ширина)
-                {
-                    // УМЕРЕННАЯ коррекция для портретного экрана
-                    // Усиливаем коррекцию но не до максимума
-                    float aspectRatio = lerp(1.0, screenAspect, 0.6); // Увеличили с 0.3 до 0.6 для лучшего соответствия
-                    correctedUV.y = (correctedUV.y - 0.5) * aspectRatio + 0.5;
-                    
-                    // Небольшой сдвиг для выравнивания
-                    correctedUV.y += 0.02; // Минимальный сдвиг для центрирования
-                }
-                else // Ландшафтный экран
-                {
-                    // Растягиваем UV по X для ландшафта
-                    correctedUV.x = (correctedUV.x - 0.5) / screenAspect + 0.5;
-                }
-                
-                return correctedUV;
-            }
-
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 
-                // ИСПРАВЛЕНИЕ ПОВОРОТА: Поворачиваем UV координаты для правильной ориентации маски
+                // УПРОЩЕННАЯ ЛОГИКА UV
                 float2 uv = v.uv;
-                
-                // Выбираем тип поворота на основе _RotationMode
-                if (_RotationMode == 0) {
-                    // +90 градусов (по часовой стрелке)
+
+                // 1. Поворот (если нужен)
+                if (_RotationMode == 0) {       // +90
                     uv = float2(1.0 - uv.y, uv.x);
-                } else if (_RotationMode == 1) {
-                    // -90 градусов (против часовой стрелки)
+                } else if (_RotationMode == 1) { // -90
                     uv = float2(uv.y, 1.0 - uv.x);
-                } else if (_RotationMode == 2) {
-                    // 180 градусов
+                } else if (_RotationMode == 2) { // 180
                     uv = float2(1.0 - uv.x, 1.0 - uv.y);
-                } else {
-                    // Без поворота
-                    // uv остается как есть
                 }
                 
-                // ИСПРАВЛЕНИЕ РАМОК: Применяем коррекцию аспекта после поворота
-                o.uv = correctAspectUV(uv);
+                // 2. Отражение (если нужно)
+                if (_FlipHorizontal > 0.5) {
+                    uv.x = 1.0 - uv.x;
+                }
+                
+                o.uv = uv;
                 
                 return o;
             }
