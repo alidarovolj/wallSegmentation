@@ -85,3 +85,43 @@ iOS/
 /iOS/
 Builds/iOS/
 *.a
+
+# Python Virtual Environment  
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# Unity Build Directories (EXCLUDE FROM GIT)
+/CleanBuild/
+CleanBuild/
+
+# PyTorch Models (large files)
+*.pth
+*.pt
+
+# Temporary Python Scripts
+convert_*.py
+simple_*.py
+
+# Submodules (exclude from tracking)
+TopFormer/
+ONNX-*/

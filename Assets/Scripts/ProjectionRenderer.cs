@@ -40,6 +40,11 @@ public class ProjectionRenderer : MonoBehaviour
       [SerializeField]
       private bool forceFullscreen = true;
 
+      [Header("Ссылки на шейдеры (Shader References)")]
+      [Tooltip("Назначьте шейдер 'Custom/ProjectiveMask' сюда")]
+      [SerializeField]
+      private Shader projectionShaderAsset;
+
       // Приватные переменные
       private Camera arCamera;
       private Material projectionMaterial;
@@ -70,7 +75,11 @@ public class ProjectionRenderer : MonoBehaviour
                   occlusionManager = FindObjectOfType<AROcclusionManager>();
                   if (occlusionManager == null)
                   {
+#if UNITY_EDITOR
+                        LogDebug("AROcclusionManager не найден в симуляторе - это нормально. Проекция отключена для симулятора.");
+#else
                         LogError("Не найден AROcclusionManager в сцене. Проекция отключена.");
+#endif
                         enableProjection = false;
                   }
             }
@@ -124,11 +133,11 @@ public class ProjectionRenderer : MonoBehaviour
             // }
 
             // FALLBACK: Если OnRenderImage не работает, попробуем альтернативный подход
-            if (enableProjection && !testMode && projectionMaterial != null && segmentationManager != null && segmentationManager.IsSegmentationMaskReady())
-            {
-                  // Применяем эффект через CommandBuffer (альтернатива OnRenderImage)
-                  TryAlternativeRendering();
-            }
+            // if (enableProjection && !testMode && projectionMaterial != null && segmentationManager != null && segmentationManager.IsSegmentationMaskReady())
+            // {
+            //       // Применяем эффект через CommandBuffer (альтернатива OnRenderImage)
+            //       TryAlternativeRendering();
+            // }
       }
 
       /// <summary>
@@ -190,15 +199,15 @@ public class ProjectionRenderer : MonoBehaviour
       /// </summary>
       private void LoadProjectionShader()
       {
-            projectionShader = Shader.Find("Custom/ProjectiveMask");
-            if (projectionShader == null)
+            if (projectionShaderAsset == null)
             {
-                  LogError("Не найден шейдер 'Custom/ProjectiveMask'. Создайте шейдер ProjectiveMask.shader");
+                  LogError("Не назначен шейдер 'Custom/ProjectiveMask' в инспекторе. Назначьте его в поле 'Projection Shader Asset'.");
                   enableProjection = false;
             }
             else
             {
-                  LogDebug("✅ Шейдер проекции загружен: " + projectionShader.name);
+                  projectionShader = projectionShaderAsset;
+                  LogDebug("✅ Шейдер проекции загружен из ассета: " + projectionShader.name);
             }
       }
 

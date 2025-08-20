@@ -67,6 +67,9 @@ public class ARWallPresenter : MonoBehaviour
     // Параметр поворота маски
     private static readonly int RotationModeId = Shader.PropertyToID("_RotationMode");
 
+    // Параметр горизонтального отражения
+    private static readonly int FlipHorizontalId = Shader.PropertyToID("_FlipHorizontal");
+
     // Ссылка на сегментационный менеджер для получения пользовательских цветов
     private AsyncSegmentationManager segmentationManager;
 
@@ -85,6 +88,14 @@ public class ARWallPresenter : MonoBehaviour
     {
         _renderer = GetComponent<Renderer>();
         _propertyBlock = new MaterialPropertyBlock();
+
+        // АВТОМАТИЧЕСКОЕ ОПРЕДЕЛЕНИЕ СРЕДЫ: В редакторе всегда считаем, что это не реальное устройство
+#if UNITY_EDITOR
+        isRealDevice = false;
+#endif
+
+        // Устанавливаем слой, который точно будет виден в симуляторе
+        gameObject.layer = LayerMask.NameToLayer("Default");
 
         // Гарантированно находим ARCameraManager
         if (arCameraManager == null)
@@ -147,6 +158,12 @@ public class ARWallPresenter : MonoBehaviour
         if (isRealDevice && Time.frameCount % 30 == 0) // Проверяем каждые полсекунды
         {
             CheckAndUpdateScreenSize();
+        }
+
+        // ИСПРАВЛЕНИЕ: Проверяем корректность иерархии каждые 2 секунды
+        if (Time.frameCount % 120 == 0)
+        {
+            ValidateHierarchy();
         }
     }
 
@@ -214,9 +231,23 @@ public class ARWallPresenter : MonoBehaviour
         int rotationMode = GetMaskRotationModeFromManager();
         _propertyBlock.SetInt(RotationModeId, rotationMode);
 
+        // Передаем настройку горизонтального отражения
+        bool flipHorizontal = GetFlipHorizontalFromManager();
+        _propertyBlock.SetFloat(FlipHorizontalId, flipHorizontal ? 1.0f : 0.0f);
+
         // Устанавливаем параметры аспекта для коррекции UV координат
         float screenAspect = (float)Screen.width / Screen.height;
-        float maskAspect = 1.0f; // Маска квадратная
+        float maskAspect = 1.0f; // По умолчанию квадратная, будет обновлена при получении маски
+        if (lastMaskTexture != null)
+        {
+            maskAspect = (float)lastMaskTexture.width / lastMaskTexture.height;
+            // Учитываем поворот: для 180° аспект не меняется, для 90°/-90° - инвертируется
+            int currentRotationMode = GetMaskRotationModeFromManager();
+            if (currentRotationMode == 0 || currentRotationMode == 1) // +90° или -90°
+            {
+                maskAspect = 1.0f / maskAspect;
+            }
+        }
         _propertyBlock.SetFloat(ScreenAspectId, screenAspect);
         _propertyBlock.SetFloat(MaskAspectId, maskAspect);
         _propertyBlock.SetInt(ForceFullscreenId, 1); // Включаем полноэкранный режим
@@ -243,15 +274,37 @@ public class ARWallPresenter : MonoBehaviour
     /// </summary>
     public void SetClassColor(int classId, Color color)
     {
-        if (!showAllClasses)
-        {
-            // Если показываем один класс, обновляем его цвет
-            singleClassId = classId;
-            singleClassColor = color;
-            ApplyShaderProperties();
+        // ИСПРАВЛЕНИЕ: Принудительно переключаемся в режим одного класса при установке цвета
+        showAllClasses = false;
+        singleClassId = classId;
+        singleClassColor = color;
+        ApplyShaderProperties();
 
-            Debug.Log($"🎨 ARWallPresenter: Установлен цвет {ColorUtility.ToHtmlStringRGB(color)} для класса {classId}");
-        }
+        Debug.Log($"🎨 ARWallPresenter: Принудительно установлен цвет {ColorUtility.ToHtmlStringRGB(color)} для класса {classId}, режим showAllClasses=false");
+    }
+
+    /// <summary>
+    /// Принудительно переключает в режим показа только указанного класса
+    /// </summary>
+    public void SetSingleClassMode(int classId, Color color)
+    {
+        showAllClasses = false;
+        singleClassId = classId;
+        singleClassColor = color;
+        ApplyShaderProperties();
+
+        Debug.Log($"🎯 ARWallPresenter: Включен режим одного класса - ID: {classId}, цвет: {ColorUtility.ToHtmlStringRGB(color)}");
+    }
+
+    /// <summary>
+    /// Возвращает в режим показа всех классов
+    /// </summary>
+    public void SetAllClassesMode()
+    {
+        showAllClasses = true;
+        ApplyShaderProperties();
+
+        Debug.Log($"🌈 ARWallPresenter: Включен режим всех классов");
     }
 
     /// <summary>
@@ -287,19 +340,46 @@ public class ARWallPresenter : MonoBehaviour
 
     private void FitToScreen()
     {
-        Camera arCamera = FindObjectOfType<ARCameraManager>()?.GetComponent<Camera>();
+        Camera arCamera = Camera.main;
+
+        if (arCamera != null)
+        {
+            Debug.Log($"[ARWallPresenter] Найдена основная камера (Camera.main): '{arCamera.name}'. Активна: {arCamera.gameObject.activeInHierarchy}");
+        }
+        else
+        {
+            Debug.LogWarning("[ARWallPresenter] Camera.main вернула null. Основная камера не найдена или неактивна. Ищем AR-камеру...");
+            arCamera = FindObjectOfType<ARCameraManager>()?.GetComponent<Camera>();
+            if (arCamera != null)
+            {
+                Debug.Log($"[ARWallPresenter] Найдена AR-камера через FindObjectOfType<ARCameraManager>: '{arCamera.name}'. Активна: {arCamera.gameObject.activeInHierarchy}");
+            }
+        }
+
         if (arCamera == null)
         {
-            Debug.LogWarning("AR-камера не найдена!");
+            Debug.LogError("[ARWallPresenter] Не удалось найти НИ ОДНОЙ подходящей камеры (ни MainCamera, ни ARCamera). Плоскость не может быть отображена. Проверьте теги и активность камер в сцене.");
             return;
         }
 
-        transform.SetParent(arCamera.transform, false);
+        // ИСПРАВЛЕНИЕ: Убеждаемся, что родитель установлен корректно
+        if (transform.parent != arCamera.transform)
+        {
+            transform.SetParent(arCamera.transform, false);
+            Debug.Log($"🔗 ARWallPresenter: Установлен родитель '{arCamera.name}'");
+        }
+
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
 
         // Размещаем близко к камере для полного покрытия экрана
         float distance = arCamera.nearClipPlane + 0.01f;
+
+        // ИСПРАВЛЕНИЕ: В симуляторе размещаем плоскость дальше для правильного соответствия
+        if (!isRealDevice)
+        {
+            distance = 1.0f; // В симуляторе размещаем на расстоянии 1 единица
+        }
 
         // Вычисляем размеры экрана в мировых координатах на заданном расстоянии
         float height = 2.0f * distance * Mathf.Tan(arCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
@@ -321,17 +401,59 @@ public class ARWallPresenter : MonoBehaviour
         }
         else
         {
-            // В симуляторе используем минимальное масштабирование для точности
-            width *= 1.00f;  // Убираем дополнительное масштабирование
-            height *= 1.00f; // Убираем дополнительное масштабирование
+            // В симуляторе НЕ масштабируем - точное соответствие frustum камеры
+            width *= 1.0f;   // Точное соответствие размерам frustum
+            height *= 1.0f;  // Точное соответствие размерам frustum
 
-            Debug.Log($"🎮 Симулятор: точное масштабирование без увеличения - screenAspect={screenAspect:F3}");
+            Debug.Log($"🎮 Симулятор: точное соответствие frustum камеры - screenAspect={screenAspect:F3}");
         }
 
-        transform.localPosition = new Vector3(0, 0, distance);
+        // ИСПРАВЛЕНИЕ: Принудительно размещаем объект ПЕРЕД камерой
+        Vector3 targetLocalPosition = new Vector3(0, 0, -distance);
+        transform.localPosition = targetLocalPosition;
         transform.localScale = new Vector3(width, height, 1);
 
+        // Дополнительная проверка позиционирования
+        Vector3 worldPos = transform.position;
+        Vector3 cameraPos = arCamera.transform.position;
+        Vector3 directionToObject = (worldPos - cameraPos).normalized;
+        float dotProduct = Vector3.Dot(directionToObject, arCamera.transform.forward);
+
+        if (dotProduct <= 0)
+        {
+            Debug.LogWarning($"⚠️ ПРОБЛЕМА: Объект все еще позади камеры после позиционирования! dotProduct={dotProduct:F3}");
+            Debug.LogWarning($"📍 Принудительно корректируем позицию...");
+
+            // Принудительно размещаем объект точно перед камерой
+            transform.position = arCamera.transform.position + arCamera.transform.forward * distance;
+        }
+
         Debug.Log($"📐 ARWallPresenter FitToScreen: device={isRealDevice}, distance={distance}, width={width}, height={height}, aspect={arCamera.aspect}");
+
+        // ДОПОЛНИТЕЛЬНАЯ ДИАГНОСТИКА: Обновляем переменные после возможной коррекции  
+        worldPos = transform.position;
+        cameraPos = arCamera.transform.position;
+        Vector3 cameraForward = arCamera.transform.forward;
+        float distanceToCamera = Vector3.Distance(worldPos, cameraPos);
+        bool isInFrontOfCamera = Vector3.Dot((worldPos - cameraPos).normalized, cameraForward) > 0;
+        // ИСПРАВЛЕНИЕ: В локальных координатах отрицательный Z означает "перед камерой"
+        bool isInFrontLocal = transform.localPosition.z < 0;
+
+        Debug.Log($"🌍 [ARWallPresenter] Мировые координаты: Объект={worldPos}, Камера={cameraPos}");
+        Debug.Log($"📏 [ARWallPresenter] Расстояние до камеры: {distanceToCamera:F3}, Перед камерой (мировые): {isInFrontOfCamera}, Перед камерой (локальные): {isInFrontLocal}");
+        Debug.Log($"🎯 [ARWallPresenter] Локальная позиция: {transform.localPosition}, Масштаб: {transform.localScale}");
+
+        // ДОПОЛНИТЕЛЬНАЯ ДИАГНОСТИКА: Показываем все камеры в сцене
+        Camera[] allCameras = FindObjectsOfType<Camera>();
+        Debug.Log($"🎥 [ARWallPresenter] Всего камер в сцене: {allCameras.Length}");
+        for (int i = 0; i < allCameras.Length; i++)
+        {
+            Camera cam = allCameras[i];
+            string tagInfo = cam.gameObject.tag;
+            string activeInfo = cam.gameObject.activeInHierarchy ? "АКТИВНА" : "неактивна";
+            string enabledInfo = cam.enabled ? "включена" : "выключена";
+            Debug.Log($"🎥 Камера {i}: '{cam.name}' (тег: {tagInfo}, {activeInfo}, {enabledInfo}, глубина: {cam.depth})");
+        }
     }
 
     /// <summary>
@@ -391,6 +513,20 @@ public class ARWallPresenter : MonoBehaviour
         return 0;
     }
 
+    /// <summary>
+    /// Получает настройку горизонтального отражения из AsyncSegmentationManager
+    /// </summary>
+    private bool GetFlipHorizontalFromManager()
+    {
+        if (segmentationManager != null)
+        {
+            return segmentationManager.GetFlipHorizontal();
+        }
+
+        // По умолчанию отражение выключено
+        return false;
+    }
+
     private void OnFrameReceived(ARCameraFrameEventArgs eventArgs)
     {
         if (eventArgs.displayMatrix.HasValue)
@@ -420,6 +556,38 @@ public class ARWallPresenter : MonoBehaviour
             // UpdateAspectParameters(lastMaskTexture); // ОТКЛЮЧЕНО
             // _renderer.SetPropertyBlock(_propertyBlock);
             // }
+        }
+    }
+
+    /// <summary>
+    /// Проверяет корректность иерархии объектов
+    /// </summary>
+    private void ValidateHierarchy()
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            mainCamera = FindObjectOfType<ARCameraManager>()?.GetComponent<Camera>();
+        }
+
+        if (mainCamera != null && transform.parent != mainCamera.transform)
+        {
+            Debug.LogWarning($"⚠️ ARWallPresenter: Родитель потерялся! Восстанавливаем связь с '{mainCamera.name}'");
+            FitToScreen(); // Принудительно пересоздаем иерархию
+        }
+
+        // Проверим, что объект находится перед камерой
+        if (mainCamera != null)
+        {
+            Vector3 toObject = (transform.position - mainCamera.transform.position).normalized;
+            float dot = Vector3.Dot(toObject, mainCamera.transform.forward);
+
+            if (dot <= 0)
+            {
+                Debug.LogWarning($"⚠️ ARWallPresenter: Объект находится позади камеры! dot={dot:F3}");
+                Debug.LogWarning($"📍 Позиции: Объект={transform.position}, Камера={mainCamera.transform.position}");
+                Debug.LogWarning($"🔄 Локальная позиция: {transform.localPosition}");
+            }
         }
     }
 }
