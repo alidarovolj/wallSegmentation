@@ -127,52 +127,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2512387469002778309, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
   m_PrefabInstance: {fileID: 331264285}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &309017007
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 309017009}
-  - component: {fileID: 309017008}
-  m_Layer: 0
-  m_Name: ColorPaletteManagerObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &309017008
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 309017007}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30757edf5fdbc6547939a31defcc1d6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  colorSwatchPrefab: {fileID: 3384217682857608347, guid: d8d2d9e7ec11cdf418169469775d7928, type: 3}
-  paletteContainer: {fileID: 0}
---- !u!4 &309017009
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 309017007}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 560.3547, y: 330.74554, z: 619.87836}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &331264285
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -397,9 +351,9 @@ MonoBehaviour:
   arCameraManager: {fileID: 1070768330}
   visualizationMaterial: {fileID: 2100000, guid: 14d565b5b3f0d9c4bbde8f5628f16cde, type: 2}
   showAllClasses: 1
-  singleClassId: 0
+  singleClassId: 1
   singleClassColor: {r: 0, g: 0, b: 1, a: 1}
-  opacity: 0.7
+  opacity: 0.5
   isRealDevice: 0
 --- !u!33 &941417366
 MeshFilter:
@@ -514,6 +468,11 @@ MonoBehaviour:
   testMode: 0
   forceFullscreen: 1
   projectionShaderAsset: {fileID: 4800000, guid: e170c953d265b444fa948db0f7cf50fe, type: 3}
+--- !u!20 &1070768350 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 2512387469002778331, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+  m_PrefabInstance: {fileID: 331264285}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1075000274
 GameObject:
   m_ObjectHideFlags: 0
@@ -729,6 +688,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1430626605}
   - component: {fileID: 1430626604}
+  - component: {fileID: 1430626607}
+  - component: {fileID: 1430626606}
   m_Layer: 0
   m_Name: AsyncSegmentationManager
   m_TagString: Untagged
@@ -749,7 +710,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
-  modelAsset: {fileID: 5022602860645237092, guid: 8484160b6466e4cfea1d1ecad56ac98c, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: 37cd09fbcd27344fe8b8294f637cbf9f, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
   imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
   maskPostProcessingShader: {fileID: 7200000, guid: 1e8afd4d3de754dccbd0bff91ac31929, type: 3}
@@ -774,7 +735,7 @@ MonoBehaviour:
   flipHorizontal: 0
   forceFullscreenMask: 1
   useCameraAspectRatio: 1
-  selectedClass: 0
+  selectedClass: 1
   visualizationOpacity: 0.7
   paintColor: {r: 1, g: 0, b: 0, a: 1}
   showAllClasses: 0
@@ -794,10 +755,13 @@ MonoBehaviour:
   - {r: 0.5, g: 0, b: 1, a: 1}
   - {r: 1, g: 0.8, b: 0.2, a: 1}
   - {r: 0.2, g: 0.8, b: 1, a: 1}
-  useTopFormerADE20K: 1
+  useTopFormerADE20K: 0
+  useSegFormerModels: 1
+  segformerModelType: 0
+  useImageNetNormalization: 1
   enableTemporalStabilization: 1
   useBilinearUpscaling: 1
-  testMode180NoFlip: 1
+  testMode180NoFlip: 0
   testModeNoRotationWithFlip: 0
   testModePlus90: 0
   testModeMinus90: 0
@@ -817,6 +781,43 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1430626606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430626603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c4058b966d084d7eace7699b99a222c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  thumbnailSize: {x: 512, y: 512}
+  maxProjects: 100
+  enableDebugLogs: 0
+  thumbnailCamera: {fileID: 1070768350}
+  segmentationManager: {fileID: 1430626604}
+  colorPaletteManager: {fileID: 0}
+--- !u!114 &1430626607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430626603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d992bdd50249431b9d2475ef837eabe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameraManager: {fileID: 1070768330}
+  radius: 4
+  samplingStep: 2
+  timeoutSeconds: 0.5
+  useExposureNormalization: 0
+  whitePoint: {r: 1, g: 1, b: 1, a: 1}
+  enableDebugLogs: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -826,6 +827,5 @@ SceneRoots:
   - {fileID: 1075000276}
   - {fileID: 1323550134}
   - {fileID: 331264285}
-  - {fileID: 309017009}
   - {fileID: 1430626605}
   - {fileID: 941417368}
