@@ -1,0 +1,45 @@
+#pragma kernel CorrectMask
+
+// Входная текстура с индексами классов (RFloat)
+Texture2D<float> InputMask;
+// Выходная текстура с исправленными индексами (RWTexture2D<float>)
+RWTexture2D<float> ResultMask;
+
+// Порог по высоте экрана (0.0 - 1.0), выше которого стены будут считаться фоном
+float CeilingThreshold;
+// Размеры текстуры
+uint width;
+uint height;
+
+// ID классов
+#define WALL_CLASS 0
+#define BACKGROUND_CLASS 2
+
+[numthreads(8,8,1)]
+void CorrectMask (uint3 id : SV_DispatchThreadID)
+{
+    // Защита от выхода за пределы
+    if (id.x >= width || id.y >= height)
+    {
+        return;
+    }
+
+    // Получаем оригинальный индекс класса
+    float originalClass = InputMask[id.xy];
+    int classId = (int)originalClass;
+    
+    // Вычисляем нормализованную Y-координату (0=низ, 1=верх)
+    float uv_y = (float)id.y / (float)height;
+
+    // Логика коррекции: если класс - "стена" и он находится выше порога,
+    // то считаем его "фоном", чтобы убрать закрашивание потолка.
+    if (classId == WALL_CLASS && uv_y > CeilingThreshold)
+    {
+        ResultMask[id.xy] = (float)BACKGROUND_CLASS;
+    }
+    else
+    {
+        // В остальных случаях оставляем оригинальный класс
+        ResultMask[id.xy] = originalClass;
+    }
+}

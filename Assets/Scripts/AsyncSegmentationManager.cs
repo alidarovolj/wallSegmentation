@@ -147,6 +147,17 @@ public class AsyncSegmentationManager : MonoBehaviour
     [SerializeField]
     private bool useTopFormerADE20K = true;
 
+    [Header("🔥 SegFormer Models Support")]
+    [Tooltip("Use SegFormer models instead of TopFormer/BiSeNet")]
+    [SerializeField]
+    private bool useSegFormerModels = false;
+    [Tooltip("SegFormer model type selection")]
+    [SerializeField]
+    private SegFormerModelType segformerModelType = SegFormerModelType.B0_512x512;
+    [Tooltip("Enable ImageNet normalization for SegFormer")]
+    [SerializeField]
+    private bool useImageNetNormalization = true;
+
     [Tooltip("Enable temporal stabilization to reduce mask jitter during camera movement")]
     [SerializeField]
     private bool enableTemporalStabilization = true;
@@ -278,7 +289,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     void OnEnable()
     {
         // ИСПРАВЛЕНИЕ: Принудительно устанавливаем правильные значения для BiSeNet
-        ForceModelSettings();
+        // ForceModelSettings();
 
         cancellationTokenSource = new CancellationTokenSource();
         InitializeSystem();
@@ -325,7 +336,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         ApplyQualityModes();
 
         // Применяем тестовые режимы выравнивания маски
-        ApplyTestAlignmentModes();
+        // ApplyTestAlignmentModes();
 
         // Проверяем изменения в настройках отображения
         if (selectedClass != lastSelectedClass ||
@@ -471,7 +482,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             // [УДАЛЕНО] Legacy display код - используется только ARWallPresenter
 
             // ДОПОЛНИТЕЛЬНАЯ проверка: принудительно устанавливаем настройки после создания материала
-            ForceModelSettings();
+            // ForceModelSettings();
 
             string modelName = useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes";
             Debug.Log($"🎉 AsyncSegmentationManager инициализация завершена успешно! Модель: {modelName}, Режим поворота: {maskRotationMode} ({GetRotationModeDescription(maskRotationMode)})");
@@ -506,7 +517,13 @@ public class AsyncSegmentationManager : MonoBehaviour
         visualizationOpacity = 0.8f; // Полупрозрачность
 
         // Адаптивные настройки поворота в зависимости от модели
-        if (useTopFormerADE20K)
+        if (useSegFormerModels)
+        {
+            // SegFormer настройки - стандартная ориентация
+            maskRotationMode = 3; // Без поворота для SegFormer
+            flipHorizontal = false; // Без отражения
+        }
+        else if (useTopFormerADE20K)
         {
             // TopFormer требует и вертикальный, и горизонтальный flip
             maskRotationMode = 2; // 180° поворот для вертикального flip
@@ -519,7 +536,8 @@ public class AsyncSegmentationManager : MonoBehaviour
             flipHorizontal = false; // Отключаем дополнительное отражение
         }
 
-        string modelName = useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes";
+        string modelName = useSegFormerModels ? $"SegFormer {segformerModelType}" :
+                          (useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes");
         Debug.Log($"🔧 ПРИНУДИТЕЛЬНО установлены настройки {modelName}:");
         Debug.Log($"   🧱 Режим отображения: ТОЛЬКО СТЕНЫ (класс {selectedClass})");
         Debug.Log($"   📺 Показать все классы: {showAllClasses}");
@@ -587,13 +605,29 @@ public class AsyncSegmentationManager : MonoBehaviour
             await convertTask;
             if (cancellationTokenSource.IsCancellationRequested || !convertTask.IsCompletedSuccessfully) return;
 
-            NormalizeImage();
+            // Выбираем нормализацию в зависимости от типа модели
+            if (useSegFormerModels)
+            {
+                ApplySegFormerNormalization();
+            }
+            else
+            {
+                NormalizeImage();
+            }
 
             inputTensor?.Dispose();
 
             // Адаптивный размер тензора в зависимости от модели
             int tensorWidth, tensorHeight;
-            if (useTopFormerADE20K)
+            if (useSegFormerModels)
+            {
+                // SegFormer использует собственные размеры
+                Vector2Int segformerSize = GetSegFormerInputSize();
+                tensorWidth = segformerSize.x;
+                tensorHeight = segformerSize.y;
+                Debug.Log($"🔥 SegFormer {segformerModelType}: используем размер {tensorWidth}x{tensorHeight}");
+            }
+            else if (useTopFormerADE20K)
             {
                 // TopFormer работает с квадратными изображениями
                 // ФИКСИРОВАННЫЙ размер 512x512 - модель была обучена именно на этом
@@ -609,13 +643,20 @@ public class AsyncSegmentationManager : MonoBehaviour
 
             inputTensor = TextureConverter.ToTensor(normalizedTexture, tensorWidth, tensorHeight, 3);
 
-            Debug.Log($"🔧 МОДЕЛЬ {(useTopFormerADE20K ? "TopFormer" : "BiSeNet")}: текстура {normalizedTexture.width}x{normalizedTexture.height} → тензор {tensorWidth}x{tensorHeight}");
+            string currentModelName = useSegFormerModels ? $"SegFormer {segformerModelType}" :
+                                     (useTopFormerADE20K ? "TopFormer" : "BiSeNet");
+            Debug.Log($"🔧 МОДЕЛЬ {currentModelName}: текстура {normalizedTexture.width}x{normalizedTexture.height} → тензор {tensorWidth}x{tensorHeight}");
 
             // Debug.Log($"🔢 Создан тензор: {normalizedTexture.width}x{normalizedTexture.height}x3 (аспект: {(float)normalizedTexture.width / normalizedTexture.height:F2})"); // Отключено - спам
 
             worker.Schedule(inputTensor);
 
-            if (useTopFormerADE20K)
+            // Выбираем обработку в зависимости от типа модели
+            if (useSegFormerModels)
+            {
+                ProcessSegFormerOutput();
+            }
+            else if (useTopFormerADE20K)
             {
                 ProcessTopFormerOutput();
             }
@@ -871,6 +912,172 @@ public class AsyncSegmentationManager : MonoBehaviour
                     Debug.LogWarning("⚠️ ARWallPresenter не назначен и не найден в сцене! Назначьте в инспекторе AsyncSegmentationManager.");
                 }
             }
+        }
+
+        tensorDataBuffer.Dispose();
+        outputTensor.Dispose();
+    }
+
+    /// <summary>
+    /// Обрабатывает выходные данные SegFormer моделей
+    /// </summary>
+    private void ProcessSegFormerOutput()
+    {
+        var outputTensor = worker.PeekOutput() as Tensor<float>;
+        if (outputTensor == null)
+        {
+            Debug.LogError("❌ SegFormer: Выходной тензор равен null!");
+            return;
+        }
+
+        var shape = outputTensor.shape;
+        int batchSize = shape[0];
+        int numClasses = shape[1];  // SegFormer ADE20K имеет 150 классов
+        int height = shape[2];
+        int width = shape[3];
+
+        Debug.Log($"🔥 SegFormer выход: batch={batchSize}, classes={numClasses}, size={width}x{height}");
+
+        // SegFormer выдает логиты, нужен argmax как у BiSeNet
+        if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
+        {
+            ReleaseRenderTexture(segmentationMaskTexture);
+            segmentationMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
+            ReleaseRenderTexture(smoothedMaskTexture);
+            smoothedMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+            ReleaseRenderTexture(pingPongMaskTexture);
+            pingPongMaskTexture = CreateRenderTexture(width, height, RenderTextureFormat.RFloat);
+
+            if (displayMaterialInstance != null)
+            {
+                displayMaterialInstance.SetTexture("_MaskTex", segmentationMaskTexture);
+                UpdateMaterialParameters();
+            }
+        }
+
+        var tensorData = outputTensor.DownloadToArray();
+        var cmd = new CommandBuffer { name = "SegFormerPostProcessing" };
+
+        var tensorDataBuffer = new ComputeBuffer(tensorData.Length, sizeof(float));
+        tensorDataBuffer.SetData(tensorData);
+
+        // Применяем argmax шейдер для получения индексов классов
+        int kernel = argmaxShader.FindKernel("Argmax");
+        cmd.SetComputeIntParam(argmaxShader, "width", width);
+        cmd.SetComputeIntParam(argmaxShader, "height", height);
+        cmd.SetComputeIntParam(argmaxShader, "num_classes", numClasses);
+
+        cmd.SetComputeBufferParam(argmaxShader, kernel, "InputTensor", tensorDataBuffer);
+        cmd.SetComputeTextureParam(argmaxShader, kernel, "Result", segmentationMaskTexture);
+
+        int threadGroupsX = Mathf.CeilToInt(width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(height / 8.0f);
+        cmd.DispatchCompute(argmaxShader, kernel, threadGroupsX, threadGroupsY, 1);
+
+        // Увеличение разрешения маски
+        int upsampleWidth = cameraInputTexture.width;
+        int upsampleHeight = cameraInputTexture.height;
+
+        if (upsampledMaskTexture == null || upsampledMaskTexture.width != upsampleWidth || upsampledMaskTexture.height != upsampleHeight)
+        {
+            ReleaseRenderTexture(upsampledMaskTexture);
+            upsampledMaskTexture = CreateRenderTexture(upsampleWidth, upsampleHeight, RenderTextureFormat.RFloat);
+        }
+
+        if (upsampleShader != null)
+        {
+            int upsampleKernel = upsampleShader.FindKernel("BilinearUpsample");
+            cmd.SetComputeVectorParam(upsampleShader, "InputOutputScale", new Vector4(width, height, upsampleWidth, upsampleHeight));
+            cmd.SetComputeTextureParam(upsampleShader, upsampleKernel, "InputMask", segmentationMaskTexture);
+            cmd.SetComputeTextureParam(upsampleShader, upsampleKernel, "OutputMask", upsampledMaskTexture);
+
+            int upsampleThreadGroupsX = Mathf.CeilToInt(upsampleWidth / 8.0f);
+            int upsampleThreadGroupsY = Mathf.CeilToInt(upsampleHeight / 8.0f);
+            cmd.DispatchCompute(upsampleShader, upsampleKernel, upsampleThreadGroupsX, upsampleThreadGroupsY, 1);
+        }
+        else
+        {
+            Graphics.Blit(segmentationMaskTexture, upsampledMaskTexture);
+        }
+
+        RenderTexture finalMask = upsampledMaskTexture;
+
+        // Постобработка маски (сглаживание)
+        if (enableMaskSmoothing && maskSmoothingIterations > 0)
+        {
+            ReleaseRenderTexture(smoothedMaskTexture);
+            smoothedMaskTexture = CreateRenderTexture(upsampleWidth, upsampleHeight, RenderTextureFormat.RFloat);
+            ReleaseRenderTexture(pingPongMaskTexture);
+            pingPongMaskTexture = CreateRenderTexture(upsampleWidth, upsampleHeight, RenderTextureFormat.RFloat);
+
+            RenderTexture source = upsampledMaskTexture;
+            RenderTexture destination = smoothedMaskTexture;
+
+            if (useAdvancedPostProcessing && advancedPostProcessingShader != null)
+            {
+                // Улучшенная постобработка
+                int edgeAwareKernel = advancedPostProcessingShader.FindKernel("EdgeAwareSmoothing");
+                cmd.SetComputeIntParam(advancedPostProcessingShader, "width", upsampleWidth);
+                cmd.SetComputeIntParam(advancedPostProcessingShader, "height", upsampleHeight);
+                cmd.SetComputeFloatParam(advancedPostProcessingShader, "edgeThreshold", edgeThreshold);
+                cmd.SetComputeFloatParam(advancedPostProcessingShader, "contrastFactor", contrastFactor);
+
+                int advancedThreadGroupsX = Mathf.CeilToInt(upsampleWidth / 8.0f);
+                int advancedThreadGroupsY = Mathf.CeilToInt(upsampleHeight / 8.0f);
+
+                for (int i = 0; i < maskSmoothingIterations; i++)
+                {
+                    cmd.SetComputeTextureParam(advancedPostProcessingShader, edgeAwareKernel, "InputMask", source);
+                    cmd.SetComputeTextureParam(advancedPostProcessingShader, edgeAwareKernel, "ResultMask", destination);
+                    cmd.DispatchCompute(advancedPostProcessingShader, edgeAwareKernel, advancedThreadGroupsX, advancedThreadGroupsY, 1);
+
+                    var temp = source;
+                    source = destination;
+                    destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
+                }
+
+                finalMask = source;
+            }
+            else if (maskPostProcessingShader != null)
+            {
+                // Обычное медианное сглаживание
+                int postProcessingKernel = maskPostProcessingShader.FindKernel("MedianFilter");
+                cmd.SetComputeIntParam(maskPostProcessingShader, "width", upsampleWidth);
+                cmd.SetComputeIntParam(maskPostProcessingShader, "height", upsampleHeight);
+
+                for (int i = 0; i < maskSmoothingIterations; i++)
+                {
+                    cmd.SetComputeTextureParam(maskPostProcessingShader, postProcessingKernel, "InputMask", source);
+                    cmd.SetComputeTextureParam(maskPostProcessingShader, postProcessingKernel, "ResultMask", destination);
+                    int smoothThreadGroupsX = Mathf.CeilToInt(upsampleWidth / 8.0f);
+                    int smoothThreadGroupsY = Mathf.CeilToInt(upsampleHeight / 8.0f);
+                    cmd.DispatchCompute(maskPostProcessingShader, postProcessingKernel, smoothThreadGroupsX, smoothThreadGroupsY, 1);
+
+                    var temp = source;
+                    source = destination;
+                    destination = (source == smoothedMaskTexture) ? pingPongMaskTexture : smoothedMaskTexture;
+                }
+                finalMask = source;
+            }
+        }
+
+        Graphics.ExecuteCommandBuffer(cmd);
+        cmd.Dispose();
+
+        // Передаем маску в ARWallPresenter
+        if (arWallPresenter != null)
+        {
+            arWallPresenter.SetSegmentationMask(finalMask);
+
+            if (displayMaterialInstance != null)
+            {
+                float cropOffsetX = displayMaterialInstance.GetFloat("_CropOffsetX");
+                float cropOffsetY = displayMaterialInstance.GetFloat("_CropOffsetY");
+                float cropScale = displayMaterialInstance.GetFloat("_CropScale");
+                arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
+            }
+            Debug.Log("🔥 SegFormer маска передана в ARWallPresenter");
         }
 
         tensorDataBuffer.Dispose();
@@ -1627,6 +1834,119 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     #endregion
 
+    #region SegFormer Integration
+
+    /// <summary>
+    /// Типы моделей SegFormer
+    /// </summary>
+    public enum SegFormerModelType
+    {
+        B0_512x512,    // Быстрая модель для real-time (15MB)
+        B5_640x640     // Высококачественная модель (341MB)
+    }
+
+    /// <summary>
+    /// ADE20K Indoor классы для SegFormer
+    /// </summary>
+    private readonly Dictionary<int, string> segFormerADE20KClasses = new Dictionary<int, string>()
+    {
+        {0, "wall"},           // стены - основной класс для покраски
+        {1, "building"},       // здание (внешние стены)  
+        {2, "sky"},           // небо (не актуально для indoor)
+        {3, "floor"},         // пол
+        {4, "tree"},          // растения
+        {5, "ceiling"},       // потолок
+        {6, "road"},          // дорога (не актуально)
+        {7, "bed"},           // кровать
+        {8, "windowpane"},    // окно
+        {9, "grass"},         // трава
+        {10, "cabinet"},      // шкаф
+        {11, "sidewalk"},     // тротуар
+        {12, "person"},       // человек
+        {13, "earth"},        // земля
+        {14, "door"},         // дверь
+        {15, "table"},        // стол
+        {16, "mountain"},     // гора
+        {17, "plant"},        // растение
+        {18, "curtain"},      // штора
+        {19, "chair"},        // стул
+        {20, "car"}           // машина
+    };
+
+    /// <summary>
+    /// Цвета для SegFormer классов (optimized for indoor)
+    /// </summary>
+    private readonly Dictionary<int, Color> segFormerClassColors = new Dictionary<int, Color>()
+    {
+        {0, new Color(1.0f, 0.2f, 0.2f, 1f)},   // wall - красный  
+        {1, new Color(0.2f, 0.8f, 0.2f, 1f)},   // building - зеленый
+        {2, new Color(0.5f, 0.8f, 1.0f, 1f)},   // sky - голубой
+        {3, new Color(0.8f, 0.6f, 0.2f, 1f)},   // floor - коричневый/желтый
+        {4, new Color(0.2f, 0.6f, 0.2f, 1f)},   // tree - темно-зеленый
+        {5, new Color(0.8f, 0.8f, 0.8f, 1f)},   // ceiling - светло-серый
+        {6, new Color(0.4f, 0.4f, 0.4f, 1f)},   // road - серый
+        {7, new Color(0.6f, 0.3f, 0.8f, 1f)},   // bed - фиолетовый
+        {8, new Color(0.2f, 0.6f, 0.8f, 1f)},   // windowpane - синий
+        {9, new Color(0.4f, 0.8f, 0.4f, 1f)},   // grass - светло-зеленый
+        {10, new Color(0.6f, 0.4f, 0.2f, 1f)},  // cabinet - коричневый
+        {11, new Color(0.7f, 0.7f, 0.7f, 1f)},  // sidewalk - светло-серый
+        {12, new Color(1.0f, 0.7f, 0.7f, 1f)},  // person - розовый
+        {13, new Color(0.5f, 0.3f, 0.2f, 1f)},  // earth - темно-коричневый
+        {14, new Color(0.4f, 0.2f, 0.0f, 1f)},  // door - темно-коричневый
+        {15, new Color(0.8f, 0.8f, 0.4f, 1f)},  // table - светло-желтый
+        {16, new Color(0.6f, 0.6f, 0.6f, 1f)},  // mountain - серый
+        {17, new Color(0.3f, 0.7f, 0.3f, 1f)},  // plant - зеленый
+        {18, new Color(0.7f, 0.5f, 0.9f, 1f)},  // curtain - светло-фиолетовый
+        {19, new Color(0.9f, 0.6f, 0.3f, 1f)},  // chair - светло-коричневый
+        {20, new Color(0.3f, 0.3f, 0.3f, 1f)}   // car - темно-серый
+    };
+
+    /// <summary>
+    /// Получает размер входного тензора для SegFormer модели
+    /// </summary>
+    private Vector2Int GetSegFormerInputSize()
+    {
+        switch (segformerModelType)
+        {
+            case SegFormerModelType.B0_512x512:
+                return new Vector2Int(512, 512);
+            case SegFormerModelType.B5_640x640:
+                return new Vector2Int(640, 640);
+            default:
+                return new Vector2Int(512, 512);
+        }
+    }
+
+    /// <summary>
+    /// Применяет ImageNet нормализацию для SegFormer
+    /// </summary>
+    private void ApplySegFormerNormalization()
+    {
+        if (imageNormalizerShader == null || !useImageNetNormalization)
+        {
+            // Если нет шейдера нормализации или отключена, используем стандартную
+            NormalizeImage();
+            return;
+        }
+
+        int kernel = imageNormalizerShader.FindKernel("Normalize");
+
+        // ImageNet нормализация для SegFormer
+        imageNormalizerShader.SetVector("image_mean", new Vector4(0.485f, 0.456f, 0.406f, 0));
+        imageNormalizerShader.SetVector("image_std", new Vector4(0.229f, 0.224f, 0.225f, 0));
+
+        imageNormalizerShader.SetTexture(kernel, "InputTexture", cameraInputTexture);
+        imageNormalizerShader.SetTexture(kernel, "OutputTexture", normalizedTexture);
+
+        int threadGroupsX = Mathf.CeilToInt(cameraInputTexture.width / 8.0f);
+        int threadGroupsY = Mathf.CeilToInt(cameraInputTexture.height / 8.0f);
+        imageNormalizerShader.Dispatch(kernel, threadGroupsX, threadGroupsY, 1);
+
+        Debug.Log("✅ Применена ImageNet нормализация для SegFormer");
+    }
+
+    #endregion
+
     /// <summary>
     /// Обновляет параметры материала для отображения классов
     /// </summary>
@@ -1879,7 +2199,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     [ContextMenu("Тест: Исправить ориентацию BiSeNet")]
     public void FixBiSeNetOrientation()
     {
-        ForceModelSettings();
+        // ForceModelSettings();
         Debug.Log("🔧 Принудительно исправлена ориентация и настройки BiSeNet");
     }
 
@@ -2181,6 +2501,68 @@ public class AsyncSegmentationManager : MonoBehaviour
                 Debug.Log("🎯 ПРИМЕНЕН режим: -90°");
             }
         }
+    }
+
+    /// <summary>
+    /// Публичные методы для работы с SegFormer
+    /// </summary>
+    public void EnableSegFormerModels(bool enable = true)
+    {
+        useSegFormerModels = enable;
+        if (enable)
+        {
+            useTopFormerADE20K = false; // Отключаем TopFormer
+        }
+        ForceModelSettings();
+        Debug.Log($"🔥 SegFormer модели: {(enable ? "ВКЛЮЧЕНЫ" : "ВЫКЛЮЧЕНЫ")}");
+    }
+
+    public void SetSegFormerModelType(SegFormerModelType modelType)
+    {
+        segformerModelType = modelType;
+        if (useSegFormerModels)
+        {
+            ForceModelSettings();
+            Debug.Log($"🔥 SegFormer тип модели изменен на: {modelType}");
+        }
+    }
+
+    public void EnableImageNetNormalization(bool enable = true)
+    {
+        useImageNetNormalization = enable;
+        Debug.Log($"🔥 ImageNet нормализация: {(enable ? "ВКЛЮЧЕНА" : "ВЫКЛЮЧЕНА")}");
+    }
+
+    /// <summary>
+    /// Быстрое переключение на SegFormer B0 (производительность)
+    /// </summary>
+    [ContextMenu("SegFormer: Быстрая модель B0")]
+    public void SwitchToSegFormerB0()
+    {
+        EnableSegFormerModels(true);
+        SetSegFormerModelType(SegFormerModelType.B0_512x512);
+        Debug.Log("🚀 Переключено на SegFormer B0 (быстрая модель)");
+    }
+
+    /// <summary>
+    /// Быстрое переключение на SegFormer B5 (качество)
+    /// </summary>
+    [ContextMenu("SegFormer: Качественная модель B5")]
+    public void SwitchToSegFormerB5()
+    {
+        EnableSegFormerModels(true);
+        SetSegFormerModelType(SegFormerModelType.B5_640x640);
+        Debug.Log("💎 Переключено на SegFormer B5 (высокое качество)");
+    }
+
+    /// <summary>
+    /// Вернуться к TopFormer/BiSeNet
+    /// </summary>
+    [ContextMenu("SegFormer: Вернуться к TopFormer/BiSeNet")]
+    public void SwitchToLegacyModels()
+    {
+        EnableSegFormerModels(false);
+        Debug.Log("🔄 Возврат к TopFormer/BiSeNet моделям");
     }
 
     /// <summary>
