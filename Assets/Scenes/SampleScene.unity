@@ -122,6 +122,102 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &5345907
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5345908}
+  m_Layer: 0
+  m_Name: Markers Container
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5345908
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5345907}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 505.81192, y: 343.61133, z: 623.5372}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &247674143
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 247674144}
+  - component: {fileID: 247674145}
+  m_Layer: 0
+  m_Name: ARMaskInteraction
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &247674144
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 247674143}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 816793975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &247674145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 247674143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 056caacfbd741104f953343a540cd62c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  segmentationManager: {fileID: 1430626604}
+  occlusionManager: {fileID: 1070768337}
+  cameraManager: {fileID: 1070768330}
+  arCamera: {fileID: 1070768350}
+  enableInteraction: 1
+  clickCooldown: 0.3
+  uiLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  markerPrefab: {fileID: 4712692056189993606, guid: 64d94a35c934b6643bd7d5c23e6f93db, type: 3}
+  markersParent: {fileID: 5345908}
+  classColors:
+  - {r: 1, g: 0, b: 0, a: 1}
+  - {r: 0, g: 1, b: 0, a: 1}
+  - {r: 0, g: 0, b: 1, a: 1}
+  - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  - {r: 1, g: 0, b: 1, a: 1}
+  - {r: 0, g: 1, b: 1, a: 1}
+  enableDebugLogs: 1
+  showRaycastDebug: 1
+  visualizeDepth: 0
 --- !u!1 &253087724 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2512387469002778309, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
@@ -201,7 +297,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2512387470890420967, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 247674144}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2512387469002778309, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
       insertIndex: -1
@@ -317,6 +416,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &816793975 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2512387470890420967, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+  m_PrefabInstance: {fileID: 331264285}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &941417364
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,7 +814,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
-  modelAsset: {fileID: 5022602860645237092, guid: 37cd09fbcd27344fe8b8294f637cbf9f, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: 73d54473af41f4974ae8e89c0bb5d552, type: 3}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
   imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
   maskPostProcessingShader: {fileID: 7200000, guid: 1e8afd4d3de754dccbd0bff91ac31929, type: 3}
@@ -731,7 +835,7 @@ MonoBehaviour:
   maxAccuracyMode: 1
   balancedMode: 0
   performanceMode: 0
-  maskRotationMode: 0
+  maskRotationMode: 3
   flipHorizontal: 0
   forceFullscreenMask: 1
   useCameraAspectRatio: 1
@@ -766,6 +870,8 @@ MonoBehaviour:
   testModePlus90: 0
   testModeMinus90: 0
   frameSkipRate: 1
+  segmentationEnabled: 1
+  frameSkip: 2
 --- !u!4 &1430626605
 Transform:
   m_ObjectHideFlags: 0
@@ -829,3 +935,4 @@ SceneRoots:
   - {fileID: 331264285}
   - {fileID: 1430626605}
   - {fileID: 941417368}
+  - {fileID: 5345908}

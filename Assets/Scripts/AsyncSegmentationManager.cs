@@ -73,7 +73,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     [Header("Отладка и логирование")]
     [Tooltip("Включить подробные логи (отключить для production)")]
     [SerializeField]
-    private bool enableDebugLogging = false;
+    private bool enableDebugLogging = false; // ПРИНУДИТЕЛЬНО ОТКЛЮЧЕНО для устранения спама логов
     [Tooltip("Показать контуры классов для отладки")]
     [SerializeField]
     private bool showClassOutlines = false;
@@ -90,10 +90,10 @@ public class AsyncSegmentationManager : MonoBehaviour
     private bool performanceMode = false;
     [Tooltip("Режим поворота маски (0=+90°, 1=-90°, 2=180°, 3=без поворота)")]
     [SerializeField, Range(0, 3)]
-    private int maskRotationMode = 1; // ИСПРАВЛЕНИЕ: BiSeNet требует поворот на -90° для правильной ориентации
+    private int maskRotationMode = 3; // ИСПРАВЛЕНИЕ: TopFormer без поворота для правильной ориентации
     [Tooltip("Горизонтальное отражение маски для исправления инверсии")]
     [SerializeField]
-    private bool flipHorizontal = true; // ИСПРАВЛЕНИЕ: BiSeNet требует горизонтальное отражение
+    private bool flipHorizontal = false; // ИСПРАВЛЕНИЕ: TopFormer без отражения - убираем отзеркаливание
     [Tooltip("Принудительно растягивать маску на весь экран")]
     [SerializeField]
     private bool forceFullscreenMask = true;
@@ -153,7 +153,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     private bool useSegFormerModels = false;
     [Tooltip("SegFormer model type selection")]
     [SerializeField]
-    private SegFormerModelType segformerModelType = SegFormerModelType.B0_512x512;
+    private SegFormerModelType segformerModelType = SegFormerModelType.B1_512x512;
     [Tooltip("Enable ImageNet normalization for SegFormer")]
     [SerializeField]
     private bool useImageNetNormalization = true;
@@ -286,6 +286,23 @@ public class AsyncSegmentationManager : MonoBehaviour
     private float lastOpacity = -1f;
     private bool lastShowAll = true;
 
+    private bool isInitialized = false;
+
+    // Стабилизированные параметры для плавной обрезки (crop)
+    private float stableCropOffsetX = 0f;
+    private float stableCropOffsetY = 0f;
+    private float stableCropScale = 1f;
+
+    [Tooltip("Enable segmentation processing")]
+    [SerializeField]
+    private bool segmentationEnabled = true;
+
+    [Tooltip("Сколько кадров пропускать между обработкой. 0 = каждый кадр, 1 = каждый второй и т.д.")]
+    [SerializeField, Range(0, 10)]
+    private int frameSkip = 2; // Оптимизация: обрабатываем каждый 3-й кадр по умолчанию
+
+
+
     void OnEnable()
     {
         // ИСПРАВЛЕНИЕ: Принудительно устанавливаем правильные значения для BiSeNet
@@ -313,56 +330,22 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     void Update()
     {
-        // Передаем параметры ориентации в шейдер
-        if (displayMaterialInstance != null)
-        {
-            bool isPortrait = Screen.height > Screen.width;
-            displayMaterialInstance.SetFloat("_IsPortrait", isPortrait ? 1.0f : 0.0f);
-
-            // Убираем анимацию прозрачности, чтобы изолировать проблему
-            displayMaterialInstance.SetFloat("_Opacity", visualizationOpacity);
-        }
-
-        // Проверяем изменение размера экрана и обновляем полноэкранный режим
-        // [УДАЛЕНО] Legacy fullscreen код заменен ARWallPresenter.FitToScreen()
-
-        // Отладка: определяем класс по клику
-        if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
-        {
-            StartCoroutine(GetClassAtScreenPositionCoroutine(Input.mousePosition));
-        }
-
-        // Применяем режимы качества
-        ApplyQualityModes();
-
-        // Применяем тестовые режимы выравнивания маски
-        // ApplyTestAlignmentModes();
-
-        // Проверяем изменения в настройках отображения
-        if (selectedClass != lastSelectedClass ||
-            Mathf.Abs(visualizationOpacity - lastOpacity) > 0.01f ||
-            showAllClasses != lastShowAll)
-        {
-            UpdateMaterialParameters();
-            lastSelectedClass = selectedClass;
-            lastOpacity = visualizationOpacity;
-            lastShowAll = showAllClasses;
-        }
-
-        // AR режим
-        if (ARSession.state < ARSessionState.SessionTracking || worker == null || isProcessing)
+        if (!segmentationEnabled || worker == null || !arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
         {
             return;
         }
 
-        if (frameCount % (frameSkipRate + 1) == 0)
+        if (frameCount % (frameSkip + 1) == 0)
         {
-            if (arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
-            {
-                ProcessFrameAsync(cpuImage);
-            }
+            // Асинхронный метод заберет владение и сам освободит cpuImage
+            ProcessFrameAsync(cpuImage);
         }
-
+        else
+        {
+            // Если кадр пропускается, мы должны освободить его здесь
+            cpuImage.Dispose();
+        }
+        
         frameCount++;
     }
 
@@ -376,7 +359,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             return;
         }
 
-        if (frameCount % (frameSkipRate + 1) == 0)
+        if (frameCount % (frameSkip + 1) == 0)
         {
             if (arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
             {
@@ -390,6 +373,11 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     private void InitializeSystem()
     {
+        if (isInitialized)
+        {
+            return;
+        }
+
         arCameraManager = FindObjectOfType<ARCameraManager>();
         // [УДАЛЕНО] Автопоиск RawImage больше не нужен
 
@@ -419,8 +407,6 @@ public class AsyncSegmentationManager : MonoBehaviour
                 Debug.LogError("🚨 'processingResolution' в инспекторе имеет значение 0! Установите корректное значение (например, 512x512).");
                 return;
             }
-            // Модель BiSeNet использует разрешение 720x960
-            Debug.Log($"ℹ️ Модель BiSeNet использует разрешение 720x960 (настройки Inspector: {processingResolution.x}x{processingResolution.y})");
 
             worker = new Worker(runtimeModel, BackendType.GPUCompute);
             Debug.Log("✅ Worker создан с GPUCompute backend");
@@ -482,10 +468,14 @@ public class AsyncSegmentationManager : MonoBehaviour
             // [УДАЛЕНО] Legacy display код - используется только ARWallPresenter
 
             // ДОПОЛНИТЕЛЬНАЯ проверка: принудительно устанавливаем настройки после создания материала
-            // ForceModelSettings();
+            ForceModelSettings();
 
-            string modelName = useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes";
-            Debug.Log($"🎉 AsyncSegmentationManager инициализация завершена успешно! Модель: {modelName}, Режим поворота: {maskRotationMode} ({GetRotationModeDescription(maskRotationMode)})");
+            string modelName;
+            if (useSegFormerModels) modelName = $"SegFormer {segformerModelType}";
+            else if (useTopFormerADE20K) modelName = "TopFormer ADE20K";
+            else modelName = "BiSeNet Cityscapes";
+
+            Debug.Log($"🎉 AsyncSegmentationManager инициализация завершена успешно! Активная модель: {modelName}, Режим поворота: {maskRotationMode} ({GetRotationModeDescription(maskRotationMode)})");
 
             // Отправляем Flutter уведомление о готовности Unity
             Invoke(nameof(NotifyFlutterReady), 2f);
@@ -499,6 +489,8 @@ public class AsyncSegmentationManager : MonoBehaviour
         // ForceWallOnlyMode(); // ОТКЛЮЧЕНО
 
         // [УДАЛЕНО] ForceMaterialUpdate корутина больше не нужна
+
+        isInitialized = true;
     }
 
     /// <summary>
@@ -514,20 +506,20 @@ public class AsyncSegmentationManager : MonoBehaviour
         showCeilings = false;        // НЕ показывать потолки
 
         // Высокая видимость для четких границ
-        visualizationOpacity = 0.8f; // Полупрозрачность
+        visualizationOpacity = 0.7f; // Оптимальная полупрозрачность
 
         // Адаптивные настройки поворота в зависимости от модели
         if (useSegFormerModels)
         {
-            // SegFormer настройки - стандартная ориентация
-            maskRotationMode = 3; // Без поворота для SegFormer
-            flipHorizontal = false; // Без отражения
+            // ПОЛЬЗОВАТЕЛЬСКАЯ НАСТРОЙКА: Поворот вправо на 90° с горизонтальным отражением
+            maskRotationMode = 0; // Поворот на +90° (вправо)
+            flipHorizontal = true; // С горизонтальным отражением
         }
         else if (useTopFormerADE20K)
         {
-            // TopFormer требует и вертикальный, и горизонтальный flip
-            maskRotationMode = 2; // 180° поворот для вертикального flip
-            flipHorizontal = true; // Включаем горизонтальное отражение
+            // ИСПРАВЛЕНИЕ: TopFormer без дополнительных поворотов для корректной ориентации
+            maskRotationMode = 3; // Без поворота - правильная ориентация
+            flipHorizontal = false; // Без отражения - убираем отзеркаливание
         }
         else
         {
@@ -538,7 +530,7 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         string modelName = useSegFormerModels ? $"SegFormer {segformerModelType}" :
                           (useTopFormerADE20K ? "TopFormer ADE20K" : "BiSeNet Cityscapes");
-        Debug.Log($"🔧 ПРИНУДИТЕЛЬНО установлены настройки {modelName}:");
+        Debug.Log($"🔧 ПРИНУДИТЕЛЬНО установлены настройки для '{modelName}':");
         Debug.Log($"   🧱 Режим отображения: ТОЛЬКО СТЕНЫ (класс {selectedClass})");
         Debug.Log($"   📺 Показать все классы: {showAllClasses}");
         Debug.Log($"   🔆 Opacity: {visualizationOpacity}");
@@ -625,7 +617,7 @@ public class AsyncSegmentationManager : MonoBehaviour
                 Vector2Int segformerSize = GetSegFormerInputSize();
                 tensorWidth = segformerSize.x;
                 tensorHeight = segformerSize.y;
-                Debug.Log($"🔥 SegFormer {segformerModelType}: используем размер {tensorWidth}x{tensorHeight}");
+                // Debug.Log($"🔥 SegFormer {segformerModelType}: используем размер {tensorWidth}x{tensorHeight}"); // ОТКЛЮЧЕНО: спам
             }
             else if (useTopFormerADE20K)
             {
@@ -645,7 +637,7 @@ public class AsyncSegmentationManager : MonoBehaviour
 
             string currentModelName = useSegFormerModels ? $"SegFormer {segformerModelType}" :
                                      (useTopFormerADE20K ? "TopFormer" : "BiSeNet");
-            Debug.Log($"🔧 МОДЕЛЬ {currentModelName}: текстура {normalizedTexture.width}x{normalizedTexture.height} → тензор {tensorWidth}x{tensorHeight}");
+            // Debug.Log($"🔧 МОДЕЛЬ {currentModelName}: текстура {normalizedTexture.width}x{normalizedTexture.height} → тензор {tensorWidth}x{tensorHeight}"); // ОТКЛЮЧЕНО: спам
 
             // Debug.Log($"🔢 Создан тензор: {normalizedTexture.width}x{normalizedTexture.height}x3 (аспект: {(float)normalizedTexture.width / normalizedTexture.height:F2})"); // Отключено - спам
 
@@ -936,7 +928,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         int height = shape[2];
         int width = shape[3];
 
-        Debug.Log($"🔥 SegFormer выход: batch={batchSize}, classes={numClasses}, size={width}x{height}");
+        // Debug.Log($"🔥 SegFormer выход: batch={batchSize}, classes={numClasses}, size={width}x{height}"); // ОТКЛЮЧЕНО: спам
 
         // SegFormer выдает логиты, нужен argmax как у BiSeNet
         if (segmentationMaskTexture == null || segmentationMaskTexture.width != width || segmentationMaskTexture.height != height)
@@ -1068,16 +1060,16 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Передаем маску в ARWallPresenter
         if (arWallPresenter != null)
         {
-            arWallPresenter.SetSegmentationMask(finalMask);
+            var maskToSend = (enableMaskSmoothing && maskSmoothingIterations > 0 && smoothedMaskTexture != null) ? smoothedMaskTexture : upsampledMaskTexture;
+            arWallPresenter.SetSegmentationMask(maskToSend);
+            
+            float cropOffsetX = stableCropOffsetX;
+            float cropOffsetY = stableCropOffsetY;
+            float cropScale = stableCropScale;
+            arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
 
-            if (displayMaterialInstance != null)
-            {
-                float cropOffsetX = displayMaterialInstance.GetFloat("_CropOffsetX");
-                float cropOffsetY = displayMaterialInstance.GetFloat("_CropOffsetY");
-                float cropScale = displayMaterialInstance.GetFloat("_CropScale");
-                arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
-            }
-            Debug.Log("🔥 SegFormer маска передана в ARWallPresenter");
+            // ОТКЛЮЧЕНО: Слишком частый вызов, вызывает спам в логах
+            // Debug.Log("🔥 SegFormer маска передана в ARWallPresenter");
         }
 
         tensorDataBuffer.Dispose();
@@ -1281,10 +1273,11 @@ public class AsyncSegmentationManager : MonoBehaviour
         {
             int maxDeviceResolution = GetOptimalResolutionForDevice();
             targetResolution = Mathf.Min(targetResolution, maxDeviceResolution);
-            if (enableDebugLogging)
-            {
-                Debug.Log($"🎯 Адаптивное разрешение включено: {targetResolution}x{targetResolution} (устройство поддерживает до {maxDeviceResolution}x{maxDeviceResolution})");
-            }
+            // ОТКЛЮЧЕНО: спам на каждый кадр
+            // if (enableDebugLogging)
+            // {
+            //     Debug.Log($"🎯 Адаптивное разрешение включено: {targetResolution}x{targetResolution} (устройство поддерживает до {maxDeviceResolution}x{maxDeviceResolution})");
+            // }
         }
         else
         {
@@ -1304,17 +1297,43 @@ public class AsyncSegmentationManager : MonoBehaviour
         outputWidth = Mathf.Min(outputWidth, cpuImage.width);
         outputHeight = Mathf.Min(outputHeight, cpuImage.height);
 
-        string modelTargetResolution = useTopFormerADE20K ? "TopFormer=512x512" : "BiSeNet=960x720";
-        Debug.Log($"🔧 ПРОМЕЖУТОЧНОЕ РАЗРЕШЕНИЕ: камера={cpuImage.width}x{cpuImage.height} → текстура={outputWidth}x{outputHeight} → {modelTargetResolution}");
+        string modelTargetResolution;
+        if (useSegFormerModels)
+        {
+            Vector2Int segformerSize = GetSegFormerInputSize();
+            modelTargetResolution = $"SegFormer {segformerModelType}={segformerSize.x}x{segformerSize.y}";
+        }
+        else if (useTopFormerADE20K)
+        {
+            modelTargetResolution = "TopFormer=512x512";
+        }
+        else
+        {
+            modelTargetResolution = "BiSeNet=960x720";
+        }
+
+        // ОТКЛЮЧЕНО: спам логов на каждый кадр
+        // if(enableDebugLogging)
+        // {
+        //     Debug.Log($"🔧 ПРОМЕЖУТОЧНОЕ РАЗРЕШЕНИЕ: камера={cpuImage.width}x{cpuImage.height} → текстура={outputWidth}x{outputHeight} → {modelTargetResolution}");
+        // }
 
         // Но сохраняем информацию об аспекте для корректного отображения маски
         string modelName = useTopFormerADE20K ? "TopFormer" : "BiSeNet";
-        Debug.Log($"🔲 {modelName} разрешение: {outputWidth}x{outputHeight} для модели (камера: {cameraAspect:F2})");
+        // ОТКЛЮЧЕНО: спам на каждый кадр
+        // if(enableDebugLogging)
+        // {
+        //      Debug.Log($"🔲 Входное разрешение для модели: {outputWidth}x{outputHeight} (соотношение сторон камеры: {cameraAspect:F2})");
+        // }
 
         // Debug.Log($"🔲 ПРИНУДИТЕЛЬНО устанавливаем размер входа модели: {outputWidth}x{outputHeight} (аспект камеры: {cameraAspect:F2})"); // Отключено - спам
 
         // ДИАГНОСТИКА: Проверяем размеры камеры
-        Debug.Log($"🔍 ДИАГНОСТИКА камеры: width={cpuImage.width}, height={cpuImage.height}");
+        // ОТКЛЮЧЕНО: спам на каждый кадр
+        // if(enableDebugLogging)
+        // {
+        //     Debug.Log($"🔍 ДИАГНОСТИКА камеры: width={cpuImage.width}, height={cpuImage.height}");
+        // }
 
         // ИСПРАВЛЕНИЕ CROP: Используем весь кадр без crop для BiSeNet
         int cropX = 0;
@@ -1324,9 +1343,12 @@ public class AsyncSegmentationManager : MonoBehaviour
 
         // ИСПРАВЛЕНИЕ: cropY=0 правильно для ландшафтной камеры
         // Проблема в том, что камера 1920x1440 (ландшафт), а экран 1170x2532 (портрет)
-        Debug.Log($"🔍 КАМЕРА vs ЭКРАН: камера={cpuImage.width}x{cpuImage.height} (соотношение {(float)cpuImage.width / cpuImage.height:F2}), экран=1170x2532 (соотношение 0.46)");
-
-        Debug.Log($"🔍 CROP РАСЧЕТ: cropX={cropX}, cropY={cropY}, cropWidth={cropWidth}, cropHeight={cropHeight}");
+        // ОТКЛЮЧЕНО: спам на каждый кадр
+        // if(enableDebugLogging)
+        // {
+        //     Debug.Log($"🔍 КАМЕРА vs ЭКРАН: камера={cpuImage.width}x{cpuImage.height} (соотношение {(float)cpuImage.width / cpuImage.height:F2}), экран={Screen.width}x{Screen.height} (соотношение {(float)Screen.width / Screen.height:F2})");
+        //     Debug.Log($"🔍 CROP РАСЧЕТ: cropX={cropX}, cropY={cropY}, cropWidth={cropWidth}, cropHeight={cropHeight}");
+        // }
 
         conversionParams = new XRCpuImage.ConversionParams
         {
@@ -1336,7 +1358,11 @@ public class AsyncSegmentationManager : MonoBehaviour
             transformation = transformation
         };
 
-        Debug.Log($"📐 Полный кадр: {cropX},{cropY} размер {cropWidth}x{cropHeight} → {outputWidth}x{outputHeight}");
+        // ОТКЛЮЧЕНО: спам на каждый кадр
+        // if(enableDebugLogging)
+        // {
+        //     Debug.Log($"📐 Полный кадр: {cropX},{cropY} размер {cropWidth}x{cropHeight} → {outputWidth}x{outputHeight}");
+        // }
 
         // ИСПРАВЛЕНИЕ: Сохраняем информацию о crop для правильного отображения
         float cropOffsetX = (float)cropX / cpuImage.width;
@@ -1349,9 +1375,9 @@ public class AsyncSegmentationManager : MonoBehaviour
         // cropOffsetX += 0.05f; // ОТКЛЮЧЕНО: сдвигаем маску ВПРАВО 
         // cropOffsetY += 0.12f; // ОТКЛЮЧЕНО: сильно опускаем маску ВНИЗ (было 0.08f)
 
-        // ПРИНУДИТЕЛЬНОЕ логирование для диагностики
-        Debug.Log($"🔧 АГРЕССИВНАЯ КОРРЕКЦИЯ crop: X {originalOffsetX:F3}→{cropOffsetX:F3}, Y {originalOffsetY:F3}→{cropOffsetY:F3}");
-        Debug.Log($"🔍 ПРОВЕРКА ПРИМЕНЕНИЯ: передаем в шейдер cropOffsetX={cropOffsetX:F3}, cropOffsetY={cropOffsetY:F3}, cropScale={cropScale:F3}");
+        // ОТКЛЮЧЕНО: спам на каждый кадр
+        // Debug.Log($"🔧 АГРЕССИВНАЯ КОРРЕКЦИЯ crop: X {originalOffsetX:F3}→{cropOffsetX:F3}, Y {originalOffsetY:F3}→{cropOffsetY:F3}");
+        // Debug.Log($"🔍 ПРОВЕРКА ПРИМЕНЕНИЯ: передаем в шейдер cropOffsetX={cropOffsetX:F3}, cropOffsetY={cropOffsetY:F3}, cropScale={cropScale:F3}");
 
         // Передаем crop параметры в материал для корректного UV mapping
         if (displayMaterialInstance != null)
@@ -1367,7 +1393,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             ReleaseRenderTexture(normalizedTexture);
             cameraInputTexture = CreateRenderTexture(outputWidth, outputHeight, RenderTextureFormat.ARGB32);
             normalizedTexture = CreateRenderTexture(outputWidth, outputHeight, RenderTextureFormat.ARGBFloat);
-            Debug.Log($"📐 Текстуры пересозданы: {outputWidth}x{outputHeight} (аспект камеры: {cameraAspect:F2})");
+            // Debug.Log($"📐 Текстуры пересозданы: {outputWidth}x{outputHeight} (аспект камеры: {cameraAspect:F2})"); // ОТКЛЮЧЕНО: спам
         }
 
         var conversionRequest = cpuImage.ConvertAsync(conversionParams);
@@ -1841,8 +1867,12 @@ public class AsyncSegmentationManager : MonoBehaviour
     /// </summary>
     public enum SegFormerModelType
     {
-        B0_512x512,    // Быстрая модель для real-time (15MB)
-        B5_640x640     // Высококачественная модель (341MB)
+        B0_512x512,
+        B1_512x512,
+        B2_512x512,
+        B3_512x512,
+        B4_512x512,
+        B5_640x640,
     }
 
     /// <summary>
@@ -1909,6 +1939,10 @@ public class AsyncSegmentationManager : MonoBehaviour
         switch (segformerModelType)
         {
             case SegFormerModelType.B0_512x512:
+            case SegFormerModelType.B1_512x512:
+            case SegFormerModelType.B2_512x512:
+            case SegFormerModelType.B3_512x512:
+            case SegFormerModelType.B4_512x512:
                 return new Vector2Int(512, 512);
             case SegFormerModelType.B5_640x640:
                 return new Vector2Int(640, 640);
@@ -1942,7 +1976,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         int threadGroupsY = Mathf.CeilToInt(cameraInputTexture.height / 8.0f);
         imageNormalizerShader.Dispatch(kernel, threadGroupsX, threadGroupsY, 1);
 
-        Debug.Log("✅ Применена ImageNet нормализация для SegFormer");
+        // Debug.Log("✅ Применена ImageNet нормализация для SegFormer"); // ОТКЛЮЧЕНО: спам
     }
 
     #endregion
@@ -2408,10 +2442,10 @@ public class AsyncSegmentationManager : MonoBehaviour
     {
         switch (mode)
         {
-            case 0: return "0° (без поворота)";
-            case 1: return "90° (поворот влево)";
-            case 2: return "180° (вертикальный flip)";
-            case 3: return "270° (поворот вправо)";
+            case 0: return "+90°";
+            case 1: return "-90°";
+            case 2: return "180°";
+            case 3: return "Без поворота (0°)";
             default: return $"неизвестный режим {mode}";
         }
     }
@@ -2449,15 +2483,15 @@ public class AsyncSegmentationManager : MonoBehaviour
         if (testMode180NoFlip)
         {
             // Адаптивная логика в зависимости от модели
-            int targetRotationMode = useTopFormerADE20K ? 2 : 2; // TopFormer: 180° (вертикальный flip), BiSeNet: 180°
-            bool targetFlipHorizontal = useTopFormerADE20K ? true : false; // TopFormer: + горизонтальный flip
+            int targetRotationMode = useTopFormerADE20K ? 3 : 2; // TopFormer: без поворота (исправление), BiSeNet: 180°
+            bool targetFlipHorizontal = useTopFormerADE20K ? false : false; // TopFormer: без отражения (исправление)
 
             if (maskRotationMode != targetRotationMode || flipHorizontal != targetFlipHorizontal)
             {
                 maskRotationMode = targetRotationMode;
                 flipHorizontal = targetFlipHorizontal;
                 UpdateMaterialParameters();
-                string modelName = useTopFormerADE20K ? "TopFormer (180° + горизонтальный flip)" : "BiSeNet (180°)";
+                string modelName = useTopFormerADE20K ? "TopFormer (без поворота - исправление отзеркаливания)" : "BiSeNet (180°)";
                 Debug.Log($"🎯 ПРИМЕНЕН режим для {modelName}: rotation={targetRotationMode}, flip={targetFlipHorizontal}");
             }
         }
@@ -2745,7 +2779,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Флагманские устройства - максимальное качество
         if ((coreCount >= 8 && memoryMB >= 6000) || isModernAppleDevice)
         {
-            Debug.Log($"🚀 Флагманское устройство ({deviceModel}): используем разрешение 512x512");
+            // Debug.Log($"🚀 Флагманское устройство ({deviceModel}): используем разрешение 512x512"); // ОТКЛЮЧЕНО: спам
             return 512;
         }
         // Современные средне-высокие устройства
