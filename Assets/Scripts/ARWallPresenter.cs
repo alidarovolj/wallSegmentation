@@ -183,7 +183,8 @@ public class ARWallPresenter : MonoBehaviour
 
             _renderer.SetPropertyBlock(_propertyBlock);
 
-            Debug.Log($"✅ ARWallPresenter: Маска сегментации получена и установлена в шейдер! Размер: {maskTexture.width}x{maskTexture.height}");
+            // ОТКЛЮЧЕНО: Слишком частый вызов, вызывает спам в логах
+            // Debug.Log($"✅ ARWallPresenter: Маска сегментации получена и установлена в шейдер! Размер: {maskTexture.width}x{maskTexture.height}");
         }
         else
         {
@@ -255,7 +256,7 @@ public class ARWallPresenter : MonoBehaviour
         // Логируем изредка для отладки
         if (Time.frameCount < 5 || Time.frameCount % 300 == 0)
         {
-            Debug.Log($"📊 ARWallPresenter передает в шейдер: screenAspect={screenAspect:F3}, maskAspect={maskAspect:F1}");
+            // Debug.Log($"📊 ARWallPresenter передает в шейдер: screenAspect={screenAspect:F3}, maskAspect={maskAspect:F1}"); // Отключен для уменьшения спама
         }
 
         // Включение принудительного полноэкранного режима и установка ротации БОЛЬШЕ НЕ НУЖНЫ
@@ -326,8 +327,10 @@ public class ARWallPresenter : MonoBehaviour
             _renderer.SetPropertyBlock(_propertyBlock);
         }
 
-        Debug.Log($"📐 ARWallPresenter: Crop параметры установлены - Offset({cropOffsetX:F3}, {cropOffsetY:F3}), Scale: {cropScale:F3}");
-        Debug.Log($"🔍 ARWallPresenter: PropertyBlock установлен на renderer={(_renderer != null ? "OK" : "NULL")}");
+        // ОТКЛЮЧЕНО: Слишком частый вызов, вызывает спам в логах
+        // Debug.Log($"📐 ARWallPresenter: Crop параметры установлены - Offset({cropOffsetX:F3}, {cropOffsetY:F3}), Scale: {cropScale:F3}");
+        // ОТКЛЮЧЕНО: Слишком частый вызов, вызывает спам в логах
+        // Debug.Log($"🔍 ARWallPresenter: PropertyBlock установлен на renderer={(_renderer != null ? "OK" : "NULL")}");
     }
 
     [ContextMenu("Обновить размер плоскости")]
