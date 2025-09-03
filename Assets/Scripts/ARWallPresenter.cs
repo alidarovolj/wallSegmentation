@@ -37,6 +37,10 @@ public class ARWallPresenter : MonoBehaviour
     [SerializeField]
     private float opacity = 0.7f;
 
+    [Tooltip("НОВОЕ: Показывать маску только по требованию (при клике)")]
+    [SerializeField]
+    private bool showMaskOnlyOnDemand = true; // Скрыть маску по умолчанию
+
     [Header("Настройки для реального устройства")]
     [Tooltip("Включить, если приложение запущено на реальном AR-устройстве (не в симуляторе).")]
     [SerializeField]
@@ -218,7 +222,9 @@ public class ARWallPresenter : MonoBehaviour
             _propertyBlock.SetColor(PaintColorId, singleClassColor);
         }
 
-        _propertyBlock.SetFloat(OpacityId, opacity);
+        // НОВОЕ: Управляем видимостью маски через opacity
+        float effectiveOpacity = showMaskOnlyOnDemand ? 0.0f : opacity; // Скрываем маску если режим "по требованию"
+        _propertyBlock.SetFloat(OpacityId, effectiveOpacity);
 
         // Определяем ориентацию экрана - БОЛЬШЕ НЕ НУЖНО, DisplayMatrix делает это автоматически
         // bool isPortrait = Screen.height > Screen.width;
@@ -592,5 +598,37 @@ public class ARWallPresenter : MonoBehaviour
                 Debug.LogWarning($"🔄 Локальная позиция: {transform.localPosition}");
             }
         }
+    }
+
+    /// <summary>
+    /// НОВОЕ: Временно показывает маску (для режима "по требованию")
+    /// </summary>
+    public void ShowMaskTemporarily(float duration = 2.0f)
+    {
+        if (showMaskOnlyOnDemand)
+        {
+            StartCoroutine(ShowMaskForDuration(duration));
+        }
+    }
+
+    /// <summary>
+    /// НОВОЕ: Корутина для временного показа маски
+    /// </summary>
+    private System.Collections.IEnumerator ShowMaskForDuration(float duration)
+    {
+        // Временно показываем маску
+        _propertyBlock.SetFloat(OpacityId, opacity);
+        _renderer.SetPropertyBlock(_propertyBlock);
+
+        Debug.Log($"🎯 Показываем маску временно на {duration:F1}с");
+
+        // Ждем указанное время
+        yield return new WaitForSeconds(duration);
+
+        // Скрываем маску обратно
+        _propertyBlock.SetFloat(OpacityId, 0.0f);
+        _renderer.SetPropertyBlock(_propertyBlock);
+
+        Debug.Log("👻 Маска скрыта обратно");
     }
 }

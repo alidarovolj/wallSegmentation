@@ -297,9 +297,16 @@ public class AsyncSegmentationManager : MonoBehaviour
     [SerializeField]
     private bool segmentationEnabled = true;
 
+    [Tooltip("НОВОЕ: Обрабатывать сегментацию только при клике (а не каждый кадр)")]
+    [SerializeField]
+    private bool processOnClickOnly = true; // РЕЖИМ ЭКОНОМИИ: только по требованию
+
     [Tooltip("Сколько кадров пропускать между обработкой. 0 = каждый кадр, 1 = каждый второй и т.д.")]
     [SerializeField, Range(0, 10)]
     private int frameSkip = 2; // Оптимизация: обрабатываем каждый 3-й кадр по умолчанию
+
+    // Переменная для отслеживания пользовательских изменений поворота
+    private float lastRotationChangeTime = 0f;
 
 
 
@@ -330,6 +337,12 @@ public class AsyncSegmentationManager : MonoBehaviour
 
     void Update()
     {
+        // НОВОЕ: Если включен режим "только по клику", не обрабатываем кадры в Update
+        if (processOnClickOnly)
+        {
+            return; // Сегментация будет вызываться только через ProcessSingleFrame()
+        }
+
         if (!segmentationEnabled || worker == null || !arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
         {
             return;
@@ -345,8 +358,29 @@ public class AsyncSegmentationManager : MonoBehaviour
             // Если кадр пропускается, мы должны освободить его здесь
             cpuImage.Dispose();
         }
-        
+
         frameCount++;
+    }
+
+    /// <summary>
+    /// НОВОЕ: Обрабатывает один кадр по требованию (для режима "только по клику")
+    /// </summary>
+    public void ProcessSingleFrame()
+    {
+        if (!segmentationEnabled || worker == null)
+        {
+            Debug.LogWarning("⚠️ Сегментация не готова для обработки одного кадра");
+            return;
+        }
+
+        if (!arCameraManager.TryAcquireLatestCpuImage(out XRCpuImage cpuImage))
+        {
+            Debug.LogWarning("⚠️ Не удалось получить кадр камеры");
+            return;
+        }
+
+        Debug.Log("🎯 Обработка одного кадра по требованию...");
+        ProcessFrameAsync(cpuImage);
     }
 
     /// <summary>
@@ -508,24 +542,31 @@ public class AsyncSegmentationManager : MonoBehaviour
         // Высокая видимость для четких границ
         visualizationOpacity = 0.7f; // Оптимальная полупрозрачность
 
-        // Адаптивные настройки поворота в зависимости от модели
-        if (useSegFormerModels)
+        // ИСПРАВЛЕНИЕ: НЕ перезаписываем настройки поворота, если они были изменены пользователем
+        // Проверяем, были ли настройки поворота изменены вручную
+        bool rotationWasModified = (Time.time - lastRotationChangeTime < 5.0f); // 5 секунд "защиты"
+
+        if (!rotationWasModified)
         {
-            // ПОЛЬЗОВАТЕЛЬСКАЯ НАСТРОЙКА: Поворот вправо на 90° с горизонтальным отражением
-            maskRotationMode = 0; // Поворот на +90° (вправо)
-            flipHorizontal = true; // С горизонтальным отражением
-        }
-        else if (useTopFormerADE20K)
-        {
-            // ИСПРАВЛЕНИЕ: TopFormer без дополнительных поворотов для корректной ориентации
-            maskRotationMode = 3; // Без поворота - правильная ориентация
-            flipHorizontal = false; // Без отражения - убираем отзеркаливание
-        }
-        else
-        {
-            // BiSeNet требует поворот на 180°
-            maskRotationMode = 2; // Поворот на 180°
-            flipHorizontal = false; // Отключаем дополнительное отражение
+            // Адаптивные настройки поворота в зависимости от модели (только при первом запуске)
+            if (useSegFormerModels)
+            {
+                // ИСПРАВЛЕНИЕ: SegFormer требует поворот на +90°
+                maskRotationMode = 0; // Поворот на +90° вправо
+                flipHorizontal = false;
+            }
+            else if (useTopFormerADE20K)
+            {
+                // ИСПРАВЛЕНИЕ: TopFormer без дополнительных поворотов для корректной ориентации
+                maskRotationMode = 3; // Без поворота - правильная ориентация
+                flipHorizontal = false; // Без отражения - убираем отзеркаливание
+            }
+            else
+            {
+                // BiSeNet требует поворот на 180°
+                maskRotationMode = 2; // Поворот на 180°
+                flipHorizontal = false; // Отключаем дополнительное отражение
+            }
         }
 
         string modelName = useSegFormerModels ? $"SegFormer {segformerModelType}" :
@@ -1062,7 +1103,7 @@ public class AsyncSegmentationManager : MonoBehaviour
         {
             var maskToSend = (enableMaskSmoothing && maskSmoothingIterations > 0 && smoothedMaskTexture != null) ? smoothedMaskTexture : upsampledMaskTexture;
             arWallPresenter.SetSegmentationMask(maskToSend);
-            
+
             float cropOffsetX = stableCropOffsetX;
             float cropOffsetY = stableCropOffsetY;
             float cropScale = stableCropScale;
@@ -1372,8 +1413,11 @@ public class AsyncSegmentationManager : MonoBehaviour
         // АГРЕССИВНАЯ КОРРЕКЦИЯ: Исправляем смещение вправо
         float originalOffsetX = cropOffsetX;
         float originalOffsetY = cropOffsetY;
-        // cropOffsetX += 0.05f; // ОТКЛЮЧЕНО: сдвигаем маску ВПРАВО 
-        // cropOffsetY += 0.12f; // ОТКЛЮЧЕНО: сильно опускаем маску ВНИЗ (было 0.08f)
+
+        // НОВАЯ КОРРЕКЦИЯ для поворота +90°
+        // Смещаем маску ВНИЗ и ВПРАВО для компенсации поворота
+        cropOffsetX = 0.05f;
+        cropOffsetY = 0.12f;
 
         // ОТКЛЮЧЕНО: спам на каждый кадр
         // Debug.Log($"🔧 АГРЕССИВНАЯ КОРРЕКЦИЯ crop: X {originalOffsetX:F3}→{cropOffsetX:F3}, Y {originalOffsetY:F3}→{cropOffsetY:F3}");
@@ -2208,6 +2252,7 @@ public class AsyncSegmentationManager : MonoBehaviour
     public void TestNextRotationMode()
     {
         maskRotationMode = (maskRotationMode + 1) % 4;
+        lastRotationChangeTime = Time.time; // Отмечаем время изменения
         string[] modeNames = { "+90°", "-90°", "180°", "Без поворота" };
         Debug.Log($"🔄 Режим поворота изменен на: {maskRotationMode} ({modeNames[maskRotationMode]})");
         UpdateMaterialParameters();
@@ -2244,8 +2289,22 @@ public class AsyncSegmentationManager : MonoBehaviour
     public void ToggleHorizontalFlip()
     {
         flipHorizontal = !flipHorizontal;
+        lastRotationChangeTime = Time.time; // Отмечаем время изменения
         UpdateMaterialParameters();
         Debug.Log($"🔄 Горизонтальное отражение: {(flipHorizontal ? "ВКЛЮЧЕНО" : "ВЫКЛЮЧЕНО")}");
+    }
+
+    /// <summary>
+    /// Быстрая настройка: поворот на 180° + горизонтальное отражение
+    /// </summary>
+    [ContextMenu("Тест: Поворот 180° + отражение")]
+    public void SetRotation180WithFlip()
+    {
+        maskRotationMode = 2; // 180°
+        flipHorizontal = true; // С горизонтальным отражением
+        lastRotationChangeTime = Time.time; // Защищаем от перезаписи
+        UpdateMaterialParameters();
+        Debug.Log("🎯 Установлено: поворот 180° + горизонтальное отражение");
     }
 
 

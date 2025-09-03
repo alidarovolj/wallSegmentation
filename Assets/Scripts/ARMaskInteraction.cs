@@ -23,7 +23,8 @@ public class ARMaskInteraction : MonoBehaviour
     [Header("3D Маркеры")]
     [SerializeField] private GameObject markerPrefab;
     [SerializeField] private Transform markersParent;
-    [SerializeField] private Color[] classColors = new Color[] 
+    [SerializeField]
+    private Color[] classColors = new Color[]
     {
         Color.red,      // Стены  
         Color.green,    // Пол
@@ -52,10 +53,10 @@ public class ARMaskInteraction : MonoBehaviour
         // Автопоиск зависимостей если не назначены
         if (segmentationManager == null)
             segmentationManager = FindObjectOfType<AsyncSegmentationManager>();
-        
+
         if (occlusionManager == null)
             occlusionManager = FindObjectOfType<AROcclusionManager>();
-        
+
         if (cameraManager == null)
             cameraManager = FindObjectOfType<ARCameraManager>();
 
@@ -93,7 +94,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // Обновляем матрицы камеры для точных расчетов
         UpdateCameraMatrices();
-        
+
         // ОТЛАДКА: Проверяем каждые 5 секунд
         if (Time.frameCount % 300 == 0)
         {
@@ -106,6 +107,13 @@ public class ARMaskInteraction : MonoBehaviour
     /// </summary>
     private void HandleInput()
     {
+        // КРИТИЧЕСКАЯ ПРОВЕРКА: блокировка от OneClickSurfaceGenerator
+        var oneClickGenerator = FindObjectOfType<OneClickSurfaceGenerator>();
+        if (oneClickGenerator != null && oneClickGenerator.IsProcessing())
+        {
+            return; // Блокируем обработку если OneClick активен
+        }
+
         // Проверяем кулдаун
         if (Time.time - lastClickTime < clickCooldown)
             return;
@@ -128,7 +136,7 @@ public class ARMaskInteraction : MonoBehaviour
         if (inputDetected)
         {
             LogDebug($"🖱️ Обнаружен ввод в позиции: {screenPosition}");
-            
+
             // Избегаем кликов по UI
             if (IsPointerOverUI(screenPosition))
             {
@@ -152,7 +160,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // 1. Получаем класс сегментации в точке касания
         int detectedClass = GetSegmentationClassAtPosition(screenPos);
-        
+
         if (detectedClass < 0)
         {
             LogDebug("❌ Не удалось определить класс сегментации");
@@ -161,7 +169,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // 2. Получаем глубину в точке касания
         float depth = GetDepthAtPosition(screenPos);
-        
+
         if (depth <= 0)
         {
             LogDebug("❌ Не удалось получить данные о глубине");
@@ -172,7 +180,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // 3. Преобразуем 2D позицию в 3D мировые координаты
         Vector3 worldPosition = ScreenToWorldPosition(screenPos, depth);
-        
+
         if (worldPosition == Vector3.zero)
         {
             LogDebug("❌ Не удалось преобразовать в 3D координаты");
@@ -181,7 +189,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // 4. Создаем 3D маркер
         CreateWorldMarker(worldPosition, detectedClass);
-        
+
         LogDebug($"✅ 3D маркер создан: класс={GetClassName(detectedClass)}, позиция={worldPosition}, глубина={depth:F2}m");
     }
 
@@ -202,7 +210,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // Преобразуем экранные координаты в UV координаты маски
         Vector2 screenUV = new Vector2(screenPos.x / Screen.width, screenPos.y / Screen.height);
-        
+
         // Применяем тот же поворот что и в AsyncSegmentationManager (поворот на +90 градусов)
         float uv_x = 1.0f - screenUV.y;
         float uv_y = screenUV.x;
@@ -218,7 +226,7 @@ public class ARMaskInteraction : MonoBehaviour
 
         // Для быстрого доступа используем простое приближение
         // В реальной реализации можно добавить AsyncGPUReadback для точности
-        
+
         // Пока возвращаем класс "стена" (0) как наиболее вероятный
         LogDebug($"🎯 UV координаты: ({uv_x:F3}, {uv_y:F3}) -> текстура: ({textureX}, {textureY})");
         return 0; // Стены - самый частый случай для покраски
@@ -239,19 +247,19 @@ public class ARMaskInteraction : MonoBehaviour
 
         // Получаем данные глубины из AR Occlusion Manager
         var depthTexture = occlusionManager.environmentDepthTexture;
-        
+
         // Преобразуем экранные координаты в UV координаты текстуры глубины
         Vector2 depthUV = new Vector2(screenPos.x / Screen.width, screenPos.y / Screen.height);
-        
+
         // Учитываем ориентацию и поворот устройства
         // AR Foundation может поворачивать текстуру глубины
         int textureX = (int)(depthUV.x * depthTexture.width);
         int textureY = (int)(depthUV.y * depthTexture.height);
-        
+
         // Для упрощения возвращаем фиксированную глубину
         // В полной реализации здесь будет чтение пикселя из текстуры глубины
         float estimatedDepth = 1.5f;
-        
+
         LogDebug($"📊 Глубина в точке ({textureX}, {textureY}): {estimatedDepth:F2}m");
         return estimatedDepth;
     }
@@ -267,7 +275,7 @@ public class ARMaskInteraction : MonoBehaviour
             return 0f;
 
         Ray ray = mainCamera.ScreenPointToRay(screenPos);
-        
+
         if (showRaycastDebug)
         {
             Debug.DrawRay(ray.origin, ray.direction * 5f, Color.red, 1f);
@@ -299,23 +307,23 @@ public class ARMaskInteraction : MonoBehaviour
 
         // Нормализуем экранные координаты в диапазон [0,1]
         Vector2 normalizedPos = new Vector2(screenPos.x / Screen.width, screenPos.y / Screen.height);
-        
+
         // Преобразуем в NDC (Normalized Device Coordinates) [-1,1]
         Vector2 ndc = new Vector2(normalizedPos.x * 2f - 1f, normalizedPos.y * 2f - 1f);
-        
+
         // Создаем точку в пространстве клипа
         Vector4 clipSpacePos = new Vector4(ndc.x, ndc.y, -1f, 1f);
-        
+
         // Преобразуем через обратную матрицу проекции
         Vector4 viewSpacePos = inverseProjectionMatrix * clipSpacePos;
         viewSpacePos.z = -depth; // Устанавливаем нужную глубину
         viewSpacePos.w = 1f;
-        
+
         // Преобразуем в мировые координаты
         Vector4 worldSpacePos = mainCamera.cameraToWorldMatrix * viewSpacePos;
-        
+
         Vector3 worldPos = new Vector3(worldSpacePos.x, worldSpacePos.y, worldSpacePos.z);
-        
+
         LogDebug($"🌍 Преобразование: экран={screenPos} -> мир={worldPos} (глубина={depth:F2}m)");
         return worldPos;
     }
@@ -334,7 +342,7 @@ public class ARMaskInteraction : MonoBehaviour
         }
 
         GameObject marker;
-        
+
         // Создаем маркер (префаб или простую сферу)
         if (markerPrefab != null)
         {
@@ -345,45 +353,45 @@ public class ARMaskInteraction : MonoBehaviour
             // Создаем простую сферу как маркер
             marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             marker.transform.SetParent(markersParent);
-            
+
             // Устанавливаем размер маркера (увеличиваем для лучшей видимости)
             marker.transform.localScale = Vector3.one * 0.1f; // 10см диаметр
-            
+
             // Убираем коллайдер, чтобы не мешал
             Collider collider = marker.GetComponent<Collider>();
             if (collider != null)
                 DestroyImmediate(collider);
         }
-        
+
         // ИСПРАВЛЕНИЕ: Корректируем позицию - маркеры должны быть ПЕРЕД камерой
         Vector3 correctedPosition = worldPosition;
-        
+
         // Если маркер за камерой, перемещаем его вперед
         if (mainCamera != null)
         {
             Vector3 cameraForward = mainCamera.transform.forward;
             Vector3 toCameraDirection = (mainCamera.transform.position - worldPosition).normalized;
             float dotProduct = Vector3.Dot(cameraForward, toCameraDirection);
-            
+
             if (dotProduct > 0) // Маркер за камерой
             {
                 correctedPosition = mainCamera.transform.position + cameraForward * 2f; // 2 метра перед камерой
                 LogDebug($"⚠️ Маркер был за камерой, перемещен в {correctedPosition}");
             }
         }
-        
+
         // Устанавливаем позицию маркера
         marker.transform.position = correctedPosition;
-        
+
         // ВАЖНО: Убеждаемся, что маркер активен и видим
         marker.SetActive(true);
-        
+
         // Уникальное имя для отладки
         marker.name = $"Marker_{GetClassName(classIndex)}_{markersParent.childCount}";
-        
+
         // Устанавливаем цвет в зависимости от класса
         Color markerColor = GetColorForClass(classIndex);
-        
+
         // Применяем цвет ко всем рендерерам маркера
         Renderer[] renderers = marker.GetComponentsInChildren<Renderer>();
         foreach (var renderer in renderers)
@@ -426,15 +434,15 @@ public class ARMaskInteraction : MonoBehaviour
         // Создаем простую сферу как маркер
         GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         sphere.transform.localScale = Vector3.one * 0.05f; // 5см диаметр
-        
+
         // Делаем его префабом (пока просто сохраняем ссылку)
         markerPrefab = sphere;
-        
+
         // Убираем коллайдер, чтобы не мешал
         Collider collider = sphere.GetComponent<Collider>();
         if (collider != null)
             DestroyImmediate(collider);
-            
+
         LogDebug("🔵 Создан простой маркер по умолчанию (сфера 5см)");
     }
 
@@ -458,7 +466,7 @@ public class ARMaskInteraction : MonoBehaviour
     {
         if (classIndex >= 0 && classIndex < classColors.Length)
             return classColors[classIndex];
-        
+
         return Color.white; // Цвет по умолчанию
     }
 
@@ -470,10 +478,10 @@ public class ARMaskInteraction : MonoBehaviour
     private string GetClassName(int classIndex)
     {
         string[] classNames = { "Стена", "Пол", "Потолок", "Окно", "Дверь", "Другое" };
-        
+
         if (classIndex >= 0 && classIndex < classNames.Length)
             return classNames[classIndex];
-            
+
         return $"Класс_{classIndex}";
     }
 
