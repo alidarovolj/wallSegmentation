@@ -125,3 +125,4 @@ simple_*.py
 # Submodules (exclude from tracking)
 TopFormer/
 ONNX-*/
+CleanBuild/
