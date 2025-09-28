@@ -1,0 +1,921 @@
+{
+
+"Instructions Readme": "1) Open Chrome or Edge, 2) go to chrome://tracing, 3) click Load, 4) navigate to this file.",
+"processInfo": {
+    "os": "Unix 15.6.0",
+    "cpuCount": "8",
+    "mappedPhysicalMemory": "40mb",
+    "commandLine": "/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/build/deploy_arm64/il2cpp.dll --compile-cpp --platform=iOS --baselib-directory=/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Libraries --additional-defines=IL2CPP_DEBUG=0 --dotnetprofile=unityaot-macos --profiler-report --print-command-line --external-lib-il2-cpp=/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Libraries/libil2cpp.a --generatedcppdir=Il2CppOutputProject/Source/il2cppOutput --architecture=arm64 --outputpath=/Users/olzhasalidarov/Library/Developer/Xcode/DerivedData/Unity-iPhone-cyduefywzflpcgbjvqsgbpluizgj/Build/Products/ReleaseForRunning-iphoneos/libGameAssembly.a --cachedirectory=/Users/olzhasalidarov/Library/Developer/Xcode/DerivedData/Unity-iPhone-cyduefywzflpcgbjvqsgbpluizgj/Build/Intermediates.noindex/Unity-iPhone.build/ReleaseForRunning-iphoneos/artifacts/arm64 --configuration=Release"
+},
+
+"traceEvents":[
+{ "pid": 29364, "tid": -1, "ph": "M", "name": "process_name", "args": { "name": "il2cpp_outer" } },
+{ "pid": 29364, "tid": -1, "ph": "M", "name": "process_sort_index", "args": { "sort_index": "-1" } },
+{ "pid": 29364, "tid": 12884901888, "ph": "M", "name": "thread_name", "args": { "name": "GC - Gen2" } },
+{ "pid": 29364, "tid": 1, "ts": 1755358240728716, "dur": 1058, "ph": "X", "name": "GC - Gen2", "args": {} },
+{ "pid": 29364, "tid": 8589934592, "ph": "M", "name": "thread_name", "args": { "name": "GC - Gen1" } },
+{ "pid": 29364, "tid": 4294967296, "ph": "M", "name": "thread_name", "args": { "name": "GC - Gen0" } },
+{ "pid": 29364, "tid": 1, "ph": "M", "name": "thread_name", "args": { "name": "Main thread" } },
+{ "pid": 29364, "tid": 1, "ts": 1755358236848155, "dur": 3862356, "ph": "X", "name": "il2cpp.exe", "args": {"analytics": "1"} },
+{ "pid": 29364, "tid": 1, "ts": 1755358236849253, "dur": 31582, "ph": "X", "name": "ParseArguments", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358236880838, "dur": 4726, "ph": "X", "name": "RegisterRuntimeEventListeners", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358236892491, "dur": 3806378, "ph": "X", "name": "BeeDriverRunner.ExecuteIl2Cpp", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240701856, "dur": 7147, "ph": "X", "name": "Write Analytics", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240710512, "dur": 11410, "ph": "X", "name": "UnregisterRuntimeEventListeners", "args": {} },
+{ "pid": 29364, "tid": -1, "ph": "M", "name": "process_name", "args": { "name": "BeeDriver" } },
+{ "pid": 29364, "tid": -1, "ph": "M", "name": "process_sort_index", "args": { "sort_index": "-2" } },
+{ "pid": 29364, "tid": 1, "ph": "M", "name": "thread_name", "args": { "name": "Main thread" } },
+{ "pid": 29364, "tid": 1, "ts": 1755358236959419, "dur": 3738254, "ph": "X", "name": "Build FinalProgram", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358236960633, "dur": 5220, "ph": "X", "name": "Writing build program input data", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358236965867, "dur": 3731645, "ph": "X", "name": "Running build system backend", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240697567, "dur": 106, "ph": "X", "name": "Finishing", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240706792, "dur": 1069, "ph": "X", "name": "Main thread", "args": {} },
+{ "cat":"", "pid":12345, "tid":0, "ts":0, "ph":"M", "name":"process_name", "args": { "name":"bee_backend" } }
+,{ "pid":12345, "tid":0, "ts":1755358237003825, "dur":1937, "ph":"X", "name": "DriverInitData",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":0, "ts":1755358237005787, "dur":4401, "ph":"X", "name": "RemoveStaleOutputs",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":0, "ts":1755358237010208, "dur":70, "ph":"X", "name": "BuildQueueInit",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":0, "ts":1755358237010284, "dur":351, "ph":"X", "name": "EnqueueRequestedNodes",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":0, "ts":1755358237010636, "dur":3664771, "ph":"X", "name": "WaitForBuildFinished", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":0, "ts":1755358240675603, "dur":5390, "ph":"X", "name": "Tundra",  "args": { "detail":"Write AllBuiltNodes" }}
+,{ "pid":12345, "tid":0, "ts":1755358240680994, "dur":390, "ph":"X", "name": "Tundra",  "args": { "detail":"SaveScanCache" }}
+,{ "pid":12345, "tid":1, "ts":1755358237010240, "dur":399, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":1, "ts":1755358237010640, "dur":33019, "ph":"X", "name": "CheckDagSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":1, "ts":1755358237043687, "dur":811, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Assembly-CSharp.cpp" }}
+,{ "pid":12345, "tid":1, "ts":1755358237044498, "dur":4763, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Assembly-CSharp.cpp" }}
+,{ "pid":12345, "tid":1, "ts":1755358237049265, "dur":139, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":1, "ts":1755358237043686, "dur":5718, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/oim3lul6k7ht.o" }}
+,{ "pid":12345, "tid":1, "ts":1755358237078161, "dur":1548522, "ph":"X", "name": "C_iOS_arm64",  "args": { "detail":"z7ln/oim3lul6k7ht.o" }}
+,{ "pid":12345, "tid":1, "ts":1755358238626740, "dur":84, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"Lib_iOS_arm64 z7ln/libGameAssembly.a" }}
+,{ "pid":12345, "tid":1, "ts":1755358238627129, "dur":1896031, "ph":"X", "name": "Lib_iOS_arm64",  "args": { "detail":"z7ln/libGameAssembly.a" }}
+,{ "pid":12345, "tid":1, "ts":1755358240523338, "dur":152010, "ph":"X", "name": "CopyFiles",  "args": { "detail":"/Users/olzhasalidarov/Library/Developer/Xcode/DerivedData/Unity-iPhone-cyduefywzflpcgbjvqsgbpluizgj/Build/Products/ReleaseForRunning-iphoneos/libGameAssembly.a" }}
+,{ "pid":12345, "tid":2, "ts":1755358237010241, "dur":400, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237010642, "dur":431, "ph":"X", "name": "EarlyStatNonGeneratedFile",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237011073, "dur":32628, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237043702, "dur":174, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VFXModule_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237043876, "dur":806, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VFXModule_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237044696, "dur":55, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++" }}
+,{ "pid":12345, "tid":2, "ts":1755358237044753, "dur":50, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237043702, "dur":1101, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ry4y6ymdcy1x.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237044829, "dur":64, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIModule_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237044893, "dur":69, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIModule_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237044968, "dur":258, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237044828, "dur":399, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rjxi387dyi6g.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237045227, "dur":50, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237045319, "dur":181, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SpriteShapeModule_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237045698, "dur":194, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237045278, "dur":614, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bbsnnk1cj4qr.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237046122, "dur":256, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237045921, "dur":457, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/xey5pqgtz6tf.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237046426, "dur":221, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.OculusQuestSupport_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237046661, "dur":396, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237046409, "dur":648, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/q1o8c6yedgch.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047122, "dur":126, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047251, "dur":98, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047105, "dur":244, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/de8zjkizd6yf.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047370, "dur":95, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/oqjgsh5nuer1.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047499, "dur":61, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis.iOSBLAS_CodeGen.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047474, "dur":159, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/28gcfq1ktptg.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047696, "dur":51, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047645, "dur":102, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/m8dd1yre9o16.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047829, "dur":71, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047776, "dur":124, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/k4jxi96mmf8b.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047944, "dur":112, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppMetadataRegistration.c" }}
+,{ "pid":12345, "tid":2, "ts":1755358237048067, "dur":118, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237047924, "dur":261, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8jutlihl7f0h.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237048346, "dur":282, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237048203, "dur":425, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bfzwnr541hin.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237048677, "dur":686, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VFXModule.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237049368, "dur":200, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237048662, "dur":906, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nmd5v3kcfahr.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237049592, "dur":79, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI__3.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237049671, "dur":481, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI__3.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237050157, "dur":217, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237049590, "dur":784, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ubzoj85zzzzz.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237050377, "dur":2267, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__4.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237052644, "dur":313, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__4.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237052962, "dur":126, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237050377, "dur":2711, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/g6n9iwszptnv.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237053122, "dur":197, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__15.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237053340, "dur":353, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237053100, "dur":595, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/egndhjs3bkwl.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237053718, "dur":94, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237053816, "dur":223, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237053698, "dur":341, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/fezs5v76o89n.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054064, "dur":143, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreTextEngineModule__2.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054252, "dur":351, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054053, "dur":550, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/uubwpyis6twm.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054620, "dur":320, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SharedInternalsModule.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054955, "dur":61, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm-utils/VmThreadUtils.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054943, "dur":326, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237054608, "dur":661, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/wqpyrsn5wq8l.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237055304, "dur":94, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.IMGUIModule.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237055404, "dur":197, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237055280, "dur":321, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/yzk6addza4jn.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237055630, "dur":228, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237055867, "dur":216, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237055612, "dur":471, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/l18uddn24wdj.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056107, "dur":108, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AssetBundleModule.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056218, "dur":180, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056096, "dur":303, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/5w8q3kmstsft.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056415, "dur":266, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AIModule.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056711, "dur":62, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Il2CppHStringReference.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056833, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/metadata/Il2CppGenericMethodCompare.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056690, "dur":588, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237056401, "dur":877, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nssnpmf2r87q.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237057317, "dur":136, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit__3.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237057456, "dur":214, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237057286, "dur":384, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/qxselhzaffta.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237057690, "dur":138, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237057838, "dur":430, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237057679, "dur":589, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/z8s7wtut3741.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058310, "dur":74, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation__1.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058389, "dur":270, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058275, "dur":384, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2m564jzp6mkt.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058683, "dur":99, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.VisualScripting.Core__1.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058785, "dur":156, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058670, "dur":271, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/0ochk8a3eoup.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058980, "dur":63, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.TextMeshPro__4.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059155, "dur":108, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/Compiler/CompilerEnvironmentClang.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059045, "dur":263, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237058961, "dur":348, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/y9ygbeg7oi38.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059322, "dur":225, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.TextMeshPro__2.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059552, "dur":164, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059312, "dur":405, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/cmbcbplbisaa.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059750, "dur":87, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__6.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059837, "dur":141, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__6.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237060169, "dur":79, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/codegen/il2cpp-codegen-common.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059986, "dur":487, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237059749, "dur":725, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/d8serk4thtgq.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237060497, "dur":233, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__5.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237060734, "dur":145, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237060483, "dur":396, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/srdfkj1v1sb0.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237060915, "dur":136, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061055, "dur":154, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237060896, "dur":313, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rsxupc7w1u3m.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061221, "dur":92, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061430, "dur":64, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/utils/Memory.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061317, "dur":408, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061212, "dur":513, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/xkbu2ojh0dg2.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061747, "dur":327, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__1.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237062078, "dur":405, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237061733, "dur":750, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/5970jah4t83s.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237062506, "dur":81, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237062591, "dur":319, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237062487, "dur":423, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/v3rcch6p2jzv.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237062948, "dur":715, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__7.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237063667, "dur":233, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237062922, "dur":978, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/oj52j8vnvcaw.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237063923, "dur":124, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__11.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064053, "dur":264, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237063912, "dur":405, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/hcuzkjiaj9xf.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064367, "dur":133, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppUnresolvedIndirectCallStubs.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064506, "dur":315, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064348, "dur":473, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/uiapd4kb8fcy.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064846, "dur":112, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCTypeValuesTable.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064961, "dur":166, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237064829, "dur":298, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/85ipslzw4kb5.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065147, "dur":101, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCalculateTypeValues.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065252, "dur":190, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065131, "dur":311, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/fkzb4d8a4d0j.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065470, "dur":221, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics__5.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065851, "dur":51, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/icalls/mscorlib/System.Runtime.InteropServices/Marshal.h" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065700, "dur":243, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065453, "dur":490, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/za9xnbc1kvpx.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065971, "dur":73, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/GenericMethods__2.cpp" }}
+,{ "pid":12345, "tid":2, "ts":1755358237066048, "dur":238, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":2, "ts":1755358237065948, "dur":339, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/p85u9tzdnltl.o" }}
+,{ "pid":12345, "tid":2, "ts":1755358237066308, "dur":3609135, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237010247, "dur":397, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237010644, "dur":33027, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237043675, "dur":197, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/__Generated_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237043872, "dur":824, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/__Generated_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237043673, "dur":1106, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/du5vvuplocb8.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237044833, "dur":163, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045004, "dur":129, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237044799, "dur":335, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/z2eqr0tde9r8.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045134, "dur":51, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045186, "dur":56, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TerrainModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045242, "dur":169, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TerrainModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045417, "dur":171, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045186, "dur":402, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/gs7wlqy6a1vf.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045626, "dur":51, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.PropertiesModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045677, "dur":122, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.PropertiesModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045625, "dur":216, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/y1apjiho8qov.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045888, "dur":127, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.InputLegacyModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237045874, "dur":168, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/al6ce4kthf4d.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046055, "dur":55, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046054, "dur":111, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/et4lpbn89hz2.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046198, "dur":152, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AnimationModule_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046401, "dur":299, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046175, "dur":525, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/zva28yxlvrbo.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046700, "dur":69, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046794, "dur":78, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.CoreUtils_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046970, "dur":346, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237046769, "dur":547, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/jt5ckgv1ikj0.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237047367, "dur":98, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.VisualScripting.Core_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237047597, "dur":191, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237047344, "dur":444, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/v8ynqb6qu31s.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237047854, "dur":153, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib_CodeGen.c" }}
+,{ "pid":12345, "tid":3, "ts":1755358237048010, "dur":225, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237047809, "dur":426, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/96j00kim09vj.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237048304, "dur":881, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/__Generated.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237049333, "dur":98, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Internal/Compiler/Baselib_Atomic_Gcc.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237049660, "dur":59, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Runtime.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237049189, "dur":537, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237048270, "dur":1457, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/l7lfimrhn1p7.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237049744, "dur":57, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIModule.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237049801, "dur":269, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIModule.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237050128, "dur":65, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-metadata.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237050210, "dur":75, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/gc/Allocator.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237050080, "dur":303, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237049743, "dur":640, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/7ycm5x2colqo.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237050387, "dur":2196, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__3.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237052585, "dur":627, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__3.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237053222, "dur":377, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237050386, "dur":3214, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/fy3sygc1lr6f.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237053632, "dur":159, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__1.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237053890, "dur":59, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Platforms/IOS/Include/BaselibPlatformSpecificEnvironment.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237053796, "dur":471, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237053607, "dur":662, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/92wg3xj6ffjd.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054296, "dur":105, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TerrainModule.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054405, "dur":294, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054280, "dur":419, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ky5rhp5yybzk.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054731, "dur":75, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.PhysicsModule.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054899, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/google/sparsehash/internal/sparseconfig.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054809, "dur":249, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237054711, "dur":347, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2m0rbzg9fvq2.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055073, "dur":88, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.JSONSerializeModule.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055291, "dur":53, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/google/sparsehash/type_traits.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055165, "dur":443, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055061, "dur":547, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nex17n4p77ft.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055655, "dur":82, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__3.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055742, "dur":223, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055635, "dur":330, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/jsmlqtt8ukly.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055997, "dur":174, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056228, "dur":76, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-runtime-metadata.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056181, "dur":275, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237055976, "dur":480, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/iz25m3kpwmt8.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056483, "dur":119, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR__1.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056607, "dur":162, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056469, "dur":300, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/6l83rlfjrak5.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056798, "dur":133, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.MetaQuestSupport.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056935, "dur":196, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237056780, "dur":351, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/240qs98zgk3w.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057167, "dur":113, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit__6.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057411, "dur":57, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/PlatformEnvironment.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057284, "dur":323, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057138, "dur":469, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/x0j70f83otxs.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057643, "dur":96, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057743, "dur":172, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057629, "dur":286, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/h8dkarhak2nz.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057949, "dur":102, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARSubsystems.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237058300, "dur":77, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/metadata/Il2CppTypeCompare.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237058531, "dur":57, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/GenericClass.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237058056, "dur":546, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237057934, "dur":668, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/mvpao05wo1rq.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237058641, "dur":343, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.VisualScripting.Flow.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059038, "dur":99, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Thread.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059153, "dur":80, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/utils/Il2CppHashMap.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237058987, "dur":325, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237058623, "dur":689, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/iuzqrvfjytgx.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059332, "dur":278, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.TextMeshPro__1.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059619, "dur":298, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059315, "dur":602, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/r67nvf7df4yq.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059935, "dur":184, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__4.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060123, "dur":129, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237059920, "dur":332, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rk59qv9xa3nr.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060276, "dur":89, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__1.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060371, "dur":261, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060260, "dur":372, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/khehbx040oj9.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060660, "dur":279, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__3.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061114, "dur":73, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/codegen/il2cpp-codegen-tiny.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061244, "dur":73, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_Lock.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060947, "dur":376, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237060642, "dur":681, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/63paku6zu2i1.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061347, "dur":110, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Mathematics.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061461, "dur":159, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061338, "dur":282, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/jb0h1697yr11.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061645, "dur":134, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__4.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061859, "dur":75, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/BasicTypes.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061783, "dur":306, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237061624, "dur":465, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/cdztz8px3m8a.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062135, "dur":88, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Burst.Unsafe.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062232, "dur":146, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062105, "dur":273, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/p04shf5myh25.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062403, "dur":92, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System__1.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062517, "dur":77, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062674, "dur":258, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062387, "dur":545, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ob21i7fggm7n.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062965, "dur":488, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__6.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237063462, "dur":322, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237062943, "dur":841, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/331e4yhqsoyc.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237063805, "dur":221, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__2.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064030, "dur":165, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237063793, "dur":402, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/vsq53ksye8cf.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064220, "dur":273, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__10.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064498, "dur":341, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064208, "dur":631, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/g49i031bf7g0.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064877, "dur":94, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCFieldValuesTable.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065206, "dur":56, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/metadata/Il2CppGenericInstCompare.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064977, "dur":308, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237064863, "dur":423, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2r5dvf899bs2.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065319, "dur":151, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCalculateFieldValues.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065474, "dur":162, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065304, "dur":332, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bvugei0z7imn.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065659, "dur":180, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics__2.cpp" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065964, "dur":64, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/codegen/il2cpp-codegen-common.h" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065845, "dur":325, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":3, "ts":1755358237065647, "dur":523, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/s7h57c37ahlf.o" }}
+,{ "pid":12345, "tid":3, "ts":1755358237066218, "dur":3609222, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237010255, "dur":392, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237010647, "dur":33052, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237043701, "dur":372, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VideoModule_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237044073, "dur":643, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VideoModule_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237044753, "dur":50, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237043700, "dur":1103, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ei02j8vfssa2.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237044884, "dur":115, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045048, "dur":216, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237044851, "dur":414, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/qh0zkeomd4pe.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045350, "dur":205, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SharedInternalsModule_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045738, "dur":67, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045304, "dur":501, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/c8qon9dj2wuc.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045816, "dur":157, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/svzzy9djf1f4.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045992, "dur":70, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.DirectorModule_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237045991, "dur":93, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/f081606d8ge0.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046096, "dur":70, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/dp0cxiz3pnsd.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046203, "dur":151, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AndroidJNIModule_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046468, "dur":108, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046177, "dur":399, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/drtqma8buc13.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046634, "dur":141, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.ConformanceAutomation_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046615, "dur":243, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/iaaee2ac71fk.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046859, "dur":50, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046946, "dur":212, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARKit_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047161, "dur":97, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237046909, "dur":350, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/6g1gjgr1t0pc.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047320, "dur":50, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.VisualScripting.Flow_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047501, "dur":168, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047283, "dur":387, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ivt6n5dcpise.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047678, "dur":55, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047896, "dur":112, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237047733, "dur":275, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/xfhvr608xcbg.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048069, "dur":130, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048026, "dur":173, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/0pawg5iol8tj.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048264, "dur":294, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Assembly-CSharp_CodeGen.c" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048595, "dur":191, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048228, "dur":559, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8qn2laqfj64r.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048828, "dur":385, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityWebRequestModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237049246, "dur":76, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm-utils/VmThreadUtils.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237049217, "dur":349, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237048796, "dur":770, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/jhdbwm2tg6kv.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237049598, "dur":50, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237049648, "dur":355, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237050010, "dur":253, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237049597, "dur":666, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8nbkjjb4s960.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237050273, "dur":2361, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__7.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237052634, "dur":119, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__7.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237052756, "dur":142, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237050272, "dur":2626, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/n9e2yu1sz7rd.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237052936, "dur":108, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__2.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237053047, "dur":335, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237052914, "dur":468, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ui04i7x3i3uw.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237053430, "dur":203, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__11.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237053638, "dur":232, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237053396, "dur":474, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/mxswlb5czhgk.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237053895, "dur":102, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextRenderingModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054001, "dur":200, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237053881, "dur":320, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/yx3yxdicop7t.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054231, "dur":155, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreTextEngineModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054390, "dur":159, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054212, "dur":337, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/a08bj5i389s5.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054581, "dur":157, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SpriteShapeModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054745, "dur":123, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/utils/HashUtils.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054901, "dur":65, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm-utils/icalls/mscorlib/System.Threading/Interlocked.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054966, "dur":70, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/os/Atomic.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237055301, "dur":53, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/MetadataCache.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054743, "dur":815, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237054557, "dur":1001, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nni6cpgquzb7.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237055574, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.DirectorModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237055626, "dur":263, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.DirectorModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056104, "dur":70, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_SystemFutex.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237055892, "dur":391, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237055573, "dur":710, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/r8bgnivydud0.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056317, "dur":103, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AnimationModule.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056424, "dur":186, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056301, "dur":309, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/78q6wp2dyc8n.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056631, "dur":56, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.MockRuntime.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056687, "dur":187, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.MockRuntime.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056878, "dur":168, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237056631, "dur":415, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ow2ujhv74m0v.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057070, "dur":205, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057284, "dur":268, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057048, "dur":504, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/piv581ijtjvl.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057585, "dur":111, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057700, "dur":171, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057571, "dur":300, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/4949ks4e8o0b.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057904, "dur":287, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARSubsystems__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058194, "dur":223, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237057881, "dur":536, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ph0iga1u3xjq.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058426, "dur":64, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.VisualScripting.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058490, "dur":337, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.VisualScripting.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058873, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/os/Memory.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058972, "dur":62, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-runtime-metadata.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058835, "dur":297, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237058425, "dur":707, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2xqpt1jnxbwl.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059163, "dur":74, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.TextMeshPro__3.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059529, "dur":59, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Type.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059627, "dur":75, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/os/WaitStatus.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059240, "dur":474, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059145, "dur":570, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/x1e0qyz8kgmt.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059772, "dur":175, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__5.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060169, "dur":79, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/CoreMacros.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059952, "dur":316, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237059756, "dur":512, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/c08x64nvdrza.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060293, "dur":87, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis.iOSBLAS.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060384, "dur":182, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060282, "dur":284, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/qi3e7j41dn71.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060607, "dur":214, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__4.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061005, "dur":63, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/google/sparsehash/sparsetable.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061112, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-pinvoke-support.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061245, "dur":72, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_ReentrantLock.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060826, "dur":545, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237060573, "dur":798, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rjtyz3kxxquk.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061390, "dur":87, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__6.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061480, "dur":183, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061380, "dur":283, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/y0myzxktad19.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061672, "dur":50, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__2.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061722, "dur":92, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__2.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061818, "dur":233, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237061671, "dur":380, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/qpbpzjv1wwfc.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062063, "dur":104, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Collections.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062170, "dur":154, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062054, "dur":270, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ek0fow2h7j40.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062350, "dur":89, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System__2.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062442, "dur":149, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062334, "dur":257, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9q5pygudjaj7.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062619, "dur":91, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System.Core__2.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062713, "dur":179, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062603, "dur":289, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/woqlwehps8e6.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062918, "dur":398, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__8.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237063319, "dur":417, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237062899, "dur":837, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/prpj4ncmzerb.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237063764, "dur":143, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__3.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237063915, "dur":306, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237063753, "dur":468, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/w0amo08wiauu.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237064255, "dur":291, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237064555, "dur":202, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237064228, "dur":529, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/adnhobe1bk1v.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237064782, "dur":226, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppInteropDataTable.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065018, "dur":295, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237064766, "dur":547, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/f2f879rblcgj.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065336, "dur":105, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics__6.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065654, "dur":72, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Runtime.h" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065455, "dur":281, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065325, "dur":412, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/kqcm3kqynj1g.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065768, "dur":105, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065877, "dur":145, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237065754, "dur":268, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/7rehs3oa8s9v.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237066045, "dur":196, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/GenericMethods__1.cpp" }}
+,{ "pid":12345, "tid":4, "ts":1755358237066244, "dur":176, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":4, "ts":1755358237066033, "dur":387, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/4s26tklgkxh2.o" }}
+,{ "pid":12345, "tid":4, "ts":1755358237066425, "dur":3608968, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237010263, "dur":387, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237010650, "dur":33023, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237043689, "dur":204, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237043893, "dur":864, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237044777, "dur":164, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237043687, "dur":1254, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/x3xxn98u0m6t.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237045054, "dur":198, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237044960, "dur":292, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/q501extfqxcj.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237045340, "dur":161, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SpatialTracking_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237045658, "dur":222, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237045295, "dur":585, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/mpzf8ks190b9.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237045974, "dur":335, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237045906, "dur":403, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/aqaj7ql0fmp6.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237046337, "dur":114, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/7j359cn51414.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237046497, "dur":71, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.MockRuntime_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237046571, "dur":64, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237046463, "dur":172, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/sgmbqf7hxcxh.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237046697, "dur":411, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047111, "dur":66, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237046672, "dur":505, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rb9isa3zwg1z.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047215, "dur":107, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.VisualScripting_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047325, "dur":205, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047195, "dur":335, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/i3m2jjgl6azp.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047579, "dur":240, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Mathematics_CodeGen.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047541, "dur":293, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nfhe9v5uae07.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047866, "dur":64, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppTypeDefinitions.c" }}
+,{ "pid":12345, "tid":5, "ts":1755358237048044, "dur":99, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237047844, "dur":299, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/0g1zfwo4ziei.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237048208, "dur":99, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237048155, "dur":153, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/njdzg7285w0r.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237048410, "dur":810, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.XRModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237049246, "dur":77, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/os/Atomic.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237049223, "dur":340, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237048366, "dur":1198, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9bx1nhzuuzup.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237049584, "dur":95, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityAnalyticsModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237049679, "dur":333, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityAnalyticsModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237050018, "dur":278, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237049583, "dur":713, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/sltornlat9f2.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237050308, "dur":2359, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__6.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237052668, "dur":286, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__6.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237052959, "dur":132, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237050307, "dur":2784, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2tbejlnvwjgu.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237053152, "dur":110, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__13.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237053271, "dur":347, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237053126, "dur":492, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8kg1l0z8578i.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237053661, "dur":224, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237053906, "dur":232, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237053625, "dur":513, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/unajdhlnwwfd.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054159, "dur":200, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreTextEngineModule__1.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054368, "dur":254, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054141, "dur":481, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9e879o4u35k3.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054655, "dur":111, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.PropertiesModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054770, "dur":100, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054634, "dur":236, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2z2g7tke44yp.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054904, "dur":138, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.Physics2DModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055051, "dur":167, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237054885, "dur":333, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/wk6iwpydgz6t.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055241, "dur":99, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.IMGUIModule__1.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055343, "dur":188, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055227, "dur":304, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/pe298kwryhcy.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055578, "dur":135, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.GameCenterModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055717, "dur":173, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055553, "dur":337, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/e6826ex71o70.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055927, "dur":142, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__2.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237056079, "dur":273, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237055907, "dur":445, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ycjxakfbsw9e.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237056378, "dur":232, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AndroidJNIModule.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237056824, "dur":58, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/google/sparsehash/internal/sparsehashtable.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237056669, "dur":413, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237056361, "dur":721, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9i5w5kspiz1d.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057082, "dur":70, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057173, "dur":198, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit__5.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057378, "dur":363, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057153, "dur":589, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/clgjl6t6l5l9.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057773, "dur":87, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.CoreUtils.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057865, "dur":190, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237057762, "dur":293, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/fpsll3c9gha9.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237058085, "dur":209, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARKit.FaceTracking.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237058311, "dur":159, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237058067, "dur":403, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/21inqvfwe0c1.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237058482, "dur":53, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237058535, "dur":750, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237059290, "dur":347, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237058481, "dur":1156, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ddghvx9pnew0.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237059651, "dur":197, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__8.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237059852, "dur":196, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237059641, "dur":408, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/zvgjr9ypoj9o.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060091, "dur":141, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__2.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060290, "dur":59, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-metadata.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060235, "dur":431, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060070, "dur":596, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/5wh5q6e23cvs.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060694, "dur":80, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__1.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060777, "dur":180, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060675, "dur":282, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/kg25j5b4ncq2.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060979, "dur":93, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime__3.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061077, "dur":145, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237060971, "dur":251, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8d1j6mc236ks.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061249, "dur":69, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipeline.Universal.ShaderLibrary.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061429, "dur":62, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/Compiler/CompilerEnvironmentMsvc.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061322, "dur":512, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061227, "dur":607, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ami80ta3kmwj.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061867, "dur":76, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062132, "dur":73, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Object.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062257, "dur":72, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_Atomic.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062414, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/CoreMacros.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061948, "dur":534, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237061850, "dur":632, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2v1nse6wyf5h.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062527, "dur":81, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System.Core__3.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062689, "dur":192, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062495, "dur":386, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/h4t9bovmvwqp.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062907, "dur":512, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__9.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237063432, "dur":403, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237062890, "dur":945, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/a7s7jxqj222u.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237063846, "dur":117, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__12.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237063964, "dur":104, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__12.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237064073, "dur":378, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237063845, "dur":606, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2rxn0sw7lx9y.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237064479, "dur":100, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppReversePInvokeWrapperTable.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237064583, "dur":322, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237064460, "dur":445, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9p0uzhjp8kml.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237064932, "dur":126, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCalculateTypeValues1.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237065064, "dur":220, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237064913, "dur":371, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/03f8f68lnemt.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237065311, "dur":339, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCalculateFieldValues1.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237065962, "dur":63, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/utils/StringViewUtils.h" }}
+,{ "pid":12345, "tid":5, "ts":1755358237065666, "dur":404, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237065296, "dur":775, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8r25igrea9x7.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237066114, "dur":197, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Assembly-CSharp__1.cpp" }}
+,{ "pid":12345, "tid":5, "ts":1755358237066314, "dur":113, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":5, "ts":1755358237066093, "dur":334, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/zrzpgv7hvlh1.o" }}
+,{ "pid":12345, "tid":5, "ts":1755358237066431, "dur":3608964, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237010267, "dur":385, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237010652, "dur":33012, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237043713, "dur":175, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityWebRequestModule_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237043888, "dur":783, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityWebRequestModule_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237043705, "dur":1074, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nxfozq2btn7h.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237044814, "dur":254, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityAnalyticsModule_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045079, "dur":55, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237044789, "dur":345, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/kozlfe0tlm2l.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045181, "dur":56, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreFontEngineModule_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045237, "dur":261, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreFontEngineModule_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045555, "dur":188, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045180, "dur":563, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/clwstdkbomdv.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045767, "dur":84, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8q0oyiy4cu08.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045899, "dur":334, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.JSONSerializeModule_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046300, "dur":159, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237045865, "dur":594, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/r2pojnplmvi4.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046509, "dur":81, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.MetaQuestSupport_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046617, "dur":212, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046492, "dur":337, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/efqopck74q0a.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046864, "dur":100, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/6fg4pgyi2p4b.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046989, "dur":89, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARKit.FaceTracking_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047163, "dur":226, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237046988, "dur":401, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ukdlg8bleba2.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047413, "dur":52, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/r4ujm3y6ik6m.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047518, "dur":76, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime_CodeGen.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047481, "dur":154, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/7d0yralffgjo.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047652, "dur":82, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/qethvy1pt3i8.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047746, "dur":120, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bdp4pe4kx15d.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047896, "dur":58, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppRgctxTable.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237047876, "dur":115, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/gr1ufsdkz2wg.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237048035, "dur":124, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppGenericMethodTable.c" }}
+,{ "pid":12345, "tid":6, "ts":1755358237048162, "dur":175, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237048000, "dur":337, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/itsj6kz23k4l.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237048414, "dur":813, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VRModule.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237049246, "dur":76, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/Internal/Compiler/CompilerEnvironmentGcc.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237049234, "dur":329, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237048371, "dur":1193, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bkdwh4afrv2x.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237049594, "dur":58, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI__2.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237049652, "dur":388, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI__2.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237050049, "dur":266, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237049593, "dur":722, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9vv03yr2wbog.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237050318, "dur":2322, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__5.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237052640, "dur":230, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__5.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237052882, "dur":219, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237050318, "dur":2783, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/1lrxy56wshze.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053119, "dur":55, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__14.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053174, "dur":88, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__14.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053266, "dur":252, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053118, "dur":401, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/t0jp19d68vk2.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053562, "dur":120, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__10.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053688, "dur":253, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053542, "dur":399, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/1hp851qfwt40.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053967, "dur":102, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreTextEngineModule__3.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054075, "dur":163, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237053953, "dur":285, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/fafk57wp9h85.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054264, "dur":122, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreFontEngineModule.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054390, "dur":160, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054250, "dur":300, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/0u2nethymhly.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054587, "dur":182, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SpatialTracking.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054773, "dur":114, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054566, "dur":321, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/euoakc8heqwo.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054898, "dur":71, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.ParticleSystemModule.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054969, "dur":70, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.ParticleSystemModule.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055043, "dur":153, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237054897, "dur":299, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ghrvg96b604k.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055217, "dur":111, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.InputLegacyModule.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055331, "dur":153, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055200, "dur":284, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/mdrp8k85zuy0.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055539, "dur":188, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.GridModule.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055731, "dur":178, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055498, "dur":412, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/d2fd7gw4ljwp.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055921, "dur":67, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__1.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055988, "dur":168, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__1.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056160, "dur":288, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237055920, "dur":529, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/x4ygq4ycousz.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056523, "dur":112, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.RuntimeDebugger.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056639, "dur":154, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056509, "dur":284, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rudtvwe5nwfh.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056837, "dur":89, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.ConformanceAutomation.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056930, "dur":252, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237056815, "dur":367, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/yd6v9yfmrb97.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237057201, "dur":102, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit__4.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237057307, "dur":283, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237057191, "dur":399, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bdw20qd8h34t.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237057611, "dur":98, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit.Samples.StarterAssets.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237057716, "dur":416, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237057598, "dur":535, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/qqavnhrcx27e.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058179, "dur":96, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARKit.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058281, "dur":416, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058157, "dur":540, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/63tkn2rusld2.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058741, "dur":94, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.VisualScripting.Core.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058873, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_ErrorState.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058972, "dur":166, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-tabledefs.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058843, "dur":505, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237058714, "dur":634, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/vjwlqznr4tzm.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237059379, "dur":99, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.TextMeshPro.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237059491, "dur":205, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237059361, "dur":335, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/4xe7j9qaqdma.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237059722, "dur":200, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__7.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237059947, "dur":210, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237059708, "dur":449, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ynw26tirkhs9.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060180, "dur":64, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__10.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060248, "dur":172, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060161, "dur":259, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/umy0ynvkg099.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060445, "dur":97, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060708, "dur":78, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/utils/Memory.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060548, "dur":435, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060428, "dur":555, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/7fbb92gfbkho.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061013, "dur":75, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime__2.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061112, "dur":74, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/gc/GarbageCollector.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061092, "dur":248, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237060999, "dur":341, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/nyxvqdy40i98.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061363, "dur":99, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__7.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061465, "dur":163, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061353, "dur":275, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/jgqmf7yqd1ct.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061639, "dur":77, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__3.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061716, "dur":196, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__3.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061915, "dur":272, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237061638, "dur":549, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/rxv5jzb00ywr.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237062230, "dur":155, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System__3.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237062524, "dur":82, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Type.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237062390, "dur":253, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237062210, "dur":433, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/u68deq8amyuq.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237062664, "dur":270, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System.Core__1.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237063005, "dur":564, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237062653, "dur":916, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/vg64bz0qo6xq.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237063589, "dur":149, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__4.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237063991, "dur":54, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_Debug.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237063741, "dur":592, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237063571, "dur":762, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/hgea49muly5d.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237064360, "dur":239, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237064615, "dur":173, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237064340, "dur":448, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ddkbp82wqujz.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237064810, "dur":240, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCodeRegistration.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237065060, "dur":454, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237064796, "dur":718, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/6jyx9n96vlib.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237065549, "dur":113, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics__3.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237065963, "dur":66, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/google/sparsehash/internal/densehashtable.h" }}
+,{ "pid":12345, "tid":6, "ts":1755358237065666, "dur":399, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237065539, "dur":527, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/dnltnmh5d5wy.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237066101, "dur":100, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/GenericMethods.cpp" }}
+,{ "pid":12345, "tid":6, "ts":1755358237066205, "dur":154, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":6, "ts":1755358237066081, "dur":278, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/fupeqznb465t.o" }}
+,{ "pid":12345, "tid":6, "ts":1755358237066361, "dur":3609084, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237010275, "dur":379, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237010654, "dur":33040, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237043695, "dur":377, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VRModule_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237044073, "dur":606, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VRModule_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237044742, "dur":113, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237043694, "dur":1162, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bd3amen7ku6q.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237044870, "dur":70, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TilemapModule_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237044940, "dur":330, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TilemapModule_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237045410, "dur":230, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237044869, "dur":771, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/tnckobt1gans.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237045640, "dur":51, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237045868, "dur":85, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237045691, "dur":262, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/6m0wvx792yvh.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237045987, "dur":340, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.GameCenterModule_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237046458, "dur":190, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237045963, "dur":685, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ujjequ17r7xy.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237046660, "dur":65, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/4fwt6azbef50.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237046982, "dur":54, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-tokentype.h" }}
+,{ "pid":12345, "tid":7, "ts":1755358237046982, "dur":218, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237046755, "dur":446, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/p7t255gbsblf.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047272, "dur":111, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.InternalUtils_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047225, "dur":253, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/745zjljqsyuw.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047546, "dur":51, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime_CodeGen.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047654, "dur":232, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047514, "dur":372, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/lwrp9pz5opul.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047906, "dur":1409, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppMetadataUsage.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237049315, "dur":3421, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppMetadataUsage.c" }}
+,{ "pid":12345, "tid":7, "ts":1755358237047906, "dur":4845, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/03epjzgslfgt.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358237078172, "dur":1014292, "ph":"X", "name": "C_iOS_arm64",  "args": { "detail":"z7ln/03epjzgslfgt.o" }}
+,{ "pid":12345, "tid":7, "ts":1755358238092643, "dur":2582756, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237010280, "dur":376, "ph":"X", "name": "FirstLock",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237010656, "dur":33024, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237043683, "dur":197, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.XRModule_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237043881, "dur":837, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.XRModule_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237044739, "dur":116, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237043682, "dur":1174, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/dk156uztcolb.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237044923, "dur":73, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextRenderingModule_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045002, "dur":133, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237044882, "dur":254, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/yit2p0b307pq.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045136, "dur":64, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045201, "dur":50, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SubsystemsModule_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045251, "dur":170, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SubsystemsModule_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045550, "dur":293, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045201, "dur":642, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/bz7tt42s3jub.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045884, "dur":130, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.InputModule_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237045870, "dur":195, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/xp9ygbh527u6.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046101, "dur":65, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/p5bnhi74lcrv.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046181, "dur":95, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/zqa3tb0aetnd.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046324, "dur":195, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046536, "dur":139, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046290, "dur":385, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/dqw6orv1g8xe.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046695, "dur":67, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit.Samples.StarterAssets_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046762, "dur":426, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit.Samples.StarterAssets_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237047314, "dur":148, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237046694, "dur":770, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2oabtpbx9zk3.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237047466, "dur":61, "ph":"X", "name": "OutputFilesMissingFor",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237047547, "dur":142, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipeline.Universal.ShaderLibrary_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237047527, "dur":178, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/y1fb0pnau72m.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237047759, "dur":196, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Burst_CodeGen.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237047724, "dur":269, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/51yz8737en4t.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237048032, "dur":97, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppGenericMethodPointerTable.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237048005, "dur":155, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/vm72j27nu5r9.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237048175, "dur":100, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppGenericClassTable.c" }}
+,{ "pid":12345, "tid":8, "ts":1755358237048174, "dur":244, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ze3gvkgkvwrs.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237048459, "dur":912, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VideoModule.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237049379, "dur":414, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237048428, "dur":1366, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/exi7ubmf00yc.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237049839, "dur":98, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__9.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237049942, "dur":182, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237049817, "dur":307, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/9w26yjwo6xkc.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237050140, "dur":2453, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__8.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237052593, "dur":417, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__8.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053022, "dur":71, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/baselib/Include/C/Baselib_Atomic_TypeSafe.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053019, "dur":296, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237050139, "dur":3176, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/8oiqe4fq2v3w.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053357, "dur":156, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__12.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053518, "dur":317, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053323, "dur":512, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/7cwk1kja25r3.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053870, "dur":207, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TilemapModule.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237054088, "dur":400, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237053851, "dur":637, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/x5hh9grkrp0z.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237054501, "dur":171, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SubsystemsModule.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237054737, "dur":157, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/Array.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237054677, "dur":417, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237054492, "dur":615, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/72ozw20iz93a.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237055151, "dur":292, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.InputModule.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237055644, "dur":77, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm-utils/VmThreadUtils.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237055458, "dur":590, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237055118, "dur":931, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/1j4l3uhu2esc.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237056065, "dur":116, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AudioModule.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237056188, "dur":416, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237056052, "dur":552, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/xrsl2stbvguo.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237056637, "dur":95, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.OpenXR.Features.OculusQuestSupport.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237056737, "dur":309, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237056620, "dur":427, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/q0mq3ms4g5xz.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057086, "dur":131, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Management.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057222, "dur":162, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057060, "dur":324, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/cpfs1k2qu74y.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057415, "dur":327, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.Interaction.Toolkit__2.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057769, "dur":60, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/dummy" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057946, "dur":52, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-object-internals.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058006, "dur":54, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/vm/ClassInlines.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058169, "dur":54, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-string-types.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058301, "dur":77, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/os/ThreadLocalValue.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057829, "dur":631, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237057400, "dur":1060, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/5hpq57kdcrhr.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058467, "dur":54, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.InternalUtils.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058521, "dur":184, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.XR.ARFoundation.InternalUtils.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058710, "dur":137, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058466, "dur":381, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/j5i61833suo2.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058885, "dur":224, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.TextMeshPro__5.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237059117, "dur":359, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237058860, "dur":616, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/jp24qnu4r6es.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237059533, "dur":164, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__9.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237059711, "dur":296, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237059488, "dur":520, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/kbk76idnr7k8.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060036, "dur":294, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Sentis__3.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060334, "dur":309, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060021, "dur":622, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/641lbmv07ec8.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060653, "dur":67, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__2.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060720, "dur":64, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__2.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061008, "dur":60, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/external/google/sparsehash/internal/hashtable-common.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060788, "dur":301, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237060652, "dur":437, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/lomm4ks2re7h.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061120, "dur":65, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime__1.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061190, "dur":218, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061097, "dur":312, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/2iu7a4j7xuxp.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061434, "dur":97, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__5.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061859, "dur":58, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/os/ErrorCodes.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061541, "dur":552, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237061422, "dur":671, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/dljako6v7opq.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237062126, "dur":99, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Unity.Burst.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237062515, "dur":57, "ph":"X", "name": "ComputeFileSignatureSha1",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/IL2CPP/libil2cpp/codegen/il2cpp-codegen-il2cpp.h" }}
+,{ "pid":12345, "tid":8, "ts":1755358237062283, "dur":531, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237062112, "dur":702, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/tz1mnwav1f2b.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237062841, "dur":238, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/System.Core.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237063090, "dur":232, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237062817, "dur":505, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/spg6npytkecp.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237063353, "dur":260, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__5.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237063616, "dur":183, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237063339, "dur":460, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ioyqop3sp0mt.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237063833, "dur":270, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/mscorlib__13.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237064112, "dur":482, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237063810, "dur":784, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/n70bg2a5olli.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237064629, "dur":97, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppInvokerTable.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237064731, "dur":452, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237064613, "dur":570, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ca2rnflthydg.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065210, "dur":133, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Il2CppCCalculateFieldValues2.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065346, "dur":161, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065195, "dur":312, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/t75typ5bdx9q.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065532, "dur":118, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics__4.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065662, "dur":143, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065519, "dur":286, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/ev5971x3h7de.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065834, "dur":149, "ph":"X", "name": "ScanImplicitDeps",  "args": { "detail":"/Users/olzhasalidarov/Documents/Projects/RemaluxNewAR/CleanBuild/Il2CppOutputProject/Source/il2cppOutput/Generics.cpp" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065986, "dur":297, "ph":"X", "name": "ImplicitDepsSignatures",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":8, "ts":1755358237065814, "dur":469, "ph":"X", "name": "CheckInputSignature",  "args": { "detail":"C_iOS_arm64 z7ln/0txxo68pkd23.o" }}
+,{ "pid":12345, "tid":8, "ts":1755358237066303, "dur":3609144, "ph":"X", "name": "WaitingForWork", "cname":"thread_state_sleeping",  "args": { "detail":"" }}
+,{ "pid":12345, "tid":0, "ts":1755358240683382, "dur":852, "ph":"X", "name": "ProfilerWriteOutput" }
+,{ "pid": 29364, "tid": 1, "ts": 1755358240708058, "dur": 716, "ph": "X", "name": "Wait for external events", "args": {"First to finish": "backend_profiler0.traceevents"} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240708825, "dur": 318, "ph": "X", "name": "backend_profiler0.traceevents", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240706366, "dur": 3417, "ph": "X", "name": "Write chrome-trace events", "args": {} },
+{ "pid": 29364, "tid": 1, "ts": 1755358240728426, "dur": 2531, "ph": "X", "name": "Write chrome-trace events", "args": {} },
+{}
+
+]
+}

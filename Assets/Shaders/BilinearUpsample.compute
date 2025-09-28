@@ -1,0 +1,49 @@
+#pragma kernel BilinearUpsample
+
+RWTexture2D<float> OutputMask;
+Texture2D<float> InputMask;
+float4 InputOutputScale; // float4(inWidth, inHeight, outWidth, outHeight)
+
+[numthreads(8,8,1)]
+void BilinearUpsample (uint3 id : SV_DispatchThreadID)
+{
+    // Проверка границ
+    if (id.x >= (uint)InputOutputScale.z || id.y >= (uint)InputOutputScale.w)
+    {
+        return;
+    }
+
+    // Вычисляем UV-координаты в текстуре высокого разрешения
+    float2 uv = float2((id.x + 0.5) / InputOutputScale.z, (id.y + 0.5) / InputOutputScale.w);
+    
+    // Находим соответствующие координаты в текстуре низкого разрешения
+    float2 lowResCoords = uv * float2(InputOutputScale.x, InputOutputScale.y);
+
+    // Получаем целочисленные координаты и дробные части для интерполяции
+    float2 floorCoords = floor(lowResCoords - 0.5);
+    float2 fracCoords = lowResCoords - 0.5 - floorCoords;
+
+    // Координаты четырех соседних пикселей
+    int x0 = (int)floorCoords.x;
+    int y0 = (int)floorCoords.y;
+    int x1 = x0 + 1;
+    int y1 = y0 + 1;
+
+    // Ограничиваем координаты, чтобы не выйти за пределы текстуры
+    x0 = clamp(x0, 0, (int)InputOutputScale.x - 1);
+    y0 = clamp(y0, 0, (int)InputOutputScale.y - 1);
+    x1 = clamp(x1, 0, (int)InputOutputScale.x - 1);
+    y1 = clamp(y1, 0, (int)InputOutputScale.y - 1);
+
+    // Считываем значения четырех соседних пикселей
+    float p00 = InputMask[int2(x0, y0)].r;
+    float p10 = InputMask[int2(x1, y0)].r;
+    float p01 = InputMask[int2(x0, y1)].r;
+    float p11 = InputMask[int2(x1, y1)].r;
+
+    // Билинейная интерполяция
+    float val = lerp(lerp(p00, p10, fracCoords.x), lerp(p01, p11, fracCoords.x), fracCoords.y);
+
+    // Округляем до ближайшего индекса класса после интерполяции
+    OutputMask[id.xy] = round(val);
+}

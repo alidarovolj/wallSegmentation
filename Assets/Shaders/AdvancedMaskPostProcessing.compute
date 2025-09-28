@@ -1,0 +1,63 @@
+#pragma kernel EdgeAwareSmoothing
+#pragma kernel ContrastEnhancement
+
+Texture2D<float> InputMask;
+RWTexture2D<float> ResultMask;
+int width;
+int height;
+float edgeThreshold;
+float contrastFactor;
+
+[numthreads(8,8,1)]
+void EdgeAwareSmoothing(uint3 id : SV_DispatchThreadID)
+{
+    if ((int)id.x >= width || (int)id.y >= height)
+        return;
+
+    float center = InputMask[id.xy].r;
+    float sum = center;
+    float weightSum = 1.0;
+    
+    // Адаптивное сглаживание с сохранением границ
+    for (int j = -1; j <= 1; j++)
+    {
+        for (int i = -1; i <= 1; i++)
+        {
+            if (i == 0 && j == 0) continue;
+            
+            int2 coord = int2((int)id.x + i, (int)id.y + j);
+            coord = clamp(coord, int2(0, 0), int2(width - 1, height - 1));
+            
+            float neighbor = InputMask[coord].r;
+            float diff = abs(center - neighbor);
+            
+            // Если разница мала, применяем сглаживание
+            if (diff < edgeThreshold)
+            {
+                float weight = exp(-diff * 10.0); // Гауссова весовая функция
+                sum += neighbor * weight;
+                weightSum += weight;
+            }
+        }
+    }
+    
+    ResultMask[id.xy] = sum / weightSum;
+}
+
+[numthreads(8,8,1)]
+void ContrastEnhancement(uint3 id : SV_DispatchThreadID)
+{
+    if ((int)id.x >= width || (int)id.y >= height)
+        return;
+
+    float value = InputMask[id.xy].r;
+    
+    // Усиление контраста для четких границ
+    // Сигмоидная функция для усиления различий между классами
+    float enhanced = 1.0 / (1.0 + exp(-contrastFactor * (value - 0.5)));
+    
+    // Квантизация к ближайшему целому числу (классу)
+    enhanced = round(enhanced * 149.0) / 149.0; // 150 классов ADE20K
+    
+    ResultMask[id.xy] = enhanced;
+}

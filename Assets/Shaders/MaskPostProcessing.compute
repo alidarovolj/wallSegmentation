@@ -1,0 +1,54 @@
+#pragma kernel MedianFilter
+
+Texture2D<float> InputMask;
+RWTexture2D<float> ResultMask;
+int width;
+int height;
+
+#define KERNEL_SIZE 3
+#define KERNEL_RADIUS (KERNEL_SIZE / 2)
+
+// Макрос для одной операции сравнения-и-обмена
+#define SWAP(a, b) { float temp = a; a = b; b = temp; }
+#define CSWAP(a, b) { if (a > b) SWAP(a, b); }
+
+[numthreads(8,8,1)]
+void MedianFilter(uint3 id : SV_DispatchThreadID)
+{
+    if ((int)id.x >= width || (int)id.y >= height)
+    {
+        return;
+    }
+
+    float n[9];
+    int index = 0;
+
+    // Считываем окрестность 3x3
+    for (int j = -KERNEL_RADIUS; j <= KERNEL_RADIUS; j++)
+    {
+        for (int i = -KERNEL_RADIUS; i <= KERNEL_RADIUS; i++)
+        {
+            int2 coord = int2((int)id.x + i, (int)id.y + j);
+            coord = clamp(coord, int2(0, 0), int2(width - 1, height - 1));
+            n[index++] = InputMask[coord].r;
+        }
+    }
+
+    // Оптимальная сортировочная сеть для 9 элементов (25 сравнений)
+    // Источник: https://en.wikipedia.org/wiki/Sorting_network#Optimal_sorting_networks
+    CSWAP(n[0], n[1]); CSWAP(n[3], n[4]); CSWAP(n[6], n[7]);
+    CSWAP(n[1], n[2]); CSWAP(n[4], n[5]); CSWAP(n[7], n[8]);
+    CSWAP(n[0], n[1]); CSWAP(n[3], n[4]); CSWAP(n[6], n[7]);
+    CSWAP(n[0], n[3]); CSWAP(n[3], n[6]);
+    CSWAP(n[1], n[4]); CSWAP(n[4], n[7]);
+    CSWAP(n[2], n[5]); CSWAP(n[5], n[8]);
+    CSWAP(n[0], n[3]); CSWAP(n[1], n[4]); CSWAP(n[2], n[5]);
+    CSWAP(n[3], n[6]); CSWAP(n[4], n[7]); CSWAP(n[5], n[8]);
+    CSWAP(n[1], n[3]); CSWAP(n[5], n[7]);
+    CSWAP(n[2], n[6]);
+    CSWAP(n[2], n[4]); CSWAP(n[4], n[6]);
+    CSWAP(n[3], n[4]); CSWAP(n[4], n[5]);
+
+    // Медиана - это 5-й элемент (индекс 4) отсортированного массива
+    ResultMask[id.xy] = n[4];
+}

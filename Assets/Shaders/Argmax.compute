@@ -1,0 +1,48 @@
+#pragma kernel Argmax
+
+// Входной тензор от нейросети в формате
+// Мы получаем его как буфер и сами вычисляем индексы
+StructuredBuffer<float> InputTensor; 
+
+// Выходная текстура с одним каналом (RFloat), 
+// где значение пикселя - это нормализованный индекс класса
+RWTexture2D<float> Result;
+
+uint width;
+uint height;
+uint num_classes;
+
+[numthreads(8,8,1)]
+void Argmax (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= width || id.y >= height)
+    {
+        return;
+    }
+
+    float max_value = -3.402823466e+38f; // -Float.Max вместо деления на ноль
+    uint max_class_idx = 0;
+
+    // Индекс пикселя в плоском представлении H*W
+    uint pixel_offset = id.y * width + id.x;
+    // Размер одного канала (H * W)
+    uint channel_stride = width * height;
+
+    for (uint c = 0; c < num_classes; ++c)
+    {
+        // Вычисляем индекс в одномерном буфере: c * (H*W) + y*W + x
+        uint data_idx = c * channel_stride + pixel_offset;
+        float value = InputTensor[data_idx];
+
+        if (value > max_value)
+        {
+            max_value = value;
+            max_class_idx = c;
+        }
+    }
+
+    // Записываем нормализованный индекс класса в выходную текстуру.
+    // Например, класс 3 из 16 станет 3.0.
+    // Это позволяет использовать его в обычном шейдере для градиентов или пороговых значений.
+    Result[id.xy] = float(max_class_idx);
+} 
