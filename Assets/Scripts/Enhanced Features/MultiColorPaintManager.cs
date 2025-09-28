@@ -11,7 +11,7 @@ public class MultiColorPaintManager : MonoBehaviour
     [Header("Multi-Color Paint System")]
     [SerializeField] private AsyncSegmentationManager segmentationManager;
     [SerializeField] private ARWallPresenter wallPresenter;
-    [SerializeField] private DuluxVisualizerIntegration duluxIntegration;
+    [SerializeField] private DuluxVisualizerCore duluxCore;
     
     [Header("Class Colors")]
     [SerializeField] private List<ClassColorPair> classColors = new List<ClassColorPair>();
@@ -69,8 +69,8 @@ public class MultiColorPaintManager : MonoBehaviour
         if (wallPresenter == null)
             wallPresenter = FindObjectOfType<ARWallPresenter>();
             
-        if (duluxIntegration == null)
-            duluxIntegration = FindObjectOfType<DuluxVisualizerIntegration>();
+        if (duluxCore == null)
+            duluxCore = FindObjectOfType<DuluxVisualizerCore>();
         
         // Создать словарь цветов
         UpdateColorDictionary();

@@ -243,7 +243,7 @@ public class QuickDiagnostic : MonoBehaviour
         {
             typeof(AsyncSegmentationManager),
             typeof(ARWallPresenter),
-            typeof(DuluxVisualizerIntegration),
+            typeof(DuluxVisualizerCore),
             typeof(DuluxVisualizerCore)
         };
         
@@ -307,7 +307,7 @@ public class QuickDiagnostic : MonoBehaviour
         else
         {
             Debug.Log("   1. System is ready to use!");
-            Debug.Log("   2. Add DuluxVisualizerSetup if not already present");
+            Debug.Log("   2. Add DuluxVisualizerCore if not already present");
         }
     }
 

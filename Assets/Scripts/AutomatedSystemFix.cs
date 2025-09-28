@@ -262,11 +262,11 @@ public class AutomatedSystemFix : MonoBehaviour
             Debug.Log("✅ ARWallPresenter found and active");
         }
         
-        // Test DuluxVisualizerIntegration
-        DuluxVisualizerIntegration dulux = FindObjectOfType<DuluxVisualizerIntegration>();
+        // Test DuluxVisualizerCore
+        DuluxVisualizerCore dulux = FindObjectOfType<DuluxVisualizerCore>();
         if (dulux != null)
         {
-            Debug.Log("✅ DuluxVisualizerIntegration found and active");
+            Debug.Log("✅ DuluxVisualizerCore found and active");
             
             // Test basic functionality without yield in try-catch
             bool testPassed = false;

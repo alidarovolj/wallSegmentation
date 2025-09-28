@@ -85,10 +85,10 @@ public class MultiColorIntegrator : MonoBehaviour
         SetPrivateField(paintManager, "segmentationManager", segmentationManager);
         SetPrivateField(paintManager, "wallPresenter", wallPresenter);
         
-        var duluxIntegration = FindObjectOfType<DuluxVisualizerIntegration>();
-        if (duluxIntegration != null)
+        var duluxCore = FindObjectOfType<DuluxVisualizerCore>();
+        if (duluxCore != null)
         {
-            SetPrivateField(paintManager, "duluxIntegration", duluxIntegration);
+            SetPrivateField(paintManager, "duluxCore", duluxCore);
         }
     }
     
