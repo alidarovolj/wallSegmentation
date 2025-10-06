@@ -11,6 +11,8 @@ public class ARMaskInteraction : MonoBehaviour
 {
     [Header("Зависимости")]
     [SerializeField] private AsyncSegmentationManager segmentationManager;
+    [SerializeField] private HybridSegmentationManager hybridManager; // Новый гибридный менеджер
+    [SerializeField] private PlaneGenerator planeGenerator; // Генератор плоскостей
     [SerializeField] private AROcclusionManager occlusionManager;
     [SerializeField] private ARCameraManager cameraManager;
     [SerializeField] private Camera arCamera;
@@ -68,6 +70,21 @@ public class ARMaskInteraction : MonoBehaviour
         
         if (cameraManager == null)
             cameraManager = FindObjectOfType<ARCameraManager>();
+        
+        if (hybridManager == null)
+            hybridManager = FindObjectOfType<HybridSegmentationManager>();
+        
+        if (planeGenerator == null)
+        {
+            planeGenerator = FindObjectOfType<PlaneGenerator>();
+            if (planeGenerator == null)
+            {
+                // Создаём PlaneGenerator автоматически
+                GameObject planeGenObj = new GameObject("PlaneGenerator");
+                planeGenerator = planeGenObj.AddComponent<PlaneGenerator>();
+                LogDebug("✨ PlaneGenerator создан автоматически");
+            }
+        }
 
         if (arCamera == null)
         {
@@ -153,12 +170,45 @@ public class ARMaskInteraction : MonoBehaviour
     }
 
     /// <summary>
-    /// Обрабатывает касание экрана и создает 3D маркер
+    /// Обрабатывает касание экрана и создает 3D маркер или плоскость
     /// </summary>
     /// <param name="screenPos">Позиция касания в экранных координатах</param>
     private void ProcessScreenTouch(Vector2 screenPos)
     {
         LogDebug($"🔍 Обработка касания в позиции: {screenPos}");
+
+        // НОВЫЙ РЕЖИМ: Используем гибридный SegFormer + SAM
+        if (hybridManager != null && planeGenerator != null)
+        {
+            LogDebug("🎯 Используем гибридный режим (SegFormer + SAM)");
+            
+            // Вызываем ProcessClick из HybridSegmentationManager
+            hybridManager.ProcessClick(screenPos, (samMask, classId) =>
+            {
+                // Callback вызывается, когда SAM готова маска
+                LogDebug($"✅ Получена маска от SAM для класса {classId}");
+                
+                // Генерируем AR плоскость из маски
+                GameObject plane = planeGenerator.GeneratePlane(samMask, classId, screenPos);
+                
+                if (plane != null)
+                {
+                    LogDebug($"🎉 Плоскость создана: {plane.name}");
+                }
+                else
+                {
+                    LogDebug("⚠️ Не удалось создать плоскость");
+                }
+                
+                // Освобождаем маску
+                samMask?.Dispose();
+            });
+            
+            return;
+        }
+
+        // СТАРЫЙ РЕЖИМ: Используем AsyncSegmentationManager (fallback)
+        LogDebug("⚠️ Гибридный режим недоступен, используем старый метод");
 
         // 1. Получаем класс сегментации в точке касания
         int detectedClass = GetSegmentationClassAtPosition(screenPos);

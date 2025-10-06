@@ -198,6 +198,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   segmentationManager: {fileID: 1430626604}
+  hybridManager: {fileID: 424532179}
+  planeGenerator: {fileID: 1725484229}
   occlusionManager: {fileID: 1070768337}
   cameraManager: {fileID: 1070768330}
   arCamera: {fileID: 1070768350}
@@ -308,6 +310,56 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1070768345}
   m_SourcePrefab: {fileID: 100100000, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+--- !u!1 &424532178
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 424532180}
+  - component: {fileID: 424532179}
+  m_Layer: 0
+  m_Name: HybridManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &424532179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424532178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ae613397e5fc4f958f9070ebe90bbb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  segformerModelAsset: {fileID: 5022602860645237092, guid: b8b2d82c84198a646a8836a3c5d86bc7, type: 3}
+  samEncoderModelAsset: {fileID: 5022602860645237092, guid: ff47f2646d52446a4835070c6bb5c7f3, type: 3}
+  samDecoderModelAsset: {fileID: 5022602860645237092, guid: 12345678901234567890123456789012, type: 3}
+  backendType: 256
+  arCameraManager: {fileID: 1070768330}
+  arWallPresenter: {fileID: 941417365}
+--- !u!4 &424532180
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424532178}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 29.617777, y: 1.0479885, z: 21.5803}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &608830356
 GameObject:
   m_ObjectHideFlags: 0
@@ -860,6 +912,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arCameraManager: {fileID: 1070768330}
   modelAsset: {fileID: 5022602860645237092, guid: 12345678901234567890123456789012, type: 3}
+  segformerModelAsset: {fileID: 0}
+  samEncoderModelAsset: {fileID: 0}
   argmaxShader: {fileID: 7200000, guid: c05f21f3cbfcf477eba2370e62d1115b, type: 3}
   imageNormalizerShader: {fileID: 7200000, guid: c8765f2299b4a4e23bd9c1b7942e8344, type: 3}
   maskPostProcessingShader: {fileID: 7200000, guid: 1e8afd4d3de754dccbd0bff91ac31929, type: 3}
@@ -983,6 +1037,54 @@ MonoBehaviour:
   isFixed: 1
   currentModel: SAMDecoder
   fixResult: "\u2705 Successfully fixed!"
+--- !u!1 &1725484228
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1725484230}
+  - component: {fileID: 1725484229}
+  m_Layer: 0
+  m_Name: Plane Generator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1725484229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1725484228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1b2c3d4e5f6789012345678901234ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minimumMaskSize: 100
+  contourSimplification: 5
+  planePrefab: {fileID: 6754651769537798904, guid: d6191e27c46924b519c7c969d43efd70, type: 3}
+  debugMode: 0
+--- !u!4 &1725484230
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1725484228}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 34.904915, y: -0.9381697, z: 10.485543}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1931353939
 GameObject:
   m_ObjectHideFlags: 0
@@ -1047,3 +1149,5 @@ SceneRoots:
   - {fileID: 5345908}
   - {fileID: 1931353941}
   - {fileID: 966181268}
+  - {fileID: 424532180}
+  - {fileID: 1725484230}

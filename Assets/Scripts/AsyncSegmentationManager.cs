@@ -26,6 +26,13 @@ public class AsyncSegmentationManager : MonoBehaviour
     [SerializeField]
     private ModelAsset modelAsset;
 
+    [Header("Hybrid Pipeline Models (SegFormer + SAM)")]
+    [Tooltip("Модель SegFormer для поиска стен (грубая маска).")]
+    [SerializeField] private ModelAsset segformerModelAsset;
+
+    [Tooltip("Модель SAM Encoder для создания эмбеддингов.")]
+    [SerializeField] private ModelAsset samEncoderModelAsset;
+
     [SerializeField]
     private ComputeShader argmaxShader;
     [SerializeField]
@@ -41,8 +48,18 @@ public class AsyncSegmentationManager : MonoBehaviour
     [SerializeField]
     private ARWallPresenter arWallPresenter; // Ссылка на презентер для фотореалистичной окраски
 
+    // Публичный геттер для доступа к шейдеру из других классов
+    public ComputeShader GetArgmaxShader()
+    {
+        return argmaxShader;
+    }
+
     private Model runtimeModel;
     private Worker worker;
+
+    // Workers для гибридного пайплайна
+    private Worker segformerWorker;
+    private Worker samEncoderWorker;
 
     [Header("Processing & Visualization")]
     [SerializeField]
@@ -301,10 +318,25 @@ public class AsyncSegmentationManager : MonoBehaviour
     [SerializeField, Range(0, 10)]
     private int frameSkip = 2; // Оптимизация: обрабатываем каждый 3-й кадр по умолчанию
 
+    private bool isHybridMode = false; // Флаг для отключения, если работает HybridManager
 
+    void Awake()
+    {
+        // Проверяем, есть ли в сцене HybridManager
+        if (FindObjectOfType<HybridSegmentationManager>() != null)
+        {
+            isHybridMode = true;
+            Debug.Log("🚀 AsyncSegmentationManager: Обнаружен HybridManager. Переход в пассивный режим.");
+            return; // Не выполняем инициализацию, если гибридный менеджер активен
+        }
+
+        // ... остальная часть Awake()
+    }
 
     void OnEnable()
     {
+        if (isHybridMode) return; // Не подписываемся на события в гибридном режиме
+
         // Автопоиск SAM2Manager если не назначен
         if (useSAM2Models && sam2Manager == null)
         {
@@ -1328,7 +1360,7 @@ public class AsyncSegmentationManager : MonoBehaviour
             }
 
             arWallPresenter.SetCropParameters(cropOffsetX, cropOffsetY, cropScale);
-            Debug.Log($"🎨 TopFormer маска передана в ARWallPresenter: crop({cropOffsetX:F2}, {cropOffsetY:F2}, {cropScale:F2}), стабилизация={enableTemporalStabilization}");
+            Debug.Log($"🎨 TopFormer маска передана в ARWallPresenter: crop({cropOffsetX:F2}, {cropOffsetY:F3}, {cropScale:F2}), стабилизация={enableTemporalStabilization}");
         }
     }
 

@@ -11,8 +11,15 @@ public class SimpleSAM2Manager : MonoBehaviour
     
     private ARWallPresenter arWallPresenter;
     
-    void Start()
+    void Awake()
     {
+        if (FindObjectOfType<HybridSegmentationManager>() != null)
+        {
+            Debug.Log("🚀 SimpleSAM2Manager: Обнаружен HybridManager. Отключаемся.");
+            gameObject.SetActive(false); // Полностью отключаем этот компонент
+            return;
+        }
+
         // Найти ARWallPresenter для передачи результатов
         arWallPresenter = FindObjectOfType<ARWallPresenter>();
         
